@@ -59,48 +59,44 @@
   align-items: center;
   gap: 0.8rem;
   text-decoration: none;
+  padding: 0.2rem 0;
 }
 
-.logo-icon-box {
-  width: 48px;
-  height: 48px;
-  background-color: var(--color-yellow);
-  border: var(--border-thick);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-flat-sm);
+.official-logo-img {
+  height: 56px;
+  width: auto;
+  max-width: 240px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  display: block;
   transition: transform var(--transition-fast);
 }
 
-.logo-brand:hover .logo-icon-box {
-  transform: rotate(-6deg) scale(1.05);
+.logo-brand:hover .official-logo-img {
+  transform: scale(1.03);
 }
 
-.logo-text-wrap {
-  display: flex;
-  flex-direction: column;
+.footer-logo-card {
+  background-color: var(--color-white);
+  padding: 0.6rem 1.2rem;
+  border: var(--border-thick);
+  box-shadow: var(--shadow-flat-sm);
+  display: inline-block;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.logo-text-main {
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: -0.03em;
-  color: var(--color-black);
-  line-height: 1;
-  background: linear-gradient(180deg, var(--color-black) 0%, var(--color-black) 100%);
-  -webkit-background-clip: text;
+.footer-logo-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-flat);
+  background-color: var(--color-yellow);
 }
 
-.logo-sub {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--color-magenta);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
+.official-logo-img-footer {
+  height: 52px;
+  width: auto;
+  max-width: 220px;
+  object-fit: contain;
+  display: block;
 }
 
 .main-nav ul {

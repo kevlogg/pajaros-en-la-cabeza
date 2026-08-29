@@ -35,20 +35,9 @@
   <header class="site-header" id="header">
     <div class="container header-container">
       
-      <!-- Brand Logo -->
-      <a href="#inicio" class="logo-brand">
-        <div class="logo-icon-box">
-          <!-- Bird Graphic Flat Icon -->
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22 6C19 6 17 8 14 8C11 8 10 5 7 5C4 5 2 7 2 7L4 12C4 12 7 10 10 10C13 10 14 13 17 13C20 13 22 10 22 10L22 6Z" fill="#0D0D0D"/>
-            <circle cx="18" cy="7.5" r="1.5" fill="#FFE600"/>
-            <path d="M12 14L8 20L15 17L12 14Z" fill="#FF0066"/>
-          </svg>
-        </div>
-        <div class="logo-text-wrap">
-          <span class="logo-text-main">Pájaros en la Cabeza</span>
-          <span class="logo-sub">ROPA PERSONALIZADA & IMAGEN</span>
-        </div>
+      <!-- Official Brand Logo -->
+      <a href="#inicio" class="logo-brand" aria-label="Pájaros en la Cabeza Inicio">
+        <img src="/assets/logopajaros.jpg" alt="Pájaros en la Cabeza - Logo Oficial" class="official-logo-img" width="220" height="56">
       </a>
 
       <!-- Main Navigation -->
@@ -234,15 +223,9 @@
         
         <!-- Col 1: Brand Info & Payments -->
         <div class="footer-brand">
-          <div class="logo-brand">
-            <div class="logo-icon-box" style="background-color: var(--color-yellow);">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M22 6C19 6 17 8 14 8C11 8 10 5 7 5C4 5 2 7 2 7L4 12C4 12 7 10 10 10C13 10 14 13 17 13C20 13 22 10 22 10L22 6Z" fill="#0D0D0D"/><circle cx="18" cy="7.5" r="1.5" fill="#FFE600"/><path d="M12 14L8 20L15 17L12 14Z" fill="#FF0066"/></svg>
-            </div>
-            <div class="logo-text-wrap">
-              <span class="logo-text-main" style="color: var(--color-white); -webkit-text-fill-color: initial;">Pájaros en la Cabeza</span>
-              <span class="logo-sub">ROPA PERSONALIZADA</span>
-            </div>
-          </div>
+          <a href="#inicio" class="footer-logo-card" aria-label="Pájaros en la Cabeza Inicio">
+            <img src="/assets/logopajaros.jpg" alt="Pájaros en la Cabeza - Logo Oficial" class="official-logo-img-footer" width="200" height="52">
+          </a>
 
           <p>
             Especialistas en ropa personalizada, básicos lisos y accesorios urbanos con asesoría de imagen integral para potenciar la marca de tu local.
@@ -313,7 +296,12 @@
   <div class="modal-overlay" id="quote-modal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 class="modal-title">Cotiza tu Diseño - Pájaros en la Cabeza</h3>
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div style="background-color: var(--color-white); padding: 0.2rem 0.6rem; border: var(--border-thin); display: flex; align-items: center;">
+            <img src="/assets/logopajaros.jpg" alt="Logo" style="height: 32px; width: auto; display: block;">
+          </div>
+          <h3 class="modal-title" style="margin: 0; font-size: 1.2rem;">Cotiza tu Diseño</h3>
+        </div>
         <button class="modal-close-btn" id="close-quote-modal">✕</button>
       </div>
       
