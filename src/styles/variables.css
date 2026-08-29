@@ -1,0 +1,44 @@
+/* ==========================================================================
+   PÁJAROS EN LA CABEZA - DESIGN SYSTEM VARIABLES (STRICT FLAT DESIGN)
+   ========================================================================== */
+
+:root {
+  /* Strict Flat Color Palette */
+  --color-black: #0D0D0D;
+  --color-white: #FFFFFF;
+  --color-yellow: #FFE600;       /* Electric Canary Yellow Accent */
+  --color-yellow-hover: #E6CF00;
+  --color-magenta: #FF0066;      /* Hot Magenta Accent */
+  --color-magenta-hover: #E0005A;
+  --color-taupe-dark: #2B2B2B;   /* Gris Topo Oscuro */
+  --color-taupe-medium: #555555; /* Gris Topo Medio */
+  --color-taupe-light: #F4F2EC;  /* Gris Topo Claro / Fondo Neutro */
+  --color-taupe-bg: #EBE7DF;     /* Gris Topo Base */
+  --color-gray-border: #D8D4CA;
+
+  /* Typography */
+  --font-heading: 'Space Grotesk', 'Syne', -apple-system, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+
+  /* Flat Borders & Shadows (Zero blur gradients, sharp 90deg offset shadows) */
+  --border-thin: 2px solid var(--color-black);
+  --border-thick: 3.5px solid var(--color-black);
+  --border-heavy: 5px solid var(--color-black);
+  --radius-flat: 0px;            /* Pure sharp flat corners */
+  --radius-sm: 4px;              /* Slight touch for badges */
+  --radius-pill: 999px;
+  
+  --shadow-flat-sm: 3px 3px 0px var(--color-black);
+  --shadow-flat: 5px 5px 0px var(--color-black);
+  --shadow-flat-lg: 8px 8px 0px var(--color-black);
+  --shadow-yellow: 5px 5px 0px var(--color-yellow);
+  --shadow-magenta: 5px 5px 0px var(--color-magenta);
+
+  /* Transitions (Snappy pop animations) */
+  --transition-fast: 0.12s cubic-bezier(0.2, 0, 0, 1);
+  --transition-normal: 0.2s cubic-bezier(0.2, 0, 0, 1);
+
+  /* Container */
+  --max-width: 1240px;
+}

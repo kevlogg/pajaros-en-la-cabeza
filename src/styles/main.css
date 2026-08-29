@@ -1,0 +1,216 @@
+/* ==========================================================================
+   GLOBAL STYLES & RESETS - PÁJAROS EN LA CABEZA
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('./variables.css');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  background-color: var(--color-taupe-bg);
+  color: var(--color-black);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* Typography Base */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--color-black);
+  font-weight: 700;
+}
+
+h1 { font-size: clamp(2.2rem, 5vw, 3.8rem); }
+h2 { font-size: clamp(1.8rem, 3.8vw, 2.8rem); }
+h3 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); }
+h4 { font-size: clamp(1.1rem, 2vw, 1.3rem); }
+
+p {
+  color: var(--color-taupe-dark);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Utility Containers */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.section-padding {
+  padding: 5rem 0;
+}
+
+/* Flat Pop Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.8rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: var(--border-thick);
+  border-radius: var(--radius-flat);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+  box-shadow: var(--shadow-flat);
+  user-select: none;
+}
+
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0px var(--color-black);
+}
+
+.btn-primary {
+  background-color: var(--color-yellow);
+  color: var(--color-black);
+}
+.btn-primary:hover {
+  background-color: var(--color-yellow-hover);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-flat-lg);
+}
+
+.btn-secondary {
+  background-color: var(--color-magenta);
+  color: var(--color-white);
+}
+.btn-secondary:hover {
+  background-color: var(--color-magenta-hover);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-flat-lg);
+}
+
+.btn-dark {
+  background-color: var(--color-black);
+  color: var(--color-white);
+}
+.btn-dark:hover {
+  background-color: var(--color-taupe-dark);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-yellow);
+}
+
+.btn-outline {
+  background-color: var(--color-white);
+  color: var(--color-black);
+}
+.btn-outline:hover {
+  background-color: var(--color-yellow);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-flat-lg);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-flat-sm);
+}
+
+/* Badges & Tags */
+.badge {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border: var(--border-thin);
+  border-radius: var(--radius-flat);
+  box-shadow: 2px 2px 0px var(--color-black);
+}
+
+.badge-yellow {
+  background-color: var(--color-yellow);
+  color: var(--color-black);
+}
+
+.badge-magenta {
+  background-color: var(--color-magenta);
+  color: var(--color-white);
+}
+
+.badge-black {
+  background-color: var(--color-black);
+  color: var(--color-white);
+}
+
+.badge-white {
+  background-color: var(--color-white);
+  color: var(--color-black);
+}
+
+/* Section Header Component */
+.section-title-wrap {
+  margin-bottom: 3rem;
+  text-align: center;
+  position: relative;
+}
+
+.section-tag {
+  display: inline-block;
+  background-color: var(--color-yellow);
+  color: var(--color-black);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.25rem 0.75rem;
+  border: var(--border-thin);
+  margin-bottom: 0.8rem;
+  box-shadow: var(--shadow-flat-sm);
+}
+
+.section-title {
+  display: inline-block;
+  position: relative;
+  background: var(--color-white);
+  padding: 0.5rem 1.5rem;
+  border: var(--border-thick);
+  box-shadow: var(--shadow-flat);
+}
