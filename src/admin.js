@@ -162,9 +162,9 @@ function renderAdminCategories() {
 
   container.innerHTML = categories.map(cat => `
     <div class="admin-cat-card" data-id="${cat.id}">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
         <span class="badge badge-black">${cat.badge || 'Categoría'}</span>
-        <span style="font-size: 0.8rem; font-weight: 700;">ID: ${cat.id}</span>
+        <span style="font-size: 0.8rem; font-weight: 700; white-space: nowrap;">ID: ${cat.id}</span>
       </div>
       <h3 style="margin: 0.6rem 0 0.2rem;">${cat.name}</h3>
       <p style="font-size: 0.85rem; color: var(--color-taupe-dark); margin-bottom: 0.8rem;">${cat.description || cat.subtitle || ''}</p>
