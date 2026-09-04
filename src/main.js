@@ -199,6 +199,11 @@ function setupQuoteCalculator() {
 
   if (!modal || !productSelect) return;
 
+  function closeModal() {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
   // Open modal handlers
   document.addEventListener('click', (e) => {
     if (e.target.closest('.open-quote-modal')) {
@@ -208,17 +213,16 @@ function setupQuoteCalculator() {
         productSelect.value = prodPrice;
       }
       modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
       calculateTotal();
     }
   });
 
-  closeBtn?.addEventListener('click', () => {
-    modal.classList.remove('active');
-  });
+  closeBtn?.addEventListener('click', closeModal);
 
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
-      modal.classList.remove('active');
+      closeModal();
     }
   });
 
@@ -278,18 +282,25 @@ function setupMobileMenu() {
   const nav = document.querySelector('.main-nav');
   if (!toggle || !nav) return;
 
-  toggle.addEventListener('click', () => {
-    if (nav.style.display === 'flex') {
-      nav.style.display = 'none';
-    } else {
-      nav.style.display = 'flex';
-      nav.style.position = 'absolute';
-      nav.style.top = '80px';
-      nav.style.left = '0';
-      nav.style.width = '100%';
-      nav.style.backgroundColor = 'var(--color-white)';
-      nav.style.borderBottom = 'var(--border-thick)';
-      nav.style.padding = '1.5rem';
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    nav.classList.toggle('active');
+    toggle.classList.toggle('active');
+  });
+
+  // Close menu when clicking any nav link
+  nav.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      nav.classList.remove('active');
+      toggle.classList.remove('active');
+    });
+  });
+
+  // Close menu when clicking outside header
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.site-header')) {
+      nav.classList.remove('active');
+      toggle.classList.remove('active');
     }
   });
 }
