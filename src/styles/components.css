@@ -1245,3 +1245,325 @@
   }
 }
 
+/* --------------------------------------------------------------------------
+   Hidden Admin Link
+   -------------------------------------------------------------------------- */
+.hidden-admin-lock {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.6;
+  font-size: 0.85rem;
+  margin-left: 0.4rem;
+  transition: opacity var(--transition-fast);
+}
+
+.hidden-admin-lock:hover {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Admin Dashboard & Login Screen Styles
+   -------------------------------------------------------------------------- */
+.admin-body {
+  background-color: var(--color-taupe-bg);
+  min-height: 100vh;
+}
+
+.admin-login-overlay {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: var(--color-taupe-bg);
+}
+
+.admin-login-card {
+  background-color: var(--color-white);
+  border: var(--border-heavy);
+  box-shadow: var(--shadow-flat-lg);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+}
+
+.login-header {
+  margin-bottom: 1.5rem;
+}
+
+.login-logo {
+  height: 60px;
+  width: auto;
+  margin: 0 auto 1rem;
+  mix-blend-mode: multiply;
+  display: block;
+}
+
+.login-error {
+  background-color: var(--color-magenta);
+  color: var(--color-white);
+  padding: 0.6rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-top: 0.8rem;
+  border: var(--border-thin);
+}
+
+.login-footer {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* Admin Top Bar */
+.admin-top-bar {
+  background-color: var(--color-black);
+  color: var(--color-white);
+  border-bottom: var(--border-thick);
+  padding: 0.8rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.admin-bar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-logo-img {
+  height: 42px;
+  width: auto;
+  background: var(--color-white);
+  padding: 0.2rem 0.6rem;
+  border: var(--border-thin);
+}
+
+.admin-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* Admin Main Layout */
+.admin-main-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 2rem;
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+}
+
+.admin-sidebar {
+  background-color: var(--color-white);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-flat);
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  height: fit-content;
+}
+
+.sidebar-title {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  border-bottom: var(--border-thin);
+  padding-bottom: 0.5rem;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--color-taupe-light);
+  border: var(--border-thin);
+  padding: 0.8rem 1rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.admin-nav-btn:hover,
+.admin-nav-btn.active {
+  background-color: var(--color-yellow);
+  transform: translate(-2px, -2px);
+  box-shadow: 3px 3px 0px var(--color-black);
+}
+
+.nav-count-badge {
+  background-color: var(--color-black);
+  color: var(--color-white);
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 999px;
+}
+
+.sidebar-box-info {
+  background-color: var(--color-taupe-bg);
+  border: var(--border-thin);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+/* Admin Content Panel */
+.admin-content-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-tab-content {
+  display: none;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+.admin-tab-content.active {
+  display: flex;
+}
+
+.panel-header {
+  background-color: var(--color-white);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-flat);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Products Admin Grid */
+.products-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.admin-prod-card {
+  background-color: var(--color-white);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-flat);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-prod-media {
+  height: 180px;
+  background-color: var(--color-black);
+  overflow: hidden;
+  border-bottom: var(--border-thin);
+}
+
+.admin-prod-media img,
+.admin-prod-media svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-prod-details {
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+/* Categories Admin Grid */
+.categories-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.admin-cat-card {
+  background-color: var(--color-white);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-flat);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Plan Dashboard Section */
+.plan-dashboard-card {
+  background-color: var(--color-white);
+  border: var(--border-heavy);
+  box-shadow: var(--shadow-flat-lg);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.plan-hero-box {
+  background-color: var(--color-yellow);
+  border: var(--border-thick);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-flat);
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+}
+
+.plan-icon-box {
+  font-size: 2.2rem;
+  background-color: var(--color-white);
+  border: var(--border-thick);
+  padding: 0.5rem 0.8rem;
+}
+
+.plan-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.plan-module-card {
+  background-color: var(--color-taupe-light);
+  border: var(--border-thick);
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.plan-status {
+  margin-top: auto;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--color-black);
+  padding-top: 0.6rem;
+  border-top: 2px dashed var(--color-black);
+}
+
+@media (max-width: 900px) {
+  .admin-main-layout {
+    grid-template-columns: 1fr;
+  }
+  .plan-modules-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

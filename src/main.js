@@ -2,7 +2,7 @@
    MAIN APPLICATION LOGIC - PÁJAROS EN LA CABEZA
    ========================================================================== */
 
-import { BRAND_INFO, CATEGORIES, PRODUCTS, SHIPPING_RATES } from './data/products.js';
+import { BRAND_INFO, SHIPPING_RATES, getCategories, getProducts } from './data/store.js';
 
 // SVG Visual Generator for Flat Design Cards
 function getFlatSvgIllustration(type) {
@@ -59,7 +59,8 @@ function renderCategories() {
   const container = document.getElementById('category-cards-container');
   if (!container) return;
 
-  container.innerHTML = CATEGORIES.map(cat => `
+  const categories = getCategories();
+  container.innerHTML = categories.map(cat => `
     <a href="#ropa-personalizada" class="category-card" data-category-filter="${cat.id}">
       <div class="category-image-wrap">
         ${cat.image 
@@ -72,7 +73,7 @@ function renderCategories() {
         <h3 class="category-title">${cat.name}</h3>
         <p class="category-desc">${cat.description}</p>
         <div class="category-footer">
-          <span>${cat.count} Variedades</span>
+          <span>${cat.count || 0} Variedades</span>
           <span style="color: var(--color-magenta);">Ver Colección →</span>
         </div>
       </div>
@@ -93,15 +94,17 @@ function renderProducts(items) {
   const container = document.getElementById('products-grid-container');
   if (!container) return;
 
-  if (items.length === 0) {
+  const productsToRender = items || getProducts();
+
+  if (productsToRender.length === 0) {
     container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 2rem; font-weight: 700;">No hay productos en esta categoría.</p>`;
     return;
   }
 
-  container.innerHTML = items.map(product => `
+  container.innerHTML = productsToRender.map(product => `
     <div class="product-card">
       <div class="product-badge-overlay">
-        <span class="badge badge-${product.badgeColor}">${product.badge}</span>
+        <span class="badge badge-${product.badgeColor || 'yellow'}">${product.badge || 'Producto'}</span>
       </div>
 
       <div class="product-img-wrap">
@@ -112,7 +115,7 @@ function renderProducts(items) {
       </div>
 
       <div class="product-body">
-        <span class="product-category-tag">${product.categoryLabel}</span>
+        <span class="product-category-tag">${product.categoryLabel || product.category}</span>
         <h3 class="product-name">${product.name}</h3>
         
         ${product.advisoryIncluded 
@@ -120,11 +123,11 @@ function renderProducts(items) {
                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                Asesoría de Imagen de Local Incluida
              </div>` 
-          : `<p style="font-size: 0.85rem; color: var(--color-taupe-dark);">${product.description.substring(0, 75)}...</p>`
+          : `<p style="font-size: 0.85rem; color: var(--color-taupe-dark);">${(product.description || '').substring(0, 75)}...</p>`
         }
 
         <div class="product-footer">
-          <div class="product-price">${product.priceFormatted}</div>
+          <div class="product-price">${product.priceFormatted || `$${product.price}`}</div>
           <button class="btn btn-primary btn-sm open-quote-modal" data-product-id="${product.id}" data-product-price="${product.price}">
             Cotizar
           </button>
@@ -148,10 +151,11 @@ function filterProducts(categoryId) {
     }
   });
 
+  const allProducts = getProducts();
   if (categoryId === 'all') {
-    renderProducts(PRODUCTS);
+    renderProducts(allProducts);
   } else {
-    const filtered = PRODUCTS.filter(p => p.category === categoryId);
+    const filtered = allProducts.filter(p => p.category === categoryId);
     renderProducts(filtered);
   }
 }
@@ -308,7 +312,7 @@ function setupMobileMenu() {
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
   renderCategories();
-  renderProducts(PRODUCTS);
+  renderProducts(getProducts());
   setupShippingCalculator();
   setupQuoteCalculator();
   setupContactForm();
