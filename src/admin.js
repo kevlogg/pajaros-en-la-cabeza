@@ -448,13 +448,23 @@ async function loadPlanData() {
   if (!tbody) return;
 
   try {
-    const res = await fetch('https://www.kevdev.net.ar/api/payments/client-history?clienteId=pajarosenlacabeza', {
+    let res = await fetch('https://www.kevdev.net.ar/api/payments/client-history?clienteId=pajarosenlacabeza', {
       headers: { 'x-kevdev-secret': 'kevdev_payments_sec_2026_key' },
       cache: 'no-store'
     });
+    let data = await res.json().catch(() => ({}));
+    if (!data.payments || data.payments.length === 0) {
+      const fbRes = await fetch('https://www.kevdev.net.ar/api/payments/client-history?clienteId=pajaros-en-la-cabeza', {
+        headers: { 'x-kevdev-secret': 'kevdev_payments_sec_2026_key' },
+        cache: 'no-store'
+      });
+      const fbData = await fbRes.json().catch(() => ({}));
+      if (fbData.payments && fbData.payments.length > 0) {
+        data = fbData;
+      }
+    }
 
-    if (res.ok) {
-      const data = await res.json();
+    if (data.success) {
       const payments = Array.isArray(data.payments) ? data.payments : [];
       const estadoPago = data.estadoPago || 'AL_DIA';
 
