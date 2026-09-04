@@ -461,6 +461,15 @@ async function loadPlanData() {
       const fbData = await fbRes.json().catch(() => ({}));
       if (fbData.payments && fbData.payments.length > 0) {
         data = fbData;
+      } else {
+        const docRes = await fetch('https://www.kevdev.net.ar/api/payments/client-history?clienteId=qrKvonUCFeUOJZW32bee', {
+          headers: { 'x-kevdev-secret': 'kevdev_payments_sec_2026_key' },
+          cache: 'no-store'
+        });
+        const docData = await docRes.json().catch(() => ({}));
+        if (docData.payments && docData.payments.length > 0) {
+          data = docData;
+        }
       }
     }
 
