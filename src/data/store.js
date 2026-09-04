@@ -20,30 +20,38 @@ import { CATEGORIES as DEFAULT_CATEGORIES, PRODUCTS as DEFAULT_PRODUCTS, BRAND_I
 
 const STORAGE_KEY_PRODUCTS = 'pajaros_products_v1';
 const STORAGE_KEY_CATEGORIES = 'pajaros_categories_v1';
+const STORAGE_KEY_HERO_IMAGE = 'pajaros_hero_image_v1';
+
+const DEFAULT_HERO_IMAGE = '/assets/hero_banner.png';
 
 const productsCollectionRef = collection(db, 'products');
 const categoriesCollectionRef = collection(db, 'categories');
+const heroDocRef = doc(db, 'settings', 'hero');
 
 let cachedProducts = [];
 let cachedCategories = [];
+let cachedHeroImage = DEFAULT_HERO_IMAGE;
 const subscribers = [];
 
 // Initialize local cache from localStorage
 try {
   const savedProds = localStorage.getItem(STORAGE_KEY_PRODUCTS);
   const savedCats = localStorage.getItem(STORAGE_KEY_CATEGORIES);
+  const savedHero = localStorage.getItem(STORAGE_KEY_HERO_IMAGE);
 
   cachedProducts = savedProds ? JSON.parse(savedProds) : DEFAULT_PRODUCTS;
   cachedCategories = savedCats ? JSON.parse(savedCats) : DEFAULT_CATEGORIES;
+  cachedHeroImage = savedHero || DEFAULT_HERO_IMAGE;
 } catch (e) {
   cachedProducts = DEFAULT_PRODUCTS;
   cachedCategories = DEFAULT_CATEGORIES;
+  cachedHeroImage = DEFAULT_HERO_IMAGE;
 }
 
 // Function to notify subscribed views (landing page, admin panel)
 function notifySubscribers() {
   subscribers.forEach(cb => {
-    try { cb({ products: cachedProducts, categories: cachedCategories }); } catch(err){}
+    try { cb({ products: cachedProducts, categories: cachedCategories, heroImage: cachedHeroImage }); } catch(err){}
   });
 }
 
@@ -105,6 +113,16 @@ try {
   }, (err) => {
     console.warn('Firestore categories snapshot error:', err);
   });
+
+  onSnapshot(heroDocRef, (docSnap) => {
+    if (docSnap.exists() && docSnap.data().url) {
+      cachedHeroImage = docSnap.data().url;
+      localStorage.setItem(STORAGE_KEY_HERO_IMAGE, cachedHeroImage);
+      notifySubscribers();
+    }
+  }, (err) => {
+    console.warn('Firestore hero image snapshot error:', err);
+  });
 } catch (e) {
   console.warn('Firestore initialization fallback to LocalStorage:', e);
 }
@@ -116,6 +134,25 @@ export function getCategories() {
 
 export function getProducts() {
   return cachedProducts.length > 0 ? cachedProducts : DEFAULT_PRODUCTS;
+}
+
+export function getHeroImage() {
+  return cachedHeroImage || DEFAULT_HERO_IMAGE;
+}
+
+export async function setHeroImage(url) {
+  const newUrl = url || DEFAULT_HERO_IMAGE;
+  cachedHeroImage = newUrl;
+  localStorage.setItem(STORAGE_KEY_HERO_IMAGE, newUrl);
+  notifySubscribers();
+
+  try {
+    await setDoc(heroDocRef, { url: newUrl, updatedAt: new Date().toISOString() });
+  } catch (err) {
+    console.warn('Firestore setHeroImage error:', err);
+  }
+
+  return newUrl;
 }
 
 // Image Upload to Firebase Storage

@@ -85,9 +85,9 @@
             <span>📁 Categorías</span>
             <span class="nav-count-badge" id="sidebar-cat-count">0</span>
           </button>
-          <button class="admin-nav-btn" data-tab="plan" style="display: none;">
+          <button class="admin-nav-btn" data-tab="plan">
             <span>📋 Mi Plan</span>
-            <span class="badge badge-magenta" style="font-size: 0.65rem;">NUEVO</span>
+            <span class="badge badge-magenta" style="font-size: 0.65rem;">ACTIVO</span>
           </button>
         </nav>
 
@@ -103,8 +103,43 @@
       <!-- Admin Content Area -->
       <section class="admin-content-panel">
         
-        <!-- TAB 1: PRODUCTOS -->
+        <!-- TAB 1: PRODUCTOS & HERO IMAGE -->
         <div class="admin-tab-content active" id="tab-products">
+          
+          <!-- Hero Image Management Banner -->
+          <div class="hero-admin-card" style="margin-bottom: 2rem; background: var(--color-bg-alt); border: 3.5px solid var(--color-border); border-radius: 16px; padding: 1.5rem; box-shadow: var(--shadow-flat);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <h3 style="font-family: var(--font-display); font-weight: 800; margin: 0; font-size: 1.2rem;">🖼️ Imagen Principal del Hero (Landing Page)</h3>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.88rem; color: #555;">Selecciona o sube la imagen principal que aparecerá en la cabecera del sitio web.</p>
+              </div>
+              <span class="badge badge-yellow">EN VIVO</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 220px 1fr; gap: 1.5rem; align-items: center;">
+              <div style="border: 3px solid var(--color-border); border-radius: 12px; overflow: hidden; background: #fff; height: 140px; display: flex; align-items: center; justify-content: center;">
+                <img id="admin-hero-preview" src="/assets/hero_banner.png" alt="Vista Previa Hero" style="width: 100%; height: 100%; object-fit: cover;">
+              </div>
+              <div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                  <div>
+                    <label class="form-label" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem; display: block;">Subir desde computadora/móvil:</label>
+                    <input type="file" id="hero-file-input" accept="image/*" class="form-input" style="padding: 0.4rem; font-size: 0.85rem;">
+                  </div>
+                  <div>
+                    <label class="form-label" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem; display: block;">O pegar URL directa de imagen:</label>
+                    <input type="text" id="hero-url-input" class="form-input" placeholder="https://..." style="padding: 0.5rem; font-size: 0.85rem;">
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                  <button type="button" id="save-hero-img-btn" class="btn btn-primary btn-sm">💾 Guardar Imagen Hero</button>
+                  <button type="button" id="reset-hero-img-btn" class="btn btn-outline btn-sm">🔄 Restablecer Original</button>
+                  <span id="hero-msg-status" style="display: none; font-size: 0.85rem; font-weight: 700; color: #008844;"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="panel-header">
             <div>
               <h2>Gestión de Productos</h2>
@@ -137,49 +172,150 @@
           </div>
         </div>
 
-        <!-- TAB 3: MI PLAN -->
+        <!-- TAB 3: MI PLAN (REPLICATED FROM DULCE HOGAR & CONNECTED TO KEVDEV) -->
         <div class="admin-tab-content" id="tab-plan">
-          <div class="panel-header">
+          <div class="panel-header" style="margin-bottom: 1.5rem;">
             <div>
-              <h2>Mi Plan de Gestión & Expansión</h2>
-              <p>Módulo de planificación para Pájaros en la Cabeza.</p>
+              <h2>Mi Plan</h2>
+              <p>Detalle del acuerdo de servicio y condiciones.</p>
             </div>
-            <span class="badge badge-yellow">SECCIÓN AUTOGESTIONABLE</span>
+            <span class="badge badge-yellow">CONEXIÓN KEVDEV</span>
           </div>
 
-          <div class="plan-dashboard-card">
-            <div class="plan-hero-box">
-              <div class="plan-icon-box">📋</div>
-              <div>
-                <h3>¡Sección "Mi Plan" Lista!</h3>
-                <p>
-                  En este espacio integraremos los detalles, objetivos comerciales, estrategias de marca, paquetes de asesoría y planes de expansión que me compartas próximamente.
-                </p>
+          <div class="plan-full-container" style="max-width: 900px; display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- ALERT DE SALDO PENDIENTE -->
+            <div id="plan-overdue-alert" class="plan-alert-card" style="display: none; background: #FFF0F0; border: 3px solid #FF0066; border-radius: 12px; padding: 1.25rem; box-shadow: var(--shadow-flat);">
+              <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <span style="font-size: 1.6rem;">⚠️</span>
+                <div>
+                  <h4 style="margin: 0; font-family: var(--font-display); color: #CC0044; font-size: 1.1rem; font-weight: 800;">Tenes un saldo pendiente</h4>
+                  <p id="plan-overdue-text" style="margin: 0.25rem 0 0 0; color: #990033; font-weight: 600; font-size: 0.95rem;">
+                    $ 60.000 — ponete al día para evitar interrupciones en el servicio.
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div class="plan-modules-grid">
-              <div class="plan-module-card">
-                <span class="badge badge-magenta">Estrategia</span>
-                <h4>Branding & Asesoría de Imagen</h4>
-                <p>Planes de consultoría para locales comerciales, tarjetas de marca y uniformes.</p>
-                <div class="plan-status">✓ Configurado</div>
+            <!-- CARD PLAN ACTIVO -->
+            <div class="plan-card-box" style="background: #FFFFFF; border: 3.5px solid var(--color-border); border-radius: 16px; padding: 1.5rem; box-shadow: var(--shadow-flat);">
+              <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.25rem; border-bottom: 2px solid #EBE7DF; padding-bottom: 0.75rem;">
+                <span style="font-size: 1.3rem;">💳</span>
+                <h3 style="margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 1.2rem;">Plan activo</h3>
               </div>
 
-              <div class="plan-module-card">
-                <span class="badge badge-yellow">Catálogo</span>
-                <h4>Indumentaria & Merchandising</h4>
-                <p>Personalización de remeras, buzos, artículos promocionales y básicos lisos.</p>
-                <div class="plan-status">✓ En Funcionamiento</div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+                <div>
+                  <span style="font-size: 0.72rem; font-weight: 800; color: #666; text-transform: uppercase; tracking: 0.05em; display: block; margin-bottom: 0.2rem;">INICIO DEL PROYECTO</span>
+                  <strong style="font-size: 1rem; color: var(--color-text);">16/06/2026</strong>
+                </div>
+                <div>
+                  <span style="font-size: 0.72rem; font-weight: 800; color: #666; text-transform: uppercase; tracking: 0.05em; display: block; margin-bottom: 0.2rem;">TIPO</span>
+                  <strong style="font-size: 1rem; color: var(--color-text);">Mensual</strong>
+                </div>
+                <div>
+                  <span style="font-size: 0.72rem; font-weight: 800; color: #666; text-transform: uppercase; tracking: 0.05em; display: block; margin-bottom: 0.2rem;">MONTO ACTUAL</span>
+                  <strong style="font-size: 1rem; color: var(--color-text);">$ 33.000/mes</strong>
+                </div>
+                <div>
+                  <span style="font-size: 0.72rem; font-weight: 800; color: #666; text-transform: uppercase; tracking: 0.05em; display: block; margin-bottom: 0.2rem;">PRÓXIMO PAGO</span>
+                  <strong style="font-size: 1rem; color: var(--color-text);">2026-09-16</strong>
+                </div>
+                <div>
+                  <span style="font-size: 0.72rem; font-weight: 800; color: #666; text-transform: uppercase; tracking: 0.05em; display: block; margin-bottom: 0.2rem;">SALDO PENDIENTE</span>
+                  <strong id="plan-saldo-badge" style="font-size: 1rem; color: #CC0044;">$ 60.000</strong>
+                </div>
               </div>
 
-              <div class="plan-module-card">
-                <span class="badge badge-black">Nube</span>
-                <h4>Conexión con Firebase Firestore</h4>
-                <p>Estructura preparada para sincronización multiusuario en la nube.</p>
-                <div class="plan-status">⚡ Listo para Activar</div>
+              <!-- Sub-caja de alerta de próximo pago -->
+              <div style="background: var(--color-bg-alt); border: 2px solid var(--color-border); border-radius: 10px; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <span style="font-size: 1.2rem;">⏰</span>
+                <span style="font-size: 0.92rem; font-weight: 600; color: var(--color-text);">
+                  Próximo pago: <strong>2026-09-16</strong> — $ 33.000
+                </span>
+              </div>
+
+              <!-- Sub-tarjeta Forma de pago -->
+              <div style="border: 2.5px solid var(--color-border); border-radius: 12px; padding: 1.25rem; background: #FAF8F5;">
+                <p style="margin: 0 0 0.85rem 0; font-weight: 800; font-size: 0.95rem;">Forma de pago — Kevin Loggia</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+                  <button type="button" id="pay-card-modal-btn" class="btn btn-dark btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                    💳 Pagar con tarjeta
+                  </button>
+                  <a href="https://wa.me/5491112345678?text=Hola%20Kevin,%20te%20paso%20el%20comprobante%20de%20pago%20de%20P%C3%A1jaros%20en%20la%20Cabeza." target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="background: #25D366; color: #fff; border-color: #0D0D0D; text-decoration: none;">
+                    💬 Enviar comprobante por WhatsApp
+                  </a>
+                </div>
               </div>
             </div>
+
+            <!-- CARD CONDICIONES DEL ACUERDO (DESPLEGABLE / ACCORDION) -->
+            <div class="plan-card-box" style="background: #FFFFFF; border: 3.5px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-flat); overflow: hidden;">
+              <button type="button" id="toggle-conditions-btn" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; background: transparent; border: none; cursor: pointer; text-align: left;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span style="font-size: 1.3rem;">ℹ️</span>
+                  <h3 style="margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; color: var(--color-text);">Condiciones del acuerdo</h3>
+                </div>
+                <span id="conditions-chevron" style="font-size: 1.2rem; font-weight: 800; transition: transform 0.2s;">▼</span>
+              </button>
+
+              <div id="conditions-body" style="display: none; padding: 0 1.5rem 1.5rem 1.5rem; border-top: 2px dashed #EBE7DF;">
+                <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.9rem; color: #333; line-height: 1.5;">
+                  <div>
+                    <h4 style="margin: 0 0 0.5rem 0; font-weight: 800; font-size: 1rem; color: var(--color-text);">Plan mensual</h4>
+                    <ul style="margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                      <li>Pago mensual fijo de <strong>$ 33.000</strong>.</li>
+                      <li>El precio se ajusta cada 6 meses por la variación del componente Servicios del IPC publicado por INDEC en los 6 meses anteriores a la fecha de ajuste. El aumento se calcula multiplicando los factores mensuales (no sumando).</li>
+                      <li>El servicio incluye hosting, actualizaciones de seguridad y soporte técnico ante errores o caídas.</li>
+                      <li>Cualquier modificación, nueva sección o desarrollo adicional se presupuesta por separado, ya que implica tiempo de desarrollo.</li>
+                    </ul>
+                  </div>
+
+                  <div style="border-top: 1px solid #EBE7DF; pt-3; padding-top: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem 0; font-weight: 800; font-size: 1rem; color: var(--color-text);">Plan pago único</h4>
+                    <ul style="margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                      <li>Pago único de <strong>$ 250.000</strong> que cubre el desarrollo completo.</li>
+                      <li>El precio se ajusta cada 6 meses por la variación del componente Servicios del IPC publicado por INDEC en los 6 meses anteriores a la fecha de ajuste. El aumento se calcula multiplicando los factores mensuales (no sumando).</li>
+                      <li>Incluye renovación anual de <strong>$ 45.000</strong>, también sujeto a ajuste por IPC cada 6 meses.</li>
+                      <li>El mantenimiento cubre actualizaciones de seguridad y corrección de errores del sistema existente.</li>
+                      <li>Cualquier modificación, nueva sección o desarrollo adicional se presupuesta por separado, ya que implica tiempo de desarrollo.</li>
+                    </ul>
+                  </div>
+
+                  <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #777; border-top: 1px solid #EBE7DF; padding-top: 0.75rem;">
+                    Ante cualquier consulta sobre el plan, comunicarse directamente con Kevin Loggia.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD HISTORIAL DE PAGOS (CONECTADO A KEVDEV) -->
+            <div class="plan-card-box" style="background: #FFFFFF; border: 3.5px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-flat); overflow: hidden;">
+              <div style="padding: 1.25rem 1.5rem; border-bottom: 2.5px solid var(--color-border); background: var(--color-bg-alt); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 1.15rem;">Historial de pagos</h3>
+                <span id="kevdev-sync-badge" style="font-size: 0.75rem; font-weight: 700; color: #008844; background: #E6F7ED; padding: 0.25rem 0.6rem; border-radius: 20px; border: 1px solid #B3E6C8;">⚡ Sincronizado con KevDev</span>
+              </div>
+
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                  <thead>
+                    <tr style="background: #FAF8F5; border-bottom: 2px solid var(--color-border);">
+                      <th style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">Fecha</th>
+                      <th style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">Concepto</th>
+                      <th style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">Monto</th>
+                      <th style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="plan-payments-tbody">
+                    <!-- Dynamic payments rendered from KevDev API via admin.js -->
+                    <tr>
+                      <td colspan="4" style="padding: 1.5rem; text-align: center; color: #777;">Cargando historial de pagos desde KevDev...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         </div>
 

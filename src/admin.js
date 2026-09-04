@@ -13,7 +13,9 @@ import {
   deleteCategory,
   resetToDefaults,
   uploadImageToFirebase,
-  subscribeToStore
+  subscribeToStore,
+  getHeroImage,
+  setHeroImage
 } from './data/store.js';
 
 const ADMIN_PASSWORD = 'adminpajaros';
@@ -355,6 +357,173 @@ function setupCategoryModal() {
   });
 }
 
+// Hero Image Management in Admin
+function setupHeroImageManager() {
+  const preview = document.getElementById('admin-hero-preview');
+  const fileInput = document.getElementById('hero-file-input');
+  const urlInput = document.getElementById('hero-url-input');
+  const saveBtn = document.getElementById('save-hero-img-btn');
+  const resetBtn = document.getElementById('reset-hero-img-btn');
+  const statusMsg = document.getElementById('hero-msg-status');
+
+  if (!preview || !saveBtn) return;
+
+  function updatePreview() {
+    const currentUrl = getHeroImage();
+    preview.src = currentUrl;
+    urlInput.value = currentUrl.startsWith('http') ? currentUrl : '';
+  }
+
+  updatePreview();
+
+  fileInput?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      statusMsg.style.display = 'inline';
+      statusMsg.style.color = '#0055CC';
+      statusMsg.textContent = '⏳ Subiendo foto a Firebase Storage...';
+      try {
+        const uploadedUrl = await uploadImageToFirebase(file);
+        if (uploadedUrl) {
+          urlInput.value = uploadedUrl;
+          preview.src = uploadedUrl;
+          statusMsg.style.color = '#008844';
+          statusMsg.textContent = '✓ Foto subida. Haz clic en Guardar.';
+        }
+      } catch (err) {
+        statusMsg.style.color = '#CC0044';
+        statusMsg.textContent = '⚠️ Error al subir la imagen.';
+      }
+    }
+  });
+
+  urlInput?.addEventListener('input', () => {
+    if (urlInput.value.trim()) {
+      preview.src = urlInput.value.trim();
+    }
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const finalUrl = urlInput.value.trim() || preview.src;
+    await setHeroImage(finalUrl);
+    statusMsg.style.display = 'inline';
+    statusMsg.style.color = '#008844';
+    statusMsg.textContent = '✅ ¡Imagen del Hero guardada en vivo!';
+    setTimeout(() => { statusMsg.style.display = 'none'; }, 3000);
+  });
+
+  resetBtn?.addEventListener('click', async () => {
+    if (confirm('¿Restablecer la imagen principal del Hero a la foto original?')) {
+      await setHeroImage('/assets/hero_banner.png');
+      updatePreview();
+      statusMsg.style.display = 'inline';
+      statusMsg.style.color = '#008844';
+      statusMsg.textContent = '🔄 Restablecido a la imagen por defecto.';
+      setTimeout(() => { statusMsg.style.display = 'none'; }, 3000);
+    }
+  });
+}
+
+// "Mi Plan" Accordion and KevDev API Connection
+function setupConditionsAccordion() {
+  const toggleBtn = document.getElementById('toggle-conditions-btn');
+  const body = document.getElementById('conditions-body');
+  const chevron = document.getElementById('conditions-chevron');
+
+  if (!toggleBtn || !body) return;
+
+  toggleBtn.addEventListener('click', () => {
+    const isOpen = body.style.display === 'block';
+    body.style.display = isOpen ? 'none' : 'block';
+    if (chevron) {
+      chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
+  });
+}
+
+async function loadPlanData() {
+  const tbody = document.getElementById('plan-payments-tbody');
+  const overdueAlert = document.getElementById('plan-overdue-alert');
+
+  if (!tbody) return;
+
+  try {
+    const res = await fetch('https://www.kevdev.net.ar/api/payments/client-history?clienteId=pajarosenlacabeza', {
+      headers: { 'x-kevdev-secret': 'kevdev_payments_sec_2026_key' },
+      cache: 'no-store'
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const payments = Array.isArray(data.payments) ? data.payments : [];
+      const estadoPago = data.estadoPago || 'AL_DIA';
+
+      if (estadoPago !== 'AL_DIA' || payments.some(p => !p.confirmed)) {
+        if (overdueAlert) overdueAlert.style.display = 'block';
+      } else {
+        if (overdueAlert) overdueAlert.style.display = 'none';
+      }
+
+      if (payments.length === 0) {
+        tbody.innerHTML = `
+          <tr style="border-bottom: 1px solid #EBE7DF;">
+            <td style="padding: 0.85rem 1.25rem; font-weight: 700; color: #555;">2026-09-01</td>
+            <td style="padding: 0.85rem 1.25rem; color: var(--color-text);">
+              <strong>Paquete de desarrollo</strong>
+              <div style="font-size: 0.78rem; color: #777; margin-top: 0.15rem;">Tienda online autogestionable & landing en vivo</div>
+            </td>
+            <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">$ 60.000</td>
+            <td style="padding: 0.85rem 1.25rem;">
+              <span class="badge badge-magenta" style="font-size: 0.75rem; background: #FFF0F0; color: #CC0044; border: 1px solid #FFCCE0;">Pendiente</span>
+            </td>
+          </tr>
+          <tr style="border-bottom: 1px solid #EBE7DF;">
+            <td style="padding: 0.85rem 1.25rem; font-weight: 700; color: #555;">2026-08-16</td>
+            <td style="padding: 0.85rem 1.25rem; color: var(--color-text);">
+              <strong>Plan mensual</strong>
+              <div style="font-size: 0.78rem; color: #777; margin-top: 0.15rem;">Mantenimiento y hosting</div>
+            </td>
+            <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">$ 33.000</td>
+            <td style="padding: 0.85rem 1.25rem;">
+              <span class="badge badge-yellow" style="font-size: 0.75rem; background: #E6F7ED; color: #008844; border: 1px solid #B3E6C8;">Confirmado</span>
+            </td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = payments.map(p => `
+          <tr style="border-bottom: 1px solid #EBE7DF;">
+            <td style="padding: 0.85rem 1.25rem; font-weight: 700; color: #555;">${p.date || '—'}</td>
+            <td style="padding: 0.85rem 1.25rem; color: var(--color-text);">
+              <strong>${p.concept || p.concepto || 'Cuota de Servicio'}</strong>
+              ${p.details ? `<div style="font-size: 0.78rem; color: #777; margin-top: 0.15rem;">${p.details}</div>` : ''}
+            </td>
+            <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">$ ${Number(p.amount || 0).toLocaleString('es-AR')}</td>
+            <td style="padding: 0.85rem 1.25rem;">
+              <span class="badge" style="font-size: 0.75rem; ${p.confirmed ? 'background: #E6F7ED; color: #008844; border: 1px solid #B3E6C8;' : 'background: #FFF0F0; color: #CC0044; border: 1px solid #FFCCE0;'}">
+                ${p.confirmed ? 'Confirmado' : 'Pendiente'}
+              </span>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch (err) {
+    console.warn('KevDev API fetch warning:', err);
+    tbody.innerHTML = `
+      <tr style="border-bottom: 1px solid #EBE7DF;">
+        <td style="padding: 0.85rem 1.25rem; font-weight: 700; color: #555;">2026-09-01</td>
+        <td style="padding: 0.85rem 1.25rem; color: var(--color-text);">
+          <strong>Paquete de desarrollo</strong>
+        </td>
+        <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">$ 60.000</td>
+        <td style="padding: 0.85rem 1.25rem;">
+          <span class="badge badge-magenta" style="font-size: 0.75rem; background: #FFF0F0; color: #CC0044; border: 1px solid #FFCCE0;">Pendiente</span>
+        </td>
+      </tr>
+    `;
+  }
+}
+
 // Reset Data Button Setup
 function setupResetButton() {
   const resetBtn = document.getElementById('reset-data-btn');
@@ -373,6 +542,9 @@ document.addEventListener('DOMContentLoaded', () => {
   setupProductModal();
   setupCategoryModal();
   setupResetButton();
+  setupHeroImageManager();
+  setupConditionsAccordion();
+  loadPlanData();
   checkAuthUI();
 
   subscribeToStore(() => {
