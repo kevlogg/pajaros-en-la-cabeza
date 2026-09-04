@@ -483,7 +483,7 @@ async function loadPlanData() {
               <strong>Plan mensual</strong>
               <div style="font-size: 0.78rem; color: #777; margin-top: 0.15rem;">Mantenimiento y hosting</div>
             </td>
-            <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">$ 33.000</td>
+            <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">$ 39.000</td>
             <td style="padding: 0.85rem 1.25rem;">
               <span class="badge badge-yellow" style="font-size: 0.75rem; background: #E6F7ED; color: #008844; border: 1px solid #B3E6C8;">Confirmado</span>
             </td>
