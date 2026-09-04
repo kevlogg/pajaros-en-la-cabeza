@@ -11,7 +11,9 @@ import {
   addCategory, 
   updateCategory, 
   deleteCategory,
-  resetToDefaults 
+  resetToDefaults,
+  uploadImageToFirebase,
+  subscribeToStore
 } from './data/store.js';
 
 const ADMIN_PASSWORD = 'adminpajaros';
@@ -235,32 +237,58 @@ function setupProductModal() {
   closeBtn?.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const id = document.getElementById('prod-form-id').value;
-    const catSelect = document.getElementById('prod-form-category');
-    const selectedCatLabel = catSelect.options[catSelect.selectedIndex]?.text || '';
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Guardando en Firebase...';
 
-    const prodData = {
-      name: document.getElementById('prod-form-name').value,
-      category: catSelect.value,
-      categoryLabel: selectedCatLabel,
-      price: document.getElementById('prod-form-price').value,
-      image: document.getElementById('prod-form-image').value || null,
-      badge: document.getElementById('prod-form-badge').value || 'Destacado',
-      badgeColor: document.getElementById('prod-form-badge-color').value,
-      description: document.getElementById('prod-form-description').value,
-      advisoryIncluded: document.getElementById('prod-form-advisory').checked
-    };
+    try {
+      const id = document.getElementById('prod-form-id').value;
+      const catSelect = document.getElementById('prod-form-category');
+      const selectedCatLabel = catSelect.options[catSelect.selectedIndex]?.text || '';
+      
+      const fileInput = document.getElementById('prod-form-file');
+      let imageUrl = document.getElementById('prod-form-image').value || null;
 
-    if (id) {
-      updateProduct(id, prodData);
-    } else {
-      addProduct(prodData);
+      // Upload file to Firebase Storage if selected
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        try {
+          const uploadedUrl = await uploadImageToFirebase(fileInput.files[0]);
+          if (uploadedUrl) imageUrl = uploadedUrl;
+        } catch (storageErr) {
+          console.warn('Firebase Storage upload warning (verify Storage Security Rules in console):', storageErr);
+        }
+      }
+
+      const prodData = {
+        name: document.getElementById('prod-form-name').value,
+        category: catSelect.value,
+        categoryLabel: selectedCatLabel,
+        price: document.getElementById('prod-form-price').value,
+        image: imageUrl,
+        badge: document.getElementById('prod-form-badge').value || 'Destacado',
+        badgeColor: document.getElementById('prod-form-badge-color').value,
+        description: document.getElementById('prod-form-description').value,
+        advisoryIncluded: document.getElementById('prod-form-advisory').checked
+      };
+
+      if (id) {
+        await updateProduct(id, prodData);
+      } else {
+        await addProduct(prodData);
+      }
+
+      closeModal();
+      renderAllAdminData();
+    } catch (err) {
+      alert('Ocurrió un error al guardar. Revisa la consola o las reglas de Firebase.');
+      console.error(err);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
     }
-
-    closeModal();
-    renderAllAdminData();
   });
 }
 
@@ -346,4 +374,10 @@ document.addEventListener('DOMContentLoaded', () => {
   setupCategoryModal();
   setupResetButton();
   checkAuthUI();
+
+  subscribeToStore(() => {
+    if (isAuthenticated()) {
+      renderAllAdminData();
+    }
+  });
 });

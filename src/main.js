@@ -2,7 +2,7 @@
    MAIN APPLICATION LOGIC - PÁJAROS EN LA CABEZA
    ========================================================================== */
 
-import { BRAND_INFO, SHIPPING_RATES, getCategories, getProducts } from './data/store.js';
+import { BRAND_INFO, SHIPPING_RATES, getCategories, getProducts, subscribeToStore } from './data/store.js';
 
 // SVG Visual Generator for Flat Design Cards
 function getFlatSvgIllustration(type) {
@@ -317,6 +317,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setupQuoteCalculator();
   setupContactForm();
   setupMobileMenu();
+
+  // Re-render when Firebase updates store
+  subscribeToStore(({ products }) => {
+    renderCategories();
+    renderProducts(products);
+  });
 
   // Filter Buttons Event Delegation
   document.querySelectorAll('.filter-btn').forEach(btn => {
