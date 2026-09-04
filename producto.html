@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalle de Producto | Pájaros en la Cabeza</title>
+  <meta name="description" content="Detalle de producto, confección personalizada, asesoría de imagen y especificaciones en Pájaros en la Cabeza.">
+  
+  <!-- Favicon / Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=Space+Mono:wght@700&display=display" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/main.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-bar">
+    <div class="top-bar-track">
+      <div class="top-bar-item">
+        <span class="dot"></span> PERSONALIZACIÓN DE PRENDAS DESDE 1 UNIDAD
+      </div>
+      <div class="top-bar-item">
+        <span class="dot"></span> ✅ ENVÍOS A TODO EL PAÍS
+      </div>
+      <div class="top-bar-item">
+        <span class="dot"></span> MEDIOS DE PAGO: TRANSFERENCIA | EFECTIVO | MERCADO PAGO
+      </div>
+      <div class="top-bar-item">
+        <span class="dot"></span> PERSONALIZACIÓN DE PRENDAS DESDE 1 UNIDAD
+      </div>
+      <div class="top-bar-item">
+        <span class="dot"></span> ✅ ENVÍOS A TODO EL PAÍS
+      </div>
+      <div class="top-bar-item">
+        <span class="dot"></span> MEDIOS DE PAGO: TRANSFERENCIA | EFECTIVO | MERCADO PAGO
+      </div>
+    </div>
+  </div>
+
+  <!-- Header & Navigation -->
+  <header class="site-header" id="header">
+    <div class="container header-container">
+      
+      <!-- Official Brand Logo -->
+      <a href="./index.html#inicio" class="logo-brand" aria-label="Pájaros en la Cabeza Inicio">
+        <img src="/assets/logopajaros.jpg" alt="Pájaros en la Cabeza - Logo Oficial" class="official-logo-img" width="220" height="56">
+      </a>
+
+      <!-- Main Navigation -->
+      <nav class="main-nav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="./index.html#inicio" class="nav-link">Inicio</a></li>
+          <li><a href="./index.html#ropa-personalizada" class="nav-link">Ropa Personalizada</a></li>
+          <li><a href="./index.html#ropa-lisa" class="nav-link">Ropa Lisa</a></li>
+          <li><a href="./index.html#accesorios" class="nav-link">Accesorios</a></li>
+          <li><a href="./index.html#contacto" class="nav-link">Contacto</a></li>
+        </ul>
+      </nav>
+
+      <!-- Action Button -->
+      <div class="header-actions">
+        <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Abrir menú">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Product Detail Section -->
+  <section class="product-detail-section section-padding">
+    <div class="container">
+      
+      <!-- Breadcrumbs Navigation -->
+      <nav class="breadcrumb-nav" id="breadcrumb-container">
+        <!-- Rendered via JS -->
+      </nav>
+
+      <!-- Main Product Detail View -->
+      <div class="product-detail-wrapper" id="product-detail-card">
+        <!-- Rendered dynamically via JS -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Related Products Section -->
+  <section class="products-section section-padding" style="background-color: var(--color-white); border-top: var(--border-thick);">
+    <div class="container">
+      <div class="section-title-wrap">
+        <span class="section-tag">Sigue Explorando</span>
+        <h2 class="section-title">Productos Relacionados</h2>
+      </div>
+
+      <div class="products-grid" id="related-products-container">
+        <!-- Rendered dynamically via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="site-footer" id="contacto">
+    <div class="container">
+      <div class="footer-grid">
+        
+        <!-- Col 1: Brand Info & Payments -->
+        <div class="footer-brand">
+          <a href="./index.html#inicio" class="footer-logo-card" aria-label="Pájaros en la Cabeza Inicio">
+            <img src="/assets/logopajaros.jpg" alt="Pájaros en la Cabeza - Logo Oficial" class="official-logo-img-footer" width="200" height="52">
+          </a>
+
+          <p>
+            Especialistas en ropa personalizada, básicos lisos y accesorios urbanos con asesoría de imagen integral para potenciar la marca de tu local.
+          </p>
+
+          <!-- Accepted Payment Methods -->
+          <div class="payments-box">
+            <div class="payments-title">Métodos de Pago Aceptados</div>
+            <div class="payment-badges-grid">
+              <div class="payment-badge">
+                <span>🏦</span> Transferencia
+              </div>
+              <div class="payment-badge">
+                <span>💵</span> Efectivo (Eft)
+              </div>
+              <div class="payment-badge" style="background-color: var(--color-yellow);">
+                <span>💳</span> Mercado Pago (Crédito 1 pago)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 2: Navigation & Envíos -->
+        <div>
+          <h4 style="color: var(--color-yellow); margin-bottom: 1.2rem;">Información</h4>
+          <ul style="display: flex; flex-direction: column; gap: 0.8rem;">
+            <li><a href="./index.html#inicio" style="color: #DDD;">• Inicio</a></li>
+            <li><a href="./index.html#ropa-personalizada" style="color: #DDD;">• Ropa Personalizada</a></li>
+            <li><a href="./index.html#ropa-lisa" style="color: #DDD;">• Ropa Lisa Premium</a></li>
+            <li><a href="./index.html#accesorios" style="color: #DDD;">• Mochilas y Riñoneras</a></li>
+            <li><a href="./index.html#servicios" style="color: #DDD;">• Asesoría de Imagen de Local</a></li>
+            <li><span style="color: var(--color-yellow); font-weight: 700;">• Envíos a todo el país</span></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Contact Form -->
+        <div class="footer-form-card">
+          <h4 style="margin-bottom: 0.4rem;">Hablemos de tu proyecto</h4>
+          <p style="font-size: 0.85rem; margin-bottom: 1rem; color: var(--color-taupe-dark);">
+            Cuéntanos la idea de tu marca y te enviaremos una cotización personalizada.
+          </p>
+          <form id="contact-form">
+            <div class="form-group" style="margin-bottom: 0.8rem;">
+              <input type="text" class="form-input" placeholder="Tu Nombre o Marca" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.8rem;">
+              <input type="text" class="form-input" placeholder="WhatsApp / Teléfono" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.8rem;">
+              <textarea class="form-textarea" rows="3" placeholder="¿Qué prendas o asesoría necesitas?" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              Enviar Consulta
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 Pájaros en la Cabeza. Todos los derechos reservados. <a href="/admin.html" class="hidden-admin-lock" title="Acceso Panel de Administración" aria-label="Acceso Admin">🔒</a></span>
+        <span>Diseñado para ropa personalizada & asesoría de local</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Cotizador Express ("Cotiza tu Diseño") -->
+  <div class="modal-overlay" id="quote-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <div style="background-color: var(--color-white); padding: 0.2rem 0.6rem; border: var(--border-thin); display: flex; align-items: center;">
+            <img src="/assets/logopajaros.jpg" alt="Logo" style="height: 32px; width: auto; display: block;">
+          </div>
+          <h3 class="modal-title" style="margin: 0; font-size: 1.2rem;">Cotiza tu Diseño</h3>
+        </div>
+        <button class="modal-close-btn" id="close-quote-modal">✕</button>
+      </div>
+      
+      <div class="modal-body">
+        <p style="font-size: 0.95rem; font-weight: 600;">
+          Selecciona las características de tu pedido para obtener una estimación instantánea y asesoramiento directo.
+        </p>
+
+        <form id="quote-calculator-form">
+          <div class="form-group">
+            <label class="form-label" for="quote-product-type">Tipo de Producto:</label>
+            <select id="quote-product-type" class="form-select">
+              <option value="18500">Remera Personalizada Staff (con Asesoría) - $18.500 c/u</option>
+              <option value="32000">Buzo Hoodie Ropa Lisa - $32.000 c/u</option>
+              <option value="14500">Riñonera Urbana - $14.500 c/u</option>
+              <option value="28900">Mochila Notebook - $28.900 c/u</option>
+              <option value="42000">Campera Staff Personalizada - $42.000 c/u</option>
+              <option value="55000">Kit Indumentaria + Tarjetas para Local - $55.000 pack</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="quote-quantity">Cantidad de Unidades:</label>
+            <input type="number" id="quote-quantity" class="form-input" value="10" min="1" max="500">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Ubicaciones de Estampado / Bordado:</label>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 0.4rem; font-weight: 700; cursor: pointer;">
+                <input type="checkbox" id="print-front" checked style="width: 18px; height: 18px;"> Frente (Logo)
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; font-weight: 700; cursor: pointer;">
+                <input type="checkbox" id="print-back" style="width: 18px; height: 18px;"> Espalda Grande
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; font-weight: 700; cursor: pointer;">
+                <input type="checkbox" id="print-advisory" checked style="width: 18px; height: 18px;"> Incluir Asesoría de Imagen de Local
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="quote-payment-method">Método de Pago Preferido:</label>
+            <select id="quote-payment-method" class="form-select">
+              <option value="0.9">Transferencia Bancaria (10% Descuento)</option>
+              <option value="0.85">Efectivo Eft (15% Descuento)</option>
+              <option value="1.0">Mercado Pago (Crédito 1 pago)</option>
+            </select>
+          </div>
+
+          <!-- Total Calculation Display -->
+          <div class="quote-summary-box">
+            <div>
+              <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">Presupuesto Estimado:</span>
+              <div class="quote-total-price" id="quote-total-display">$166.500</div>
+            </div>
+            <span class="badge badge-black">Envíos a todo el país</span>
+          </div>
+
+          <button type="button" class="btn btn-secondary" id="send-whatsapp-quote" style="width: 100%; margin-top: 1rem;">
+            <span>Enviar Cotización por WhatsApp</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Floating WhatsApp Button -->
+  <a href="https://wa.me/5491155443322?text=Hola%20P%C3%A1jaros%20en%20la%20Cabeza!%20Quisiera%20hacer%20una%20consulta." target="_blank" rel="noopener noreferrer" class="floating-whatsapp-btn" aria-label="Contactar por WhatsApp">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+    </svg>
+    <span class="whatsapp-text">¡Chatea con nosotras!</span>
+  </a>
+
+  <!-- JavaScript Module -->
+  <script type="module" src="./src/product-detail.js"></script>
+</body>
+</html>
