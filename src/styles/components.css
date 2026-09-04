@@ -282,13 +282,15 @@
   background-color: var(--color-white);
   border: var(--border-heavy);
   box-shadow: 8px 8px 0px var(--color-yellow);
-  padding: 1.2rem 1.5rem;
+  padding: 0.8rem 1.2rem;
   margin-bottom: 1.2rem;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   z-index: 5;
+  min-height: 160px;
+  overflow: hidden;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -299,12 +301,14 @@
 
 .hero-big-logo-img {
   width: 100%;
-  max-width: 380px;
+  max-width: 520px;
   height: auto;
-  max-height: 100px;
+  max-height: 180px;
   object-fit: contain;
   mix-blend-mode: multiply;
   display: block;
+  transform: scale(1.45);
+  transition: transform var(--transition-fast);
 }
 
 .hero-image-card {
