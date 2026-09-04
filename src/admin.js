@@ -467,26 +467,7 @@ async function loadPlanData() {
       if (payments.length === 0) {
         tbody.innerHTML = `
           <tr style="border-bottom: 1px solid #EBE7DF;">
-            <td style="padding: 0.85rem 1.25rem; font-weight: 700; color: #555;">2026-09-01</td>
-            <td style="padding: 0.85rem 1.25rem; color: var(--color-text);">
-              <strong>Paquete de desarrollo</strong>
-              <div style="font-size: 0.78rem; color: #777; margin-top: 0.15rem;">Tienda online autogestionable & landing en vivo</div>
-            </td>
-            <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">$ 60.000</td>
-            <td style="padding: 0.85rem 1.25rem;">
-              <span class="badge badge-magenta" style="font-size: 0.75rem; background: #FFF0F0; color: #CC0044; border: 1px solid #FFCCE0;">Pendiente</span>
-            </td>
-          </tr>
-          <tr style="border-bottom: 1px solid #EBE7DF;">
-            <td style="padding: 0.85rem 1.25rem; font-weight: 700; color: #555;">2026-08-16</td>
-            <td style="padding: 0.85rem 1.25rem; color: var(--color-text);">
-              <strong>Plan mensual</strong>
-              <div style="font-size: 0.78rem; color: #777; margin-top: 0.15rem;">Mantenimiento y hosting</div>
-            </td>
-            <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">$ 39.000</td>
-            <td style="padding: 0.85rem 1.25rem;">
-              <span class="badge badge-yellow" style="font-size: 0.75rem; background: #E6F7ED; color: #008844; border: 1px solid #B3E6C8;">Confirmado</span>
-            </td>
+            <td colspan="4" style="padding: 1.5rem; text-align: center; color: #777;">Sin pagos registrados aún.</td>
           </tr>
         `;
       } else {
@@ -511,14 +492,7 @@ async function loadPlanData() {
     console.warn('KevDev API fetch warning:', err);
     tbody.innerHTML = `
       <tr style="border-bottom: 1px solid #EBE7DF;">
-        <td style="padding: 0.85rem 1.25rem; font-weight: 700; color: #555;">2026-09-01</td>
-        <td style="padding: 0.85rem 1.25rem; color: var(--color-text);">
-          <strong>Paquete de desarrollo</strong>
-        </td>
-        <td style="padding: 0.85rem 1.25rem; font-weight: 800; color: var(--color-text);">$ 60.000</td>
-        <td style="padding: 0.85rem 1.25rem;">
-          <span class="badge badge-magenta" style="font-size: 0.75rem; background: #FFF0F0; color: #CC0044; border: 1px solid #FFCCE0;">Pendiente</span>
-        </td>
+        <td colspan="4" style="padding: 1.5rem; text-align: center; color: #777;">Sin pagos registrados aún.</td>
       </tr>
     `;
   }
