@@ -15,7 +15,10 @@ import {
   uploadImageToFirebase,
   subscribeToStore,
   getHeroImage,
-  setHeroImage
+  setHeroImage,
+  exportStoreData,
+  importStoreData,
+  getFirestoreStatus
 } from './data/store.js';
 
 const ADMIN_PASSWORD = 'adminpajaros';
@@ -517,6 +520,70 @@ async function loadPlanData() {
   }
 }
 
+// Firestore Status & Warning UI Update
+function updateFirestoreStatusUI(status) {
+  const badge = document.getElementById('firestore-status-badge');
+  const alertBox = document.getElementById('firestore-permission-alert');
+  
+  if (!badge) return;
+
+  const currentStatus = status || getFirestoreStatus();
+
+  if (currentStatus && currentStatus.connected) {
+    badge.textContent = '🟢 Cloud Firestore Conectado';
+    badge.style.background = '#E6F7ED';
+    badge.style.color = '#008844';
+    badge.style.borderColor = '#B3E6C8';
+    if (alertBox) alertBox.style.display = 'none';
+  } else if (currentStatus && currentStatus.error) {
+    badge.textContent = '🔴 Permiso Denegado Firestore';
+    badge.style.background = '#FFF0F0';
+    badge.style.color = '#CC0044';
+    badge.style.borderColor = '#FFCCE0';
+    if (alertBox) alertBox.style.display = 'block';
+  } else {
+    badge.textContent = '⚡ Conectando a Firebase...';
+    badge.style.background = '#FFF8E6';
+    badge.style.color = '#B7791F';
+    badge.style.borderColor = '#FEEBC8';
+  }
+}
+
+// Backup Export & Import Setup
+function setupBackupHandlers() {
+  const exportBtn = document.getElementById('export-data-btn');
+  const importInput = document.getElementById('import-data-file');
+
+  exportBtn?.addEventListener('click', () => {
+    const dataStr = exportStoreData();
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pajaros_en_la_cabeza_backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  importInput?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const result = await importStoreData(event.target.result);
+      if (result.success) {
+        alert(`¡Copia de seguridad importada con éxito!\n- Categorías: ${result.countCategories}\n- Productos: ${result.countProducts}`);
+        renderAllAdminData();
+      } else {
+        alert(`Error al importar: ${result.error}`);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+}
+
 // Reset Data Button Setup
 function setupResetButton() {
   const resetBtn = document.getElementById('reset-data-btn');
@@ -535,12 +602,17 @@ document.addEventListener('DOMContentLoaded', () => {
   setupProductModal();
   setupCategoryModal();
   setupResetButton();
+  setupBackupHandlers();
   setupHeroImageManager();
   setupConditionsAccordion();
   loadPlanData();
   checkAuthUI();
+  updateFirestoreStatusUI();
 
-  subscribeToStore(() => {
+  subscribeToStore((data) => {
+    if (data && data.firestoreStatus) {
+      updateFirestoreStatusUI(data.firestoreStatus);
+    }
     if (isAuthenticated()) {
       renderAllAdminData();
     }

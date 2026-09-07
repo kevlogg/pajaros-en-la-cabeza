@@ -70,6 +70,12 @@ function renderCategories() {
   if (!container) return;
 
   const categories = getCategories();
+
+  if (categories.length === 0) {
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2.5rem; background: var(--color-white); border: var(--border-thick); border-radius: 12px; font-weight: 700; color: var(--color-taupe-dark);">Actualmente no hay categorías disponibles en el catálogo. Cárgalas desde el panel de administración.</div>`;
+    return;
+  }
+
   container.innerHTML = categories.map(cat => `
     <a href="#ropa-personalizada" class="category-card" data-category-filter="${cat.id}">
       <div class="category-image-wrap">
@@ -79,9 +85,9 @@ function renderCategories() {
         }
       </div>
       <div class="category-info">
-        <span class="badge badge-black" style="align-self: flex-start; font-size: 0.7rem;">${cat.badge}</span>
+        <span class="badge badge-black" style="align-self: flex-start; font-size: 0.7rem;">${cat.badge || 'Categoría'}</span>
         <h3 class="category-title">${cat.name}</h3>
-        <p class="category-desc">${cat.description}</p>
+        <p class="category-desc">${cat.description || ''}</p>
         <div class="category-footer">
           <span>${cat.count || 0} Variedades</span>
           <span style="color: var(--color-magenta);">Ver Colección →</span>
@@ -272,7 +278,7 @@ function setupQuoteCalculator() {
 
     const message = `Hola Pájaros en la Cabeza! Quisiera consultar por la cotización de:\n- Producto: ${productName}\n- Cantidad: ${qty} unidades\n- Forma de pago: ${paymentName}\n- Presupuesto aproximado: $${total.toLocaleString('es-AR')}\n\n¿Me pueden enviar más información sobre la Asesoría de Imagen para mi local?`;
     
-    const whatsappUrl = `https://wa.me/5491155443322?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/5493517620847?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   });
 }

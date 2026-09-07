@@ -95,16 +95,51 @@
         </nav>
 
         <div class="sidebar-box-info">
-          <h4>💡 Base de Datos</h4>
-          <p style="font-size: 0.8rem; margin: 0.4rem 0;">Los cambios se guardan localmente y están listos para sincronizar con Firebase Firestore.</p>
-          <button id="reset-data-btn" class="btn btn-outline btn-sm" style="width: 100%; font-size: 0.75rem; padding: 0.4rem;">
-            Restablecer Datos Iniciales
-          </button>
+          <h4>💡 Sincronización en la Nube</h4>
+          <div id="firestore-status-badge" style="font-size: 0.75rem; font-weight: 700; margin: 0.4rem 0; padding: 0.3rem 0.5rem; border-radius: 4px; background: #E6F7ED; color: #008844; border: 1px solid #B3E6C8;">
+            ⚡ Verificando Firestore...
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.6rem;">
+            <button id="export-data-btn" class="btn btn-outline btn-sm" style="width: 100%; font-size: 0.75rem; padding: 0.4rem;">
+              📥 Exportar Copia de Seguridad
+            </button>
+            <label class="btn btn-outline btn-sm" style="width: 100%; font-size: 0.75rem; padding: 0.4rem; text-align: center; cursor: pointer; margin: 0;">
+              📤 Importar Copia (JSON)
+              <input type="file" id="import-data-file" accept=".json" style="display: none;">
+            </label>
+            <button id="reset-data-btn" class="btn btn-outline btn-sm" style="width: 100%; font-size: 0.75rem; padding: 0.4rem; color: #CC0044; border-color: #FFCCE0;">
+              Restablecer Datos Iniciales
+            </button>
+          </div>
         </div>
       </aside>
 
       <!-- Admin Content Area -->
       <section class="admin-content-panel">
+
+        <!-- FIRESTORE PERMISSION WARNING ALERT -->
+        <div id="firestore-permission-alert" style="display: none; background: #FFF8E6; border: 3.5px solid #FFC107; border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-flat);">
+          <div style="display: flex; gap: 1rem; align-items: flex-start;">
+            <span style="font-size: 1.6rem;">⚠️</span>
+            <div style="flex: 1;">
+              <h4 style="margin: 0; font-family: var(--font-display); color: #B7791F; font-size: 1.05rem; font-weight: 800;">Reglas de Seguridad de Firebase Firestore Bloqueando Cambios (Permission Denied)</h4>
+              <p style="margin: 0.3rem 0 0.6rem 0; color: #744210; font-size: 0.88rem; line-height: 1.45;">
+                Las reglas actuales en Firebase están rechazando la lectura/escritura pública. Por esta razón, cuando tu clienta crea o modifica categorías desde su computadora, sólo se guardan en su navegador local (LocalStorage) y <strong>no se reflejan en el sitio web ni en otros administradores</strong>.
+              </p>
+              <div style="font-size: 0.82rem; color: #4A5568; background: #FFFFFF; padding: 0.75rem; border-radius: 8px; border: 1.5px solid #CBD5E0;">
+                <strong style="color: #2D3748;">📌 Solución en 1 minuto:</strong> Ingresa a <a href="https://console.firebase.google.com/" target="_blank" style="color: #3182CE; font-weight: 700; text-decoration: underline;">Firebase Console (Proyecto: pajaros-en-la-cabeza)</a> &gt; <strong>Firestore Database</strong> &gt; pestaña <strong>Reglas</strong> y reemplaza con:<br>
+                <pre style="margin: 0.5rem 0 0 0; background: #EDF2F7; padding: 0.5rem; border-radius: 6px; font-size: 0.78rem; font-family: monospace; overflow-x: auto;"><code>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
         
         <!-- TAB 1: PRODUCTOS & HERO IMAGE -->
         <div class="admin-tab-content active" id="tab-products">

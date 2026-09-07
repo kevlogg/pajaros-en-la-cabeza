@@ -58,7 +58,7 @@ function renderProductDetailView() {
   const colors = (product.colors && product.colors.length > 0) ? product.colors : ["Negro", "Blanco", "Gris Topo"];
 
   const whatsappMessage = encodeURIComponent(`Hola Pájaros en la Cabeza! Quisiera consultar por la ficha de:\n- Producto: ${product.name}\n- Precio: ${product.priceFormatted || '$' + product.price}\n\n¿Tienen disponibilidad y asesoría para mi local?`);
-  const whatsappUrl = `https://wa.me/5491155443322?text=${whatsappMessage}`;
+  const whatsappUrl = `https://wa.me/5493517620847?text=${whatsappMessage}`;
 
   container.innerHTML = `
     <div class="product-detail-grid">
@@ -242,7 +242,7 @@ function setupQuoteCalculator() {
 
     const message = `Hola Pájaros en la Cabeza! Quisiera consultar por la cotización de:\n- Producto: ${productName}\n- Cantidad: ${qty} unidades\n- Forma de pago: ${paymentName}\n- Presupuesto aproximado: $${total.toLocaleString('es-AR')}\n\n¿Me pueden enviar más información sobre la Asesoría de Imagen para mi local?`;
     
-    const whatsappUrl = `https://wa.me/5491155443322?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/5493517620847?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   });
 }

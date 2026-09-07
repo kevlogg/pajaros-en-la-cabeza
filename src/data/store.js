@@ -16,7 +16,7 @@ import {
   uploadBytes, 
   getDownloadURL 
 } from 'firebase/storage';
-import { CATEGORIES as DEFAULT_CATEGORIES, PRODUCTS as DEFAULT_PRODUCTS, BRAND_INFO, SHIPPING_RATES } from './products.js';
+import { BRAND_INFO, SHIPPING_RATES } from './products.js';
 
 const STORAGE_KEY_PRODUCTS = 'pajaros_products_v1';
 const STORAGE_KEY_CATEGORIES = 'pajaros_categories_v1';
@@ -39,19 +39,29 @@ try {
   const savedCats = localStorage.getItem(STORAGE_KEY_CATEGORIES);
   const savedHero = localStorage.getItem(STORAGE_KEY_HERO_IMAGE);
 
-  cachedProducts = savedProds ? JSON.parse(savedProds) : DEFAULT_PRODUCTS;
-  cachedCategories = savedCats ? JSON.parse(savedCats) : DEFAULT_CATEGORIES;
+  cachedProducts = savedProds ? JSON.parse(savedProds) : [];
+  cachedCategories = savedCats ? JSON.parse(savedCats) : [];
   cachedHeroImage = savedHero || DEFAULT_HERO_IMAGE;
 } catch (e) {
-  cachedProducts = DEFAULT_PRODUCTS;
-  cachedCategories = DEFAULT_CATEGORIES;
+  cachedProducts = [];
+  cachedCategories = [];
   cachedHeroImage = DEFAULT_HERO_IMAGE;
+}
+
+let isFirestoreConnected = false;
+let firestoreErrorNotice = null;
+
+export function getFirestoreStatus() {
+  return {
+    connected: isFirestoreConnected,
+    error: firestoreErrorNotice
+  };
 }
 
 // Function to notify subscribed views (landing page, admin panel)
 function notifySubscribers() {
   subscribers.forEach(cb => {
-    try { cb({ products: cachedProducts, categories: cachedCategories, heroImage: cachedHeroImage }); } catch(err){}
+    try { cb({ products: cachedProducts, categories: cachedCategories, heroImage: cachedHeroImage, firestoreStatus: getFirestoreStatus() }); } catch(err){}
   });
 }
 
@@ -61,57 +71,40 @@ export function subscribeToStore(callback) {
   }
 }
 
-// Seed initial default data to Firestore if collection is empty
-async function seedInitialDataIfEmpty() {
-  try {
-    const prodSnapshot = await getDocs(productsCollectionRef);
-    if (prodSnapshot.empty) {
-      console.log('Seeding initial products to Firebase Firestore...');
-      for (const prod of DEFAULT_PRODUCTS) {
-        await setDoc(doc(db, 'products', prod.id), prod);
-      }
-    }
-
-    const catSnapshot = await getDocs(categoriesCollectionRef);
-    if (catSnapshot.empty) {
-      console.log('Seeding initial categories to Firebase Firestore...');
-      for (const cat of DEFAULT_CATEGORIES) {
-        await setDoc(doc(db, 'categories', cat.id), cat);
-      }
-    }
-  } catch (err) {
-    console.warn('Firestore seed warning (verify Security Rules in console):', err);
-  }
-}
-
 // Listen to Firestore real-time updates
 try {
   onSnapshot(productsCollectionRef, (snapshot) => {
-    if (!snapshot.empty) {
-      const prods = [];
-      snapshot.forEach(docSnap => prods.push({ id: docSnap.id, ...docSnap.data() }));
-      cachedProducts = prods;
-      localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(prods));
-      notifySubscribers();
-    } else {
-      seedInitialDataIfEmpty();
-    }
+    isFirestoreConnected = true;
+    firestoreErrorNotice = null;
+    const prods = [];
+    snapshot.forEach(docSnap => prods.push({ id: docSnap.id, ...docSnap.data() }));
+    cachedProducts = prods;
+    localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(prods));
+    notifySubscribers();
   }, (err) => {
+    isFirestoreConnected = false;
+    firestoreErrorNotice = err.code === 'permission-denied' 
+      ? 'Permiso denegado en Firebase Firestore. Revisa las reglas de seguridad en la consola de Firebase.' 
+      : (err.message || 'Error de conexión con Firebase');
     console.warn('Firestore products snapshot error:', err);
+    notifySubscribers();
   });
 
   onSnapshot(categoriesCollectionRef, (snapshot) => {
-    if (!snapshot.empty) {
-      const cats = [];
-      snapshot.forEach(docSnap => cats.push({ id: docSnap.id, ...docSnap.data() }));
-      cachedCategories = cats;
-      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(cats));
-      notifySubscribers();
-    } else {
-      seedInitialDataIfEmpty();
-    }
+    isFirestoreConnected = true;
+    firestoreErrorNotice = null;
+    const cats = [];
+    snapshot.forEach(docSnap => cats.push({ id: docSnap.id, ...docSnap.data() }));
+    cachedCategories = cats;
+    localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(cats));
+    notifySubscribers();
   }, (err) => {
+    isFirestoreConnected = false;
+    firestoreErrorNotice = err.code === 'permission-denied' 
+      ? 'Permiso denegado en Firebase Firestore. Revisa las reglas de seguridad en la consola de Firebase.' 
+      : (err.message || 'Error de conexión con Firebase');
     console.warn('Firestore categories snapshot error:', err);
+    notifySubscribers();
   });
 
   onSnapshot(heroDocRef, (docSnap) => {
@@ -124,16 +117,18 @@ try {
     console.warn('Firestore hero image snapshot error:', err);
   });
 } catch (e) {
+  isFirestoreConnected = false;
+  firestoreErrorNotice = 'Falló inicialización de Firestore: ' + (e.message || e);
   console.warn('Firestore initialization fallback to LocalStorage:', e);
 }
 
 // Getters
 export function getCategories() {
-  return cachedCategories.length > 0 ? cachedCategories : DEFAULT_CATEGORIES;
+  return cachedCategories;
 }
 
 export function getProducts() {
-  return cachedProducts.length > 0 ? cachedProducts : DEFAULT_PRODUCTS;
+  return cachedProducts;
 }
 
 export function getHeroImage() {
@@ -296,12 +291,59 @@ export async function deleteCategory(id) {
 }
 
 export function resetToDefaults() {
-  cachedCategories = DEFAULT_CATEGORIES;
-  cachedProducts = DEFAULT_PRODUCTS;
-  localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
-  localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(DEFAULT_PRODUCTS));
+  cachedCategories = [];
+  cachedProducts = [];
+  localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify([]));
+  localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify([]));
   notifySubscribers();
-  return { categories: DEFAULT_CATEGORIES, products: DEFAULT_PRODUCTS };
+  return { categories: [], products: [] };
+}
+
+export function exportStoreData() {
+  return JSON.stringify({
+    version: '1.0',
+    exportDate: new Date().toISOString(),
+    categories: cachedCategories,
+    products: cachedProducts,
+    heroImage: cachedHeroImage
+  }, null, 2);
+}
+
+export async function importStoreData(jsonContent) {
+  try {
+    const parsed = JSON.parse(jsonContent);
+    if (!parsed.categories || !parsed.products) {
+      throw new Error('Formato de archivo inválido. Se requieren categorías y productos.');
+    }
+    
+    cachedCategories = parsed.categories;
+    cachedProducts = parsed.products;
+    if (parsed.heroImage) cachedHeroImage = parsed.heroImage;
+
+    localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(cachedCategories));
+    localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(cachedProducts));
+    localStorage.setItem(STORAGE_KEY_HERO_IMAGE, cachedHeroImage);
+    notifySubscribers();
+
+    // Sync imported data to Firestore if available
+    try {
+      for (const cat of cachedCategories) {
+        await setDoc(doc(db, 'categories', cat.id), cat);
+      }
+      for (const prod of cachedProducts) {
+        await setDoc(doc(db, 'products', prod.id), prod);
+      }
+      if (cachedHeroImage) {
+        await setDoc(heroDocRef, { url: cachedHeroImage, updatedAt: new Date().toISOString() });
+      }
+    } catch (fsErr) {
+      console.warn('Firestore sync warning during import:', fsErr);
+    }
+
+    return { success: true, countCategories: cachedCategories.length, countProducts: cachedProducts.length };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 }
 
 export { BRAND_INFO, SHIPPING_RATES };
