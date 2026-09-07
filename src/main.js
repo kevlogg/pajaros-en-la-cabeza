@@ -123,7 +123,7 @@ function renderProducts(items) {
         <span class="badge badge-${product.badgeColor || 'yellow'}">${product.badge || 'Producto'}</span>
       </div>
 
-      <a href="./producto.html?id=${product.id}" class="product-img-wrap" style="display: block;">
+      <a href="/producto?id=${product.id}" class="product-img-wrap" style="display: block;">
         ${product.image
           ? `<img src="${product.image}" alt="${product.name}" width="350" height="240" loading="lazy">`
           : getFlatSvgIllustration(product.svgType)
@@ -132,7 +132,7 @@ function renderProducts(items) {
 
       <div class="product-body">
         <span class="product-category-tag">${product.categoryLabel || product.category}</span>
-        <h3 class="product-name"><a href="./producto.html?id=${product.id}">${product.name}</a></h3>
+        <h3 class="product-name"><a href="/producto?id=${product.id}">${product.name}</a></h3>
         
         ${product.advisoryIncluded 
           ? `<div class="product-advisory-note">
@@ -145,7 +145,7 @@ function renderProducts(items) {
         <div class="product-footer">
           <div class="product-price">${product.priceFormatted || `$${product.price}`}</div>
           <div style="display: flex; gap: 0.4rem;">
-            <a href="./producto.html?id=${product.id}" class="btn btn-outline btn-sm">Ver Ficha</a>
+            <a href="/producto?id=${product.id}" class="btn btn-outline btn-sm">Ver Ficha</a>
             <button class="btn btn-primary btn-sm open-quote-modal" data-product-id="${product.id}" data-product-price="${product.price}">
               Cotizar
             </button>

@@ -28,9 +28,9 @@ function renderBreadcrumbs(product) {
   if (!container) return;
 
   container.innerHTML = `
-    <a href="./index.html#inicio">Inicio</a>
+    <a href="/#inicio">Inicio</a>
     <span>/</span>
-    <a href="./index.html#ropa-personalizada">${product?.categoryLabel || 'Catálogo'}</a>
+    <a href="/#ropa-personalizada">${product?.categoryLabel || 'Catálogo'}</a>
     <span>/</span>
     <span class="active">${product?.name || 'Ficha de Producto'}</span>
   `;
@@ -45,7 +45,7 @@ function renderProductDetailView() {
   const product = products.find(p => p.id === targetId) || products[0];
 
   if (!product) {
-    container.innerHTML = `<div style="padding: 3rem; text-align: center; font-weight: 700;">Producto no encontrado. <a href="./index.html">Volver al inicio</a></div>`;
+    container.innerHTML = `<div style="padding: 3rem; text-align: center; font-weight: 700;">Producto no encontrado. <a href="/">Volver al inicio</a></div>`;
     return;
   }
 
@@ -187,7 +187,7 @@ function renderRelatedProducts(currentProduct) {
         <span class="badge badge-${prod.badgeColor || 'yellow'}">${prod.badge || 'Producto'}</span>
       </div>
 
-      <a href="./producto.html?id=${prod.id}" class="product-img-wrap" style="display: block;">
+      <a href="/producto?id=${prod.id}" class="product-img-wrap" style="display: block;">
         ${prod.image
           ? `<img src="${prod.image}" alt="${prod.name}" width="350" height="240" loading="lazy">`
           : getFlatSvgIllustration(prod.svgType)
@@ -196,11 +196,11 @@ function renderRelatedProducts(currentProduct) {
 
       <div class="product-body">
         <span class="product-category-tag">${prod.categoryLabel || prod.category}</span>
-        <h3 class="product-name"><a href="./producto.html?id=${prod.id}">${prod.name}</a></h3>
+        <h3 class="product-name"><a href="/producto?id=${prod.id}">${prod.name}</a></h3>
         
         <div class="product-footer">
           <div class="product-price">${prod.priceFormatted || `$${prod.price}`}</div>
-          <a href="./producto.html?id=${prod.id}" class="btn btn-primary btn-sm">
+          <a href="/producto?id=${prod.id}" class="btn btn-primary btn-sm">
             Ver Ficha →
           </a>
         </div>
