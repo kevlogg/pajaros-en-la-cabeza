@@ -90,11 +90,12 @@
 
 .footer-logo-card {
   background-color: var(--color-black);
-  padding: 0.6rem 1.2rem;
+  padding: 0.8rem 1.4rem;
   border: var(--border-thick);
   border-color: var(--color-yellow);
   box-shadow: var(--shadow-flat-sm);
   display: inline-block;
+  margin-bottom: 1.2rem;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -105,9 +106,9 @@
 }
 
 .official-logo-img-footer {
-  height: 52px;
+  height: 105px;
   width: auto;
-  max-width: 220px;
+  max-width: 340px;
   object-fit: contain;
   display: block;
 }
