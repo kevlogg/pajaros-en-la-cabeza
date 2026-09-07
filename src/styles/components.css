@@ -89,9 +89,10 @@
 }
 
 .footer-logo-card {
-  background-color: var(--color-white);
+  background-color: var(--color-black);
   padding: 0.6rem 1.2rem;
   border: var(--border-thick);
+  border-color: var(--color-yellow);
   box-shadow: var(--shadow-flat-sm);
   display: inline-block;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
@@ -100,7 +101,7 @@
 .footer-logo-card:hover {
   transform: translate(-2px, -2px);
   box-shadow: var(--shadow-flat);
-  background-color: var(--color-yellow);
+  border-color: var(--color-magenta);
 }
 
 .official-logo-img-footer {
