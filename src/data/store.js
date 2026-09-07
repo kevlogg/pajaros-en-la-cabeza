@@ -16,7 +16,7 @@ import {
   uploadBytes, 
   getDownloadURL 
 } from 'firebase/storage';
-import { BRAND_INFO, SHIPPING_RATES } from './products.js';
+import { BRAND_INFO, SHIPPING_RATES, ARGENTINA_PROVINCES } from './products.js';
 
 const STORAGE_KEY_PRODUCTS = 'pajaros_products_v1';
 const STORAGE_KEY_CATEGORIES = 'pajaros_categories_v1';
@@ -358,4 +358,4 @@ export async function importStoreData(jsonContent) {
   }
 }
 
-export { BRAND_INFO, SHIPPING_RATES };
+export { BRAND_INFO, SHIPPING_RATES, ARGENTINA_PROVINCES };

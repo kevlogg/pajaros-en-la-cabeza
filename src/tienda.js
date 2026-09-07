@@ -217,9 +217,16 @@ function setupQuoteCalculator() {
 
 function setupContactForm() {
   const form = document.getElementById('contact-form');
-  form?.addEventListener('submit', (e) => {
+  if (!form) return;
+
+  form.addEventListener('submit', (e) => {
     e.preventDefault();
-    alert('¡Gracias por tu mensaje! El equipo de Pájaros en la Cabeza se pondrá en contacto contigo a la brevedad para asesorarte.');
+    const nameInput = document.getElementById('contact-name')?.value || form.querySelector('input[type="text"]')?.value || '';
+    const messageInput = document.getElementById('contact-message')?.value || form.querySelector('textarea')?.value || '';
+
+    const fullMessage = `Hola Pájaros en la Cabeza! Mi nombre/marca es: ${nameInput}\n\nConsulta sobre mi proyecto: ${messageInput}`;
+    const whatsappUrl = `https://wa.me/5493517620847?text=${encodeURIComponent(fullMessage)}`;
+    window.open(whatsappUrl, '_blank');
     form.reset();
   });
 }

@@ -209,16 +209,17 @@
             Despachamos pedidos mayoristas y minoristas a todas las provincias argentinas a través de los transportes más veloces y seguros.
           </p>
           
-          <!-- Shipping Estimator -->
+          <!-- Shipping Selector & WhatsApp Redirect -->
           <div class="shipping-calculator-box">
-            <label class="form-label" for="shipping-region-select">Calcula tu costo aproximado de envío:</label>
+            <label class="form-label" for="shipping-region-select">Consultar costo y transporte de envío por provincia:</label>
             <select id="shipping-region-select" class="shipping-select">
               <!-- Rendered via JS -->
             </select>
-            <div class="shipping-result" id="shipping-result-display">
-              Selecciona tu provincia para ver el costo estimado y plazo.
-            </div>
-            <p style="font-size: 0.8rem; font-weight: 700; color: var(--color-taupe-dark);">
+            <button type="button" id="btn-consultar-envio" class="btn btn-secondary" style="width: 100%; margin-top: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+              <span>Consultar Envío por WhatsApp</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+            </button>
+            <p style="font-size: 0.8rem; font-weight: 700; color: var(--color-taupe-dark); margin-top: 0.6rem;">
               * El costo final del envío corre por cuenta del comprador y se abona al recibir o despachar.
             </p>
           </div>
@@ -277,20 +278,18 @@
         <div class="footer-form-card">
           <h4 style="margin-bottom: 0.4rem;">Hablemos de tu proyecto</h4>
           <p style="font-size: 0.85rem; margin-bottom: 1rem; color: var(--color-taupe-dark);">
-            Cuéntanos la idea de tu marca y te enviaremos una cotización personalizada.
+            Cuéntanos la idea de tu marca y te enviaremos una cotización personalizada por WhatsApp.
           </p>
           <form id="contact-form">
             <div class="form-group" style="margin-bottom: 0.8rem;">
-              <input type="text" class="form-input" placeholder="Tu Nombre o Marca" required>
+              <input type="text" id="contact-name" class="form-input" placeholder="Tu Nombre o Marca" required>
             </div>
             <div class="form-group" style="margin-bottom: 0.8rem;">
-              <input type="text" class="form-input" placeholder="WhatsApp / Teléfono" required>
+              <textarea id="contact-message" class="form-textarea" rows="3" placeholder="¿Qué prendas o asesoría necesitas?" required></textarea>
             </div>
-            <div class="form-group" style="margin-bottom: 0.8rem;">
-              <textarea class="form-textarea" rows="3" placeholder="¿Qué prendas o asesoría necesitas?" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">
-              Enviar Consulta
+            <button type="submit" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+              <span>Enviar Consulta por WhatsApp</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
             </button>
           </form>
         </div>

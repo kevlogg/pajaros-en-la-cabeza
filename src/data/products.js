@@ -23,11 +23,31 @@ export const CATEGORIES = [];
 
 export const PRODUCTS = [];
 
-export const SHIPPING_RATES = [
-  { region: "CABA (Capital Federal)", cost: 3500, time: "24 a 48 hs hábiles" },
-  { region: "GBA (Gran Buenos Aires)", cost: 4800, time: "48 a 72 hs hábiles" },
-  { region: "Provincia de Buenos Aires", cost: 6200, time: "3 a 5 días hábiles" },
-  { region: "Córdoba / Santa Fe / Entre Ríos", cost: 6900, time: "3 a 5 días hábiles" },
-  { region: "Mendoza / Cuyo / NOA", cost: 7800, time: "4 a 6 días hábiles" },
-  { region: "Patagonia & Resto del País", cost: 8900, time: "5 a 7 días hábiles" }
+export const ARGENTINA_PROVINCES = [
+  "Buenos Aires",
+  "Ciudad Autónoma de Buenos Aires (CABA)",
+  "Catamarca",
+  "Chaco",
+  "Chubut",
+  "Córdoba",
+  "Corrientes",
+  "Entre Ríos",
+  "Formosa",
+  "Jujuy",
+  "La Pampa",
+  "La Rioja",
+  "Mendoza",
+  "Misiones",
+  "Neuquén",
+  "Río Negro",
+  "Salta",
+  "San Juan",
+  "San Luis",
+  "Santa Cruz",
+  "Santa Fe",
+  "Santiago del Estero",
+  "Tierra del Fuego",
+  "Tucumán"
 ];
+
+export const SHIPPING_RATES = ARGENTINA_PROVINCES.map(prov => ({ region: prov }));

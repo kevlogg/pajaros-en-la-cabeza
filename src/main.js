@@ -2,7 +2,7 @@
    MAIN APPLICATION LOGIC - PÁJAROS EN LA CABEZA
    ========================================================================== */
 
-import { BRAND_INFO, SHIPPING_RATES, getCategories, getProducts, getHeroImage, subscribeToStore } from './data/store.js';
+import { BRAND_INFO, SHIPPING_RATES, ARGENTINA_PROVINCES, getCategories, getProducts, getHeroImage, subscribeToStore } from './data/store.js';
 
 function renderHeroImage(url) {
   const heroImg = document.querySelector('.hero-image-wrap img');
@@ -179,31 +179,35 @@ function filterProducts(categoryId) {
   }
 }
 
-// Shipping Rates Estimator setup
+// Shipping Rates Estimator setup - Direct WhatsApp query
 function setupShippingCalculator() {
   const select = document.getElementById('shipping-region-select');
-  const resultDisplay = document.getElementById('shipping-result-display');
-  if (!select || !resultDisplay) return;
+  const btnConsult = document.getElementById('btn-consultar-envio');
+  if (!select) return;
 
   select.innerHTML = `<option value="">-- Selecciona tu provincia / ubicación --</option>` +
-    SHIPPING_RATES.map((rate, idx) => `
-      <option value="${idx}">${rate.region} ($${rate.cost.toLocaleString('es-AR')})</option>
-    `).join('');
+    ARGENTINA_PROVINCES.map(prov => `<option value="${prov}">${prov}</option>`).join('');
 
-  select.addEventListener('change', (e) => {
-    const idx = e.target.value;
-    if (idx === "") {
-      resultDisplay.innerHTML = "Selecciona tu provincia para ver el costo estimado y plazo.";
-      resultDisplay.style.backgroundColor = "var(--color-magenta)";
-      return;
+  function openShippingWhatsApp() {
+    const selectedProv = select.value;
+    let message = "";
+    if (selectedProv) {
+      message = `Hola Pájaros en la Cabeza! Quisiera consultar por el costo y medios de envío hacia la provincia de ${selectedProv}.`;
+    } else {
+      message = `Hola Pájaros en la Cabeza! Quisiera consultar por las opciones y costos de envío a todo el país.`;
     }
-    const selectedRate = SHIPPING_RATES[idx];
-    resultDisplay.style.backgroundColor = "var(--color-black)";
-    resultDisplay.innerHTML = `
-      <strong>Costo estimado: $${selectedRate.cost.toLocaleString('es-AR')}</strong><br>
-      Plazo de entrega: ${selectedRate.time}<br>
-      <small style="color: var(--color-yellow);">✅ Cargo a abonar al recibir/despachar por el comprador.</small>
-    `;
+    const whatsappUrl = `https://wa.me/5493517620847?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  }
+
+  select.addEventListener('change', () => {
+    if (select.value) {
+      openShippingWhatsApp();
+    }
+  });
+
+  btnConsult?.addEventListener('click', () => {
+    openShippingWhatsApp();
   });
 }
 
@@ -287,14 +291,19 @@ function bindQuoteButtons() {
   // Handled by delegated listener in setupQuoteCalculator
 }
 
-// Contact Form Handler
+// Contact Form Handler - Direct WhatsApp redirect
 function setupContactForm() {
   const form = document.getElementById('contact-form');
   if (!form) return;
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    alert('¡Gracias por tu mensaje! El equipo de Pájaros en la Cabeza se pondrá en contacto contigo a la brevedad para asesorarte.');
+    const nameInput = document.getElementById('contact-name')?.value || form.querySelector('input[type="text"]')?.value || '';
+    const messageInput = document.getElementById('contact-message')?.value || form.querySelector('textarea')?.value || '';
+
+    const fullMessage = `Hola Pájaros en la Cabeza! Mi nombre/marca es: ${nameInput}\n\nConsulta sobre mi proyecto: ${messageInput}`;
+    const whatsappUrl = `https://wa.me/5493517620847?text=${encodeURIComponent(fullMessage)}`;
+    window.open(whatsappUrl, '_blank');
     form.reset();
   });
 }
