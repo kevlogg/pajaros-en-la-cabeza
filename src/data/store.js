@@ -163,6 +163,10 @@ export async function uploadImageToFirebase(file) {
 // Product CRUD Operations
 export async function addProduct(productData) {
   const prodId = `prod-${Date.now()}`;
+  const imagesList = Array.isArray(productData.images) && productData.images.length > 0 
+    ? productData.images 
+    : (productData.image ? [productData.image] : []);
+
   const newProduct = {
     id: prodId,
     name: productData.name || 'Nuevo Producto',
@@ -170,7 +174,8 @@ export async function addProduct(productData) {
     categoryLabel: productData.categoryLabel || 'Ropa Personalizada',
     price: Number(productData.price) || 0,
     priceFormatted: `$${Number(productData.price || 0).toLocaleString('es-AR')}`,
-    image: productData.image || null,
+    image: imagesList[0] || null,
+    images: imagesList,
     svgType: productData.svgType || 'hoodie_liso',
     advisoryIncluded: Boolean(productData.advisoryIncluded),
     badge: productData.badge || 'Nuevo',
@@ -197,11 +202,18 @@ export async function updateProduct(id, productData) {
   const index = cachedProducts.findIndex(p => p.id === id);
   if (index === -1) return null;
 
+  const currentProduct = cachedProducts[index];
+  const imagesList = Array.isArray(productData.images) 
+    ? productData.images 
+    : (productData.image ? [productData.image] : currentProduct.images || (currentProduct.image ? [currentProduct.image] : []));
+
   const updated = {
-    ...cachedProducts[index],
+    ...currentProduct,
     ...productData,
     price: Number(productData.price),
-    priceFormatted: `$${Number(productData.price).toLocaleString('es-AR')}`
+    priceFormatted: `$${Number(productData.price).toLocaleString('es-AR')}`,
+    images: imagesList,
+    image: imagesList[0] || productData.image || currentProduct.image || null
   };
 
   cachedProducts[index] = updated;

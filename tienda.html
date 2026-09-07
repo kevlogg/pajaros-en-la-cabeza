@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detalle de Producto | Pájaros en la Cabeza</title>
-  <meta name="description" content="Detalle de producto, confección personalizada, asesoría de imagen y especificaciones en Pájaros en la Cabeza.">
+  <title>Tienda & Catálogo Completo | Pájaros en la Cabeza</title>
+  <meta name="description" content="Explora todo nuestro catálogo de ropa personalizada, prendas lisas premium y accesorios urbanos. Filtrado por categoría, buscador y asesoría visual de local.">
   
   <!-- Favicon / Fonts -->
   <link rel="icon" type="image/jpeg" href="/assets/logopajaros.jpg">
@@ -58,7 +58,7 @@
       <nav class="main-nav" aria-label="Navegación principal">
         <ul>
           <li><a href="./index.html#inicio" class="nav-link">Inicio</a></li>
-          <li><a href="./tienda.html" class="nav-link" style="color: var(--color-magenta); font-weight: 800;">Tienda 🛍️</a></li>
+          <li><a href="./tienda.html" class="nav-link active" style="color: var(--color-magenta); font-weight: 800;">Tienda 🛍️</a></li>
           <li><a href="./index.html#ropa-personalizada" class="nav-link">Ropa Personalizada</a></li>
           <li><a href="./index.html#ropa-lisa" class="nav-link">Ropa Lisa</a></li>
           <li><a href="./index.html#accesorios" class="nav-link">Accesorios</a></li>
@@ -78,34 +78,53 @@
     </div>
   </header>
 
-  <!-- Product Detail Section -->
-  <section class="product-detail-section section-padding">
+  <!-- Tienda Banner Section -->
+  <section class="tienda-banner-section" style="background: var(--color-bg-alt); border-bottom: var(--border-thick); padding: 3rem 0 2rem 0;">
     <div class="container">
-      
-      <!-- Breadcrumbs Navigation -->
-      <nav class="breadcrumb-nav" id="breadcrumb-container">
-        <!-- Rendered via JS -->
-      </nav>
+      <div class="section-title-wrap" style="text-align: left; margin-bottom: 1.5rem;">
+        <span class="section-tag" style="background: var(--color-yellow);">CATÁLOGO EN VIVO</span>
+        <h1 class="section-title" style="font-size: 2.4rem; margin-top: 0.4rem;">Tienda & Productos Disponibles</h1>
+        <p style="font-size: 1rem; color: #555; max-width: 680px; margin-top: 0.5rem;">
+          Explora todos nuestros artículos indumentarios y merchandising en tiempo real. Utiliza el buscador y los filtros para encontrar rápidamente lo que necesitas para tu local.
+        </p>
+      </div>
 
-      <!-- Main Product Detail View -->
-      <div class="product-detail-wrapper" id="product-detail-card">
-        <!-- Rendered dynamically via JS -->
+      <!-- Controls & Filter Bar -->
+      <div class="tienda-controls-card" style="background: var(--color-white); border: 3.5px solid var(--color-border); border-radius: 16px; padding: 1.25rem; box-shadow: var(--shadow-flat); display: flex; flex-direction: column; gap: 1.25rem;">
+        
+        <!-- Search & Sort Row -->
+        <div style="display: grid; grid-template-columns: 1fr 240px; gap: 1rem; align-items: center;">
+          <div style="position: relative;">
+            <input type="text" id="tienda-search-input" class="form-input" placeholder="🔍 Buscar producto por nombre o palabra clave..." style="padding-left: 1rem;">
+          </div>
+          <div>
+            <select id="tienda-sort-select" class="form-select" style="font-weight: 700;">
+              <option value="default">Sort: Recomendados</option>
+              <option value="price-asc">Precio: Menor a Mayor</option>
+              <option value="price-desc">Precio: Mayor a Menor</option>
+              <option value="name-asc">Nombre: A - Z</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Categories Filter Pills -->
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;" id="tienda-categories-filter">
+          <!-- Rendered dynamically via JS -->
+        </div>
+
       </div>
 
     </div>
   </section>
 
-  <!-- Related Products Section -->
-  <section class="products-section section-padding" style="background-color: var(--color-white); border-top: var(--border-thick);">
+  <!-- Tienda Products Section -->
+  <section class="products-section section-padding">
     <div class="container">
-      <div class="section-title-wrap">
-        <span class="section-tag">Sigue Explorando</span>
-        <h2 class="section-title">Productos Relacionados</h2>
-      </div>
-
-      <div class="products-grid" id="related-products-container">
+      
+      <div class="products-grid" id="tienda-products-container">
         <!-- Rendered dynamically via JS -->
       </div>
+
     </div>
   </section>
 
@@ -146,6 +165,7 @@
           <h4 style="color: var(--color-yellow); margin-bottom: 1.2rem;">Información</h4>
           <ul style="display: flex; flex-direction: column; gap: 0.8rem;">
             <li><a href="./index.html#inicio" style="color: #DDD;">• Inicio</a></li>
+            <li><a href="./tienda.html" style="color: var(--color-yellow); font-weight: bold;">• Tienda Complete</a></li>
             <li><a href="./index.html#ropa-personalizada" style="color: #DDD;">• Ropa Personalizada</a></li>
             <li><a href="./index.html#ropa-lisa" style="color: #DDD;">• Ropa Lisa Premium</a></li>
             <li><a href="./index.html#accesorios" style="color: #DDD;">• Mochilas y Riñoneras</a></li>
@@ -207,12 +227,7 @@
           <div class="form-group">
             <label class="form-label" for="quote-product-type">Tipo de Producto:</label>
             <select id="quote-product-type" class="form-select">
-              <option value="18500">Remera Personalizada Staff (con Asesoría) - $18.500 c/u</option>
-              <option value="32000">Buzo Hoodie Ropa Lisa - $32.000 c/u</option>
-              <option value="14500">Riñonera Urbana - $14.500 c/u</option>
-              <option value="28900">Mochila Notebook - $28.900 c/u</option>
-              <option value="42000">Campera Staff Personalizada - $42.000 c/u</option>
-              <option value="55000">Kit Indumentaria + Tarjetas para Local - $55.000 pack</option>
+              <!-- Rendered via JS -->
             </select>
           </div>
 
@@ -249,7 +264,7 @@
           <div class="quote-summary-box">
             <div>
               <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase;">Presupuesto Estimado:</span>
-              <div class="quote-total-price" id="quote-total-display">$166.500</div>
+              <div class="quote-total-price" id="quote-total-display">$0</div>
             </div>
             <span class="badge badge-black">Envíos a todo el país</span>
           </div>
@@ -273,6 +288,6 @@
   </a>
 
   <!-- JavaScript Module -->
-  <script type="module" src="./src/product-detail.js"></script>
+  <script type="module" src="./src/tienda.js"></script>
 </body>
 </html>

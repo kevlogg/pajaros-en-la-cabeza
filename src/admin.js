@@ -158,6 +158,35 @@ function renderAdminProducts() {
   });
 }
 
+// State for active product modal images
+let currentModalImages = [];
+
+function renderProductImagesPreview() {
+  const container = document.getElementById('prod-images-preview');
+  if (!container) return;
+
+  if (currentModalImages.length === 0) {
+    container.innerHTML = `<span style="font-size: 0.8rem; color: #888;">Sin fotos seleccionadas aún.</span>`;
+    return;
+  }
+
+  container.innerHTML = currentModalImages.map((imgUrl, idx) => `
+    <div style="position: relative; width: 60px; height: 60px; border: 2px solid var(--color-border); border-radius: 6px; overflow: hidden; background: #fff;">
+      <img src="${imgUrl}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
+      <button type="button" class="remove-modal-img-btn" data-index="${idx}" style="position: absolute; top: 2px; right: 2px; background: rgba(204,0,68,0.9); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;">✕</button>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.remove-modal-img-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.getAttribute('data-index'));
+      currentModalImages.splice(idx, 1);
+      document.getElementById('prod-form-image').value = currentModalImages.join(', ');
+      renderProductImagesPreview();
+    });
+  });
+}
+
 // Render Categories Grid in Admin
 function renderAdminCategories() {
   const container = document.getElementById('admin-categories-container');
@@ -167,6 +196,9 @@ function renderAdminCategories() {
 
   container.innerHTML = categories.map(cat => `
     <div class="admin-cat-card" data-id="${cat.id}">
+      ${cat.image 
+        ? `<div style="height: 100px; width: 100%; overflow: hidden; border-radius: 8px; margin-bottom: 0.75rem; border: var(--border-thin);"><img src="${cat.image}" alt="${cat.name}" style="width: 100%; height: 100%; object-fit: cover;"></div>` 
+        : ''}
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
         <span class="badge badge-black">${cat.badge || 'Categoría'}</span>
         <span style="font-size: 0.8rem; font-weight: 700; white-space: nowrap;">ID: ${cat.id}</span>
@@ -174,10 +206,18 @@ function renderAdminCategories() {
       <h3 style="margin: 0.6rem 0 0.2rem;">${cat.name}</h3>
       <p style="font-size: 0.85rem; color: var(--color-taupe-dark); margin-bottom: 0.8rem;">${cat.description || cat.subtitle || ''}</p>
       <div class="admin-card-actions" style="display: flex; gap: 0.5rem; margin-top: auto;">
-        <button class="btn btn-dark btn-sm delete-cat-btn" data-id="${cat.id}" style="background-color: var(--color-magenta); width: 100%;">Eliminar Categoría</button>
+        <button class="btn btn-outline btn-sm edit-cat-btn" data-id="${cat.id}" style="flex: 1;">Editar</button>
+        <button class="btn btn-dark btn-sm delete-cat-btn" data-id="${cat.id}" style="background-color: var(--color-magenta); flex: 1;">Eliminar</button>
       </div>
     </div>
   `).join('');
+
+  container.querySelectorAll('.edit-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      openEditCategoryModal(id);
+    });
+  });
 
   container.querySelectorAll('.delete-cat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -223,24 +263,59 @@ function setupProductModal() {
   const closeBtn = document.getElementById('close-prod-modal');
   const form = document.getElementById('prod-form');
   const modalTitle = document.getElementById('prod-modal-title');
+  const filesInput = document.getElementById('prod-form-files');
+  const urlInput = document.getElementById('prod-form-image');
 
   if (!modal || !form) return;
 
   function closeModal() {
     modal.classList.remove('active');
     form.reset();
+    currentModalImages = [];
     document.getElementById('prod-form-id').value = '';
+    renderProductImagesPreview();
   }
 
   openBtn?.addEventListener('click', () => {
     modalTitle.textContent = 'Agregar Nuevo Producto';
     form.reset();
+    currentModalImages = [];
     document.getElementById('prod-form-id').value = '';
+    renderProductImagesPreview();
     modal.classList.add('active');
   });
 
   closeBtn?.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  urlInput?.addEventListener('input', () => {
+    const urls = urlInput.value.split(',').map(s => s.trim()).filter(Boolean);
+    currentModalImages = urls;
+    renderProductImagesPreview();
+  });
+
+  filesInput?.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Subiendo fotos a Firebase...'; }
+      
+      try {
+        for (const file of files) {
+          const url = await uploadImageToFirebase(file);
+          if (url && !currentModalImages.includes(url)) {
+            currentModalImages.push(url);
+          }
+        }
+        urlInput.value = currentModalImages.join(', ');
+        renderProductImagesPreview();
+      } catch (err) {
+        console.warn('Error al subir fotos:', err);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Guardar Producto'; }
+      }
+    }
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -254,25 +329,13 @@ function setupProductModal() {
       const catSelect = document.getElementById('prod-form-category');
       const selectedCatLabel = catSelect.options[catSelect.selectedIndex]?.text || '';
       
-      const fileInput = document.getElementById('prod-form-file');
-      let imageUrl = document.getElementById('prod-form-image').value || null;
-
-      // Upload file to Firebase Storage if selected
-      if (fileInput && fileInput.files && fileInput.files[0]) {
-        try {
-          const uploadedUrl = await uploadImageToFirebase(fileInput.files[0]);
-          if (uploadedUrl) imageUrl = uploadedUrl;
-        } catch (storageErr) {
-          console.warn('Firebase Storage upload warning (verify Storage Security Rules in console):', storageErr);
-        }
-      }
-
       const prodData = {
         name: document.getElementById('prod-form-name').value,
         category: catSelect.value,
         categoryLabel: selectedCatLabel,
         price: document.getElementById('prod-form-price').value,
-        image: imageUrl,
+        images: currentModalImages,
+        image: currentModalImages[0] || null,
         badge: document.getElementById('prod-form-badge').value || 'Destacado',
         badgeColor: document.getElementById('prod-form-badge-color').value,
         description: document.getElementById('prod-form-description').value,
@@ -310,7 +373,14 @@ function openEditProductModal(id) {
   document.getElementById('prod-form-name').value = prod.name || '';
   document.getElementById('prod-form-category').value = prod.category || '';
   document.getElementById('prod-form-price').value = prod.price || '';
-  document.getElementById('prod-form-image').value = prod.image || '';
+  
+  currentModalImages = Array.isArray(prod.images) && prod.images.length > 0
+    ? [...prod.images]
+    : (prod.image ? [prod.image] : []);
+    
+  document.getElementById('prod-form-image').value = currentModalImages.join(', ');
+  renderProductImagesPreview();
+
   document.getElementById('prod-form-badge').value = prod.badge || '';
   document.getElementById('prod-form-badge-color').value = prod.badgeColor || 'yellow';
   document.getElementById('prod-form-description').value = prod.description || '';
@@ -325,39 +395,94 @@ function setupCategoryModal() {
   const openBtn = document.getElementById('open-add-category-modal');
   const closeBtn = document.getElementById('close-cat-modal');
   const form = document.getElementById('cat-form');
+  const modalTitle = document.getElementById('cat-modal-title');
 
   if (!modal || !form) return;
 
   function closeModal() {
     modal.classList.remove('active');
     form.reset();
+    document.getElementById('cat-form-id').value = '';
   }
 
   openBtn?.addEventListener('click', () => {
+    if (modalTitle) modalTitle.textContent = 'Nueva Categoría';
     form.reset();
+    document.getElementById('cat-form-id').value = '';
     modal.classList.add('active');
   });
 
   closeBtn?.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = document.getElementById('cat-form-name').value;
-    const catId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Guardando Categoría...';
 
-    const catData = {
-      id: catId,
-      name: name,
-      subtitle: document.getElementById('cat-form-subtitle').value || 'Colección',
-      description: document.getElementById('cat-form-description').value || '',
-      badge: document.getElementById('cat-form-badge').value || 'Categoría'
-    };
+    try {
+      const id = document.getElementById('cat-form-id').value;
+      const name = document.getElementById('cat-form-name').value;
+      const catId = id || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      
+      const fileInput = document.getElementById('cat-form-file');
+      let imageUrl = document.getElementById('cat-form-image').value || null;
 
-    addCategory(catData);
-    closeModal();
-    renderAllAdminData();
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        try {
+          const uploadedUrl = await uploadImageToFirebase(fileInput.files[0]);
+          if (uploadedUrl) imageUrl = uploadedUrl;
+        } catch (storageErr) {
+          console.warn('Firebase Storage error on category image:', storageErr);
+        }
+      }
+
+      const catData = {
+        id: catId,
+        name: name,
+        subtitle: document.getElementById('cat-form-subtitle').value || 'Colección',
+        image: imageUrl,
+        description: document.getElementById('cat-form-description').value || '',
+        badge: document.getElementById('cat-form-badge').value || 'Categoría'
+      };
+
+      if (id) {
+        await updateCategory(id, catData);
+      } else {
+        await addCategory(catData);
+      }
+
+      closeModal();
+      renderAllAdminData();
+    } catch (err) {
+      alert('Error al guardar categoría.');
+      console.error(err);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+    }
   });
+}
+
+function openEditCategoryModal(id) {
+  const categories = getCategories();
+  const cat = categories.find(c => c.id === id);
+  if (!cat) return;
+
+  const modal = document.getElementById('admin-cat-modal');
+  const modalTitle = document.getElementById('cat-modal-title');
+
+  if (modalTitle) modalTitle.textContent = 'Editar Categoría';
+  document.getElementById('cat-form-id').value = cat.id;
+  document.getElementById('cat-form-name').value = cat.name || '';
+  document.getElementById('cat-form-subtitle').value = cat.subtitle || '';
+  document.getElementById('cat-form-image').value = cat.image || '';
+  document.getElementById('cat-form-description').value = cat.description || '';
+  document.getElementById('cat-form-badge').value = cat.badge || '';
+
+  modal.classList.add('active');
 }
 
 // Hero Image Management in Admin

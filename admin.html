@@ -388,13 +388,21 @@ service cloud.firestore {
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="prod-form-file">Subir Foto desde tu dispositivo (Firebase Storage):</label>
-            <input type="file" id="prod-form-file" class="form-input" accept="image/*">
+            <label class="form-label" for="prod-form-files">Subir Fotos desde tu dispositivo (puedes seleccionar varias):</label>
+            <input type="file" id="prod-form-files" class="form-input" accept="image/*" multiple>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="prod-form-image">O ingresar URL de Imagen:</label>
-            <input type="text" id="prod-form-image" class="form-input" placeholder="/assets/ropa_custom.png o enlace web">
+            <label class="form-label" for="prod-form-image">O ingresar URL(s) de Imágenes (separadas por coma):</label>
+            <input type="text" id="prod-form-image" class="form-input" placeholder="https://..., https://...">
+          </div>
+
+          <!-- Preview Gallery Container in Admin Modal -->
+          <div class="form-group">
+            <label class="form-label">Galería de Fotos del Producto:</label>
+            <div id="prod-images-preview" style="display: flex; gap: 0.5rem; flex-wrap: wrap; padding: 0.5rem; background: var(--color-bg-alt); border: 2px dashed var(--color-border); border-radius: 8px; min-height: 70px; align-items: center;">
+              <span style="font-size: 0.8rem; color: #888;">Sin fotos seleccionadas aún.</span>
+            </div>
           </div>
 
           <div class="form-group">
@@ -450,6 +458,16 @@ service cloud.firestore {
           <div class="form-group">
             <label class="form-label" for="cat-form-subtitle">Subtítulo:</label>
             <input type="text" id="cat-form-subtitle" class="form-input" placeholder="Ej: Gorras y Merchandising">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="cat-form-file">Subir Imagen de Categoría (Firebase Storage):</label>
+            <input type="file" id="cat-form-file" class="form-input" accept="image/*">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="cat-form-image">O URL de Imagen de Categoría:</label>
+            <input type="text" id="cat-form-image" class="form-input" placeholder="https://...">
           </div>
 
           <div class="form-group">

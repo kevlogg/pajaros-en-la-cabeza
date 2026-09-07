@@ -60,6 +60,10 @@ function renderProductDetailView() {
   const whatsappMessage = encodeURIComponent(`Hola Pájaros en la Cabeza! Quisiera consultar por la ficha de:\n- Producto: ${product.name}\n- Precio: ${product.priceFormatted || '$' + product.price}\n\n¿Tienen disponibilidad y asesoría para mi local?`);
   const whatsappUrl = `https://wa.me/5493517620847?text=${whatsappMessage}`;
 
+  const productImages = (Array.isArray(product.images) && product.images.length > 0) 
+    ? product.images 
+    : (product.image ? [product.image] : []);
+
   container.innerHTML = `
     <div class="product-detail-grid">
       
@@ -70,14 +74,24 @@ function renderProductDetailView() {
             <span class="badge badge-${product.badgeColor || 'yellow'}">${product.badge || 'Producto'}</span>
           </div>
 
-          <div class="detail-img-box">
-            ${product.image 
-              ? `<img src="${product.image}" alt="${product.name}" class="detail-main-img">` 
+          <div class="detail-img-box" style="position: relative; border-radius: 12px; overflow: hidden; background: #fff; border: var(--border-thick); min-height: 300px; display: flex; align-items: center; justify-content: center;">
+            ${productImages.length > 0 
+              ? `<img id="main-product-gallery-img" src="${productImages[0]}" alt="${product.name}" class="detail-main-img" style="width: 100%; height: 100%; object-fit: cover;">` 
               : getFlatSvgIllustration(product.svgType)}
           </div>
 
+          ${productImages.length > 1 ? `
+            <div class="product-gallery-thumbnails" style="display: flex; gap: 0.6rem; margin-top: 0.85rem; overflow-x: auto; padding: 0.2rem 0.1rem;">
+              ${productImages.map((img, idx) => `
+                <button type="button" class="gallery-thumb-btn ${idx === 0 ? 'active' : ''}" data-src="${img}" style="width: 70px; height: 70px; border: 3px solid ${idx === 0 ? 'var(--color-magenta)' : 'var(--color-border)'}; border-radius: 8px; overflow: hidden; padding: 0; background: #fff; cursor: pointer; flex-shrink: 0; transition: border-color 0.2s, transform 0.2s;">
+                  <img src="${img}" alt="Foto ${idx+1}" style="width: 100%; height: 100%; object-fit: cover;">
+                </button>
+              `).join('')}
+            </div>
+          ` : ''}
+
           ${product.advisoryIncluded 
-            ? `<div class="detail-advisory-banner">
+            ? `<div class="detail-advisory-banner" style="margin-top: 0.85rem;">
                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                  <span>Asesoría de Imagen de Local Incluida</span>
                </div>` 
@@ -141,6 +155,21 @@ function renderProductDetailView() {
 
     </div>
   `;
+
+  // Thumbnail click handlers
+  container.querySelectorAll('.gallery-thumb-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const src = btn.getAttribute('data-src');
+      const mainImg = document.getElementById('main-product-gallery-img');
+      if (mainImg && src) {
+        mainImg.src = src;
+      }
+      container.querySelectorAll('.gallery-thumb-btn').forEach(b => {
+        b.style.borderColor = 'var(--color-border)';
+      });
+      btn.style.borderColor = 'var(--color-magenta)';
+    });
+  });
 
   renderRelatedProducts(product);
 }
