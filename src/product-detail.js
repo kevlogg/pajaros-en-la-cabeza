@@ -110,8 +110,6 @@ function renderProductDetailView() {
         </div>
 
         <div class="detail-payments-strip">
-          <div class="payment-mini-badge">🏦 Transferencia 10% OFF</div>
-          <div class="payment-mini-badge">💵 Efectivo 15% OFF</div>
           <div class="payment-mini-badge" style="background-color: var(--color-yellow);">💳 Mercado Pago</div>
         </div>
 

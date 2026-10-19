@@ -21,16 +21,28 @@ import { BRAND_INFO, SHIPPING_RATES, ARGENTINA_PROVINCES } from './products.js';
 const STORAGE_KEY_PRODUCTS = 'pajaros_products_v1';
 const STORAGE_KEY_CATEGORIES = 'pajaros_categories_v1';
 const STORAGE_KEY_HERO_IMAGE = 'pajaros_hero_image_v1';
+const STORAGE_KEY_PROMO = 'pajaros_promo_bar_v1';
 
 const DEFAULT_HERO_IMAGE = '/assets/hero_banner.png';
+export const DEFAULT_PROMO_BAR = {
+  enabled: true,
+  badge: '🔥 PROMO DEL MES',
+  text: '15% OFF en prendas personalizadas llevando 3 o más unidades + Asesoría de imagen bonificada',
+  linkText: 'Aprovechar Promo 🛍️',
+  linkUrl: '/tienda',
+  bgColor: 'yellow', // 'yellow', 'magenta', 'black', 'white'
+  speed: 'normal'     // 'normal', 'fast', 'slow', 'static'
+};
 
 const productsCollectionRef = collection(db, 'products');
 const categoriesCollectionRef = collection(db, 'categories');
 const heroDocRef = doc(db, 'settings', 'hero');
+const promoDocRef = doc(db, 'settings', 'promo');
 
 let cachedProducts = [];
 let cachedCategories = [];
 let cachedHeroImage = DEFAULT_HERO_IMAGE;
+let cachedPromoBar = { ...DEFAULT_PROMO_BAR };
 const subscribers = [];
 
 // Initialize local cache from localStorage
@@ -38,14 +50,17 @@ try {
   const savedProds = localStorage.getItem(STORAGE_KEY_PRODUCTS);
   const savedCats = localStorage.getItem(STORAGE_KEY_CATEGORIES);
   const savedHero = localStorage.getItem(STORAGE_KEY_HERO_IMAGE);
+  const savedPromo = localStorage.getItem(STORAGE_KEY_PROMO);
 
   cachedProducts = savedProds ? JSON.parse(savedProds) : [];
   cachedCategories = savedCats ? JSON.parse(savedCats) : [];
   cachedHeroImage = savedHero || DEFAULT_HERO_IMAGE;
+  cachedPromoBar = savedPromo ? { ...DEFAULT_PROMO_BAR, ...JSON.parse(savedPromo) } : { ...DEFAULT_PROMO_BAR };
 } catch (e) {
   cachedProducts = [];
   cachedCategories = [];
   cachedHeroImage = DEFAULT_HERO_IMAGE;
+  cachedPromoBar = { ...DEFAULT_PROMO_BAR };
 }
 
 let isFirestoreConnected = false;
@@ -61,7 +76,15 @@ export function getFirestoreStatus() {
 // Function to notify subscribed views (landing page, admin panel)
 function notifySubscribers() {
   subscribers.forEach(cb => {
-    try { cb({ products: cachedProducts, categories: cachedCategories, heroImage: cachedHeroImage, firestoreStatus: getFirestoreStatus() }); } catch(err){}
+    try { 
+      cb({ 
+        products: cachedProducts, 
+        categories: cachedCategories, 
+        heroImage: cachedHeroImage, 
+        promoBar: cachedPromoBar,
+        firestoreStatus: getFirestoreStatus() 
+      }); 
+    } catch(err){}
   });
 }
 
@@ -116,6 +139,17 @@ try {
   }, (err) => {
     console.warn('Firestore hero image snapshot error:', err);
   });
+
+  onSnapshot(promoDocRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      cachedPromoBar = { ...DEFAULT_PROMO_BAR, ...data };
+      localStorage.setItem(STORAGE_KEY_PROMO, JSON.stringify(cachedPromoBar));
+      notifySubscribers();
+    }
+  }, (err) => {
+    console.warn('Firestore promo bar snapshot error:', err);
+  });
 } catch (e) {
   isFirestoreConnected = false;
   firestoreErrorNotice = 'Falló inicialización de Firestore: ' + (e.message || e);
@@ -133,6 +167,29 @@ export function getProducts() {
 
 export function getHeroImage() {
   return cachedHeroImage || DEFAULT_HERO_IMAGE;
+}
+
+export function getPromoBar() {
+  return cachedPromoBar || { ...DEFAULT_PROMO_BAR };
+}
+
+export async function setPromoBar(promoData) {
+  const updated = {
+    ...DEFAULT_PROMO_BAR,
+    ...promoData,
+    updatedAt: new Date().toISOString()
+  };
+  cachedPromoBar = updated;
+  localStorage.setItem(STORAGE_KEY_PROMO, JSON.stringify(updated));
+  notifySubscribers();
+
+  try {
+    await setDoc(promoDocRef, updated);
+  } catch (err) {
+    console.warn('Firestore setPromoBar error:', err);
+  }
+
+  return updated;
 }
 
 export async function setHeroImage(url) {
@@ -317,7 +374,8 @@ export function exportStoreData() {
     exportDate: new Date().toISOString(),
     categories: cachedCategories,
     products: cachedProducts,
-    heroImage: cachedHeroImage
+    heroImage: cachedHeroImage,
+    promoBar: cachedPromoBar
   }, null, 2);
 }
 
@@ -331,10 +389,12 @@ export async function importStoreData(jsonContent) {
     cachedCategories = parsed.categories;
     cachedProducts = parsed.products;
     if (parsed.heroImage) cachedHeroImage = parsed.heroImage;
+    if (parsed.promoBar) cachedPromoBar = { ...DEFAULT_PROMO_BAR, ...parsed.promoBar };
 
     localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(cachedCategories));
     localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(cachedProducts));
     localStorage.setItem(STORAGE_KEY_HERO_IMAGE, cachedHeroImage);
+    localStorage.setItem(STORAGE_KEY_PROMO, JSON.stringify(cachedPromoBar));
     notifySubscribers();
 
     // Sync imported data to Firestore if available
@@ -347,6 +407,9 @@ export async function importStoreData(jsonContent) {
       }
       if (cachedHeroImage) {
         await setDoc(heroDocRef, { url: cachedHeroImage, updatedAt: new Date().toISOString() });
+      }
+      if (cachedPromoBar) {
+        await setDoc(promoDocRef, cachedPromoBar);
       }
     } catch (fsErr) {
       console.warn('Firestore sync warning during import:', fsErr);

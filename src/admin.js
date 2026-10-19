@@ -10,14 +10,17 @@ import {
   deleteProduct, 
   addCategory, 
   updateCategory, 
-  deleteCategory,
-  resetToDefaults,
-  uploadImageToFirebase,
-  subscribeToStore,
-  getHeroImage,
-  setHeroImage,
-  exportStoreData,
-  importStoreData,
+  deleteCategory, 
+  resetToDefaults, 
+  uploadImageToFirebase, 
+  subscribeToStore, 
+  getHeroImage, 
+  setHeroImage, 
+  getPromoBar,
+  setPromoBar,
+  DEFAULT_PROMO_BAR,
+  exportStoreData, 
+  importStoreData, 
   getFirestoreStatus
 } from './data/store.js';
 
@@ -249,11 +252,98 @@ function updateCountsAndSelects() {
   }
 }
 
+// Render & Sync Promo Bar in Admin
+function renderAdminPromoBar() {
+  const promo = getPromoBar();
+  const sidebarBadge = document.getElementById('sidebar-promo-badge');
+  const toggle = document.getElementById('promo-enabled-toggle');
+  const badgeInput = document.getElementById('promo-badge-input');
+  const colorSelect = document.getElementById('promo-color-select');
+  const speedSelect = document.getElementById('promo-speed-select');
+  const textInput = document.getElementById('promo-text-input');
+  const linkTextInput = document.getElementById('promo-link-text-input');
+  const linkUrlInput = document.getElementById('promo-link-url-input');
+
+  if (sidebarBadge) {
+    if (promo.enabled) {
+      sidebarBadge.textContent = 'ACTIVA';
+      sidebarBadge.className = 'badge badge-yellow';
+      sidebarBadge.style.background = 'var(--color-yellow)';
+      sidebarBadge.style.color = 'var(--color-black)';
+    } else {
+      sidebarBadge.textContent = 'PAUSADA';
+      sidebarBadge.className = 'badge';
+      sidebarBadge.style.background = '#E0DDD5';
+      sidebarBadge.style.color = '#777';
+    }
+  }
+
+  // Only populate inputs if the user is not actively typing inside the form
+  const isTyping = document.activeElement && document.activeElement.closest('#promo-form');
+  if (!isTyping) {
+    if (toggle) toggle.checked = Boolean(promo.enabled);
+    if (badgeInput) badgeInput.value = promo.badge || '';
+    if (colorSelect) colorSelect.value = promo.bgColor || 'yellow';
+    if (speedSelect) speedSelect.value = promo.speed || 'normal';
+    if (textInput) textInput.value = promo.text || '';
+    if (linkTextInput) linkTextInput.value = promo.linkText || '';
+    if (linkUrlInput) linkUrlInput.value = promo.linkUrl || '';
+  }
+
+  updateAdminPromoPreview();
+}
+
+// Update the Live Preview Box in Admin Tab
+function updateAdminPromoPreview() {
+  const previewBox = document.getElementById('admin-promo-preview-box');
+  const previewTrack = document.getElementById('admin-promo-preview-track');
+  const toggle = document.getElementById('promo-enabled-toggle');
+  const badgeInput = document.getElementById('promo-badge-input');
+  const colorSelect = document.getElementById('promo-color-select');
+  const speedSelect = document.getElementById('promo-speed-select');
+  const textInput = document.getElementById('promo-text-input');
+  const linkTextInput = document.getElementById('promo-link-text-input');
+
+  if (!previewBox || !previewTrack) return;
+
+  const isEnabled = toggle ? toggle.checked : true;
+  const bgColor = colorSelect ? colorSelect.value : 'yellow';
+  const speed = speedSelect ? speedSelect.value : 'normal';
+  const badge = badgeInput ? badgeInput.value.trim() : '';
+  const text = textInput ? textInput.value.trim() : 'Mensaje de la promoción...';
+  const linkText = linkTextInput ? linkTextInput.value.trim() : '';
+
+  previewBox.className = `promo-bar-section bg-${bgColor}`;
+  previewBox.style.opacity = isEnabled ? '1' : '0.45';
+
+  const speedClass = speed === 'fast' 
+    ? 'speed-fast' 
+    : (speed === 'slow' ? 'speed-slow' : (speed === 'static' ? 'speed-static' : ''));
+  previewTrack.className = `promo-bar-track ${speedClass}`.trim();
+
+  const badgeHtml = badge ? `<span class="promo-pill">${badge}</span>` : '';
+  const ctaHtml = linkText ? `<span class="promo-cta">${linkText}</span>` : '';
+  const textHtml = `<span class="promo-text">${text}</span>`;
+  const sep = `<span class="promo-sep">★</span>`;
+
+  const singleItem = `
+    <div class="promo-bar-item">
+      ${badgeHtml}
+      ${textHtml}
+      ${ctaHtml}
+      ${sep}
+    </div>
+  `;
+
+  previewTrack.innerHTML = singleItem.repeat(4);
+}
+
 // Render All Admin Views
 function renderAllAdminData() {
   updateCountsAndSelects();
   renderAdminProducts();
   renderAdminCategories();
+  renderAdminPromoBar();
 }
 
 // Product Modal Handling
@@ -720,6 +810,94 @@ function setupResetButton() {
   });
 }
 
+// Setup Promo Bar Form & Handlers
+function setupPromoBarManager() {
+  const form = document.getElementById('promo-form');
+  const toggle = document.getElementById('promo-enabled-toggle');
+  const badgeInput = document.getElementById('promo-badge-input');
+  const colorSelect = document.getElementById('promo-color-select');
+  const speedSelect = document.getElementById('promo-speed-select');
+  const textInput = document.getElementById('promo-text-input');
+  const linkTextInput = document.getElementById('promo-link-text-input');
+  const linkUrlInput = document.getElementById('promo-link-url-input');
+  const resetBtn = document.getElementById('reset-promo-btn');
+  const statusSpan = document.getElementById('promo-save-status');
+
+  if (!form) return;
+
+  // Live preview updates on typing/changes
+  [badgeInput, colorSelect, speedSelect, textInput, linkTextInput, linkUrlInput, toggle].forEach(el => {
+    el?.addEventListener('input', updateAdminPromoPreview);
+    el?.addEventListener('change', updateAdminPromoPreview);
+  });
+
+  // Chip quick buttons
+  document.querySelectorAll('.promo-chip-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.getAttribute('data-val');
+      if (badgeInput && val) {
+        badgeInput.value = val;
+        updateAdminPromoPreview();
+      }
+    });
+  });
+
+  // Save promo form submit
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById('save-promo-btn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = '⏳ Guardando...';
+    }
+
+    const promoData = {
+      enabled: toggle ? toggle.checked : true,
+      badge: badgeInput?.value.trim() || '',
+      bgColor: colorSelect?.value || 'yellow',
+      speed: speedSelect?.value || 'normal',
+      text: textInput?.value.trim() || '',
+      linkText: linkTextInput?.value.trim() || '',
+      linkUrl: linkUrlInput?.value.trim() || ''
+    };
+
+    try {
+      await setPromoBar(promoData);
+      renderAdminPromoBar();
+
+      if (statusSpan) {
+        statusSpan.textContent = '✅ ¡Promoción guardada y activa en el sitio!';
+        statusSpan.style.display = 'inline';
+        setTimeout(() => {
+          statusSpan.style.display = 'none';
+        }, 4000);
+      }
+    } catch (err) {
+      alert('Error al guardar promoción: ' + err.message);
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Guardar y Publicar';
+      }
+    }
+  });
+
+  // Reset to default promo
+  resetBtn?.addEventListener('click', async () => {
+    if (confirm('¿Restablecer la barra a la promoción sugerida por defecto?')) {
+      await setPromoBar(DEFAULT_PROMO_BAR);
+      renderAdminPromoBar();
+      if (statusSpan) {
+        statusSpan.textContent = '🔄 Promoción restablecida.';
+        statusSpan.style.display = 'inline';
+        setTimeout(() => {
+          statusSpan.style.display = 'none';
+        }, 3000);
+      }
+    }
+  });
+}
+
 // Initialize Admin App
 document.addEventListener('DOMContentLoaded', () => {
   setupLoginForm();
@@ -729,6 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupResetButton();
   setupBackupHandlers();
   setupHeroImageManager();
+  setupPromoBarManager();
   setupConditionsAccordion();
   loadPlanData();
   checkAuthUI();

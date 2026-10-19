@@ -2,7 +2,58 @@
    MAIN APPLICATION LOGIC - PÁJAROS EN LA CABEZA
    ========================================================================== */
 
-import { BRAND_INFO, SHIPPING_RATES, ARGENTINA_PROVINCES, getCategories, getProducts, getHeroImage, subscribeToStore } from './data/store.js';
+import { BRAND_INFO, SHIPPING_RATES, ARGENTINA_PROVINCES, getCategories, getProducts, getHeroImage, getPromoBar, subscribeToStore } from './data/store.js';
+
+function renderPromoBar(promo) {
+  const container = document.getElementById('promo-bar-section');
+  if (!container) return;
+
+  const promoData = promo || getPromoBar();
+  if (!promoData || !promoData.enabled) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  container.className = `promo-bar-section bg-${promoData.bgColor || 'yellow'}`;
+
+  const link = container.querySelector('.promo-bar-link');
+  if (link) {
+    if (promoData.linkUrl) {
+      link.href = promoData.linkUrl;
+      link.style.cursor = 'pointer';
+    } else {
+      link.removeAttribute('href');
+      link.style.cursor = 'default';
+    }
+  }
+
+  const track = document.getElementById('promo-bar-track');
+  if (!track) return;
+
+  const speedClass = promoData.speed === 'fast' 
+    ? 'speed-fast' 
+    : (promoData.speed === 'slow' 
+        ? 'speed-slow' 
+        : (promoData.speed === 'static' ? 'speed-static' : ''));
+  track.className = `promo-bar-track ${speedClass}`.trim();
+
+  const badgeHtml = promoData.badge ? `<span class="promo-pill">${promoData.badge}</span>` : '';
+  const ctaHtml = promoData.linkText ? `<span class="promo-cta">${promoData.linkText}</span>` : '';
+  const textHtml = `<span class="promo-text">${promoData.text || ''}</span>`;
+  const sep = `<span class="promo-sep">★</span>`;
+
+  const singleItem = `
+    <div class="promo-bar-item">
+      ${badgeHtml}
+      ${textHtml}
+      ${ctaHtml}
+      ${sep}
+    </div>
+  `;
+
+  track.innerHTML = singleItem.repeat(5);
+}
 
 function renderHeroImage(url) {
   const heroImg = document.querySelector('.hero-image-wrap img');
@@ -339,6 +390,7 @@ function setupMobileMenu() {
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
+  renderPromoBar();
   renderHeroImage();
   renderCategories();
   renderProducts(getProducts());
@@ -348,7 +400,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupMobileMenu();
 
   // Re-render when Firebase updates store
-  subscribeToStore(({ products, heroImage }) => {
+  subscribeToStore(({ products, heroImage, promoBar }) => {
+    if (promoBar) renderPromoBar(promoBar);
     renderHeroImage(heroImage);
     renderCategories();
     renderProducts(products);

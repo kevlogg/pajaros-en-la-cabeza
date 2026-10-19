@@ -1763,3 +1763,210 @@
   }
 }
 
+/* --------------------------------------------------------------------------
+   Dynamic Hero Promotional Bar (Neo-brutalist Marquee)
+   -------------------------------------------------------------------------- */
+.promo-bar-section {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-top: var(--border-thick);
+  border-bottom: var(--border-thick);
+  background-color: var(--color-yellow);
+  color: var(--color-black);
+  padding: 0.75rem 0;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 4px 0px rgba(0,0,0,0.06);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  z-index: 10;
+}
+
+.promo-bar-section.bg-yellow {
+  background-color: var(--color-yellow);
+  color: var(--color-black);
+}
+
+.promo-bar-section.bg-magenta {
+  background-color: var(--color-magenta);
+  color: var(--color-white);
+}
+
+.promo-bar-section.bg-black {
+  background-color: var(--color-black);
+  color: var(--color-yellow);
+}
+
+.promo-bar-section.bg-white {
+  background-color: var(--color-white);
+  color: var(--color-black);
+}
+
+.promo-bar-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+.promo-bar-track {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  width: max-content;
+  animation: promoMarquee 26s linear infinite;
+  will-change: transform;
+}
+
+.promo-bar-section:hover .promo-bar-track {
+  animation-play-state: paused;
+}
+
+.promo-bar-track.speed-fast {
+  animation-duration: 15s;
+}
+
+.promo-bar-track.speed-slow {
+  animation-duration: 38s;
+}
+
+.promo-bar-track.speed-static {
+  animation: none;
+  width: 100%;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.promo-bar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+
+.promo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.75rem;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  border: 2px solid currentColor;
+  letter-spacing: 0.04em;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.promo-bar-section.bg-yellow .promo-pill {
+  background-color: var(--color-black);
+  color: var(--color-yellow);
+  border-color: var(--color-black);
+}
+
+.promo-bar-section.bg-magenta .promo-pill {
+  background-color: var(--color-white);
+  color: var(--color-magenta);
+  border-color: var(--color-white);
+}
+
+.promo-bar-section.bg-black .promo-pill {
+  background-color: var(--color-yellow);
+  color: var(--color-black);
+  border-color: var(--color-yellow);
+}
+
+.promo-bar-section.bg-white .promo-pill {
+  background-color: var(--color-black);
+  color: var(--color-white);
+  border-color: var(--color-black);
+}
+
+.promo-text {
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+
+.promo-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  border: 2px solid currentColor;
+  box-shadow: 2.5px 2.5px 0px currentColor;
+  background-color: var(--color-white);
+  color: var(--color-black);
+  border-radius: 4px;
+  transition: transform 0.15s;
+}
+
+.promo-bar-section:hover .promo-cta {
+  transform: translate(-1.5px, -1.5px);
+  box-shadow: 4px 4px 0px currentColor;
+}
+
+.promo-sep {
+  font-size: 1.1rem;
+  opacity: 0.6;
+  margin-left: 0.4rem;
+}
+
+@keyframes promoMarquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Chips in Admin */
+.promo-chip-btn {
+  background: var(--color-bg-alt);
+  border: 1.5px solid var(--color-border);
+  border-radius: 20px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.promo-chip-btn:hover {
+  background: var(--color-yellow);
+  border-color: var(--color-black);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .promo-bar-section {
+    padding: 0.6rem 0;
+  }
+  .promo-bar-item {
+    gap: 0.65rem;
+    font-size: 0.88rem;
+  }
+  .promo-pill {
+    font-size: 0.72rem;
+    padding: 0.18rem 0.55rem;
+  }
+  .promo-text {
+    font-size: 0.88rem;
+  }
+  .promo-cta {
+    font-size: 0.74rem;
+    padding: 0.2rem 0.65rem;
+  }
+}
+
+

@@ -88,6 +88,10 @@
             <span>📁 Categorías</span>
             <span class="nav-count-badge" id="sidebar-cat-count">0</span>
           </button>
+          <button class="admin-nav-btn" data-tab="promo">
+            <span>📢 Barra Promocional</span>
+            <span class="badge badge-yellow" id="sidebar-promo-badge" style="font-size: 0.65rem;">ACTIVA</span>
+          </button>
           <button class="admin-nav-btn" data-tab="plan">
             <span>📋 Mi Plan</span>
             <span class="badge badge-magenta" style="font-size: 0.65rem;">ACTIVO</span>
@@ -207,6 +211,109 @@ service cloud.firestore {
 
           <div class="categories-admin-grid" id="admin-categories-container">
             <!-- Rendered via admin.js -->
+          </div>
+        </div>
+
+        <!-- TAB: BARRA PROMOCIONAL DINÁMICA -->
+        <div class="admin-tab-content" id="tab-promo">
+          <div style="background: #FFFFFF; border: 3.5px solid var(--color-border); border-radius: 16px; padding: 1.75rem; box-shadow: var(--shadow-flat); margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; border-bottom: 2px dashed #EBE7DF; padding-bottom: 1.25rem;">
+              <div>
+                <span class="badge badge-magenta" style="margin-bottom: 0.5rem; display: inline-block;">DINÁMICA & EN VIVO</span>
+                <h2 style="font-family: var(--font-display); font-weight: 800; margin: 0; font-size: 1.5rem;">📢 Barra Informativa y Promocional</h2>
+                <p style="margin: 0.35rem 0 0 0; color: #555; font-size: 0.95rem;">Configura la promoción destacada del mes o del día que aparece de forma dinámica justo debajo del Hero en la página de inicio.</p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.6rem; font-weight: 800; cursor: pointer; background: var(--color-bg-alt); padding: 0.6rem 1rem; border: 2px solid var(--color-border); border-radius: 10px;">
+                  <input type="checkbox" id="promo-enabled-toggle" style="width: 20px; height: 20px; accent-color: var(--color-magenta); cursor: pointer;" checked>
+                  <span id="promo-enabled-label">Barra Activa en el Sitio</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- VISTA PREVIA EN TIEMPO REAL -->
+            <div style="margin-bottom: 2rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+                <label style="font-weight: 800; font-size: 0.9rem; text-transform: uppercase; color: #444; letter-spacing: 0.05em;">👀 Vista Previa en Tiempo Real:</label>
+                <span style="font-size: 0.78rem; color: #777;">(Pasa el mouse para pausar)</span>
+              </div>
+              
+              <div id="admin-promo-preview-box" class="promo-bar-section bg-yellow" style="border-radius: 8px; border: 3px solid var(--color-black); overflow: hidden; position: relative;">
+                <div class="promo-bar-track" id="admin-promo-preview-track">
+                  <!-- Rendered dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- FORMULARIO DE GESTIÓN -->
+            <form id="promo-form">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+                
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" for="promo-badge-input">Etiqueta / Badge:</label>
+                  <input type="text" id="promo-badge-input" class="form-input" placeholder="Ej: 🔥 PROMO DEL DÍA" value="🔥 PROMO DEL MES">
+                  
+                  <!-- Chips rápidos para autocompletar -->
+                  <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                    <button type="button" class="promo-chip-btn" data-val="🔥 PROMO DEL DÍA">🔥 Promo del Día</button>
+                    <button type="button" class="promo-chip-btn" data-val="⚡ PROMO DEL MES">⚡ Promo del Mes</button>
+                    <button type="button" class="promo-chip-btn" data-val="🎉 2x1 HOY">🎉 2x1 Hoy</button>
+                    <button type="button" class="promo-chip-btn" data-val="🚚 ENVÍOS GRATIS">🚚 Envíos Gratis</button>
+                    <button type="button" class="promo-chip-btn" data-val="💥 LIQUIDACIÓN">💥 Liquidación</button>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" for="promo-color-select">Color de Fondo / Estilo:</label>
+                  <select id="promo-color-select" class="form-select">
+                    <option value="yellow">🟡 Amarillo Eléctrico (Firma de la Marca)</option>
+                    <option value="magenta">🔴 Magenta / Fucsia Streetwear</option>
+                    <option value="black">⚫ Negro Profundo con texto Amarillo</option>
+                    <option value="white">⚪ Blanco Nítido con texto Negro</option>
+                  </select>
+
+                  <div style="margin-top: 0.85rem;">
+                    <label class="form-label" for="promo-speed-select">Velocidad de Desplazamiento:</label>
+                    <select id="promo-speed-select" class="form-select">
+                      <option value="normal">Normal (26 segundos)</option>
+                      <option value="fast">Rápida (15 segundos)</option>
+                      <option value="slow">Lenta (38 segundos)</option>
+                      <option value="static">Estática (Fija centrada)</option>
+                    </select>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="promo-text-input">Texto Principal de la Promoción:</label>
+                <textarea id="promo-text-input" class="form-textarea" rows="2" placeholder="Escribe el mensaje de la promoción aquí..." required></textarea>
+                <small style="color: #666; font-size: 0.82rem; display: block; margin-top: 0.35rem;">
+                  💡 <strong>Tip:</strong> Modifícalo a gusto las veces que quieras: descuentos por mayor, lanzamientos, combos con asesoría de diseño gratis, etc.
+                </small>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" for="promo-link-text-input">Texto del Botón (Opcional):</label>
+                  <input type="text" id="promo-link-text-input" class="form-input" placeholder="Ej: Aprovechar Promo 🛍️">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" for="promo-link-url-input">Enlace de Destino (Opcional):</label>
+                  <input type="text" id="promo-link-url-input" class="form-input" placeholder="Ej: /tienda o https://wa.me/5493517620847">
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; border-top: 2px dashed #EBE7DF; padding-top: 1.25rem;">
+                <button type="submit" class="btn btn-primary" id="save-promo-btn" style="min-width: 220px;">
+                  💾 Guardar y Publicar
+                </button>
+                <button type="button" class="btn btn-outline" id="reset-promo-btn">
+                  🔄 Restablecer Promo Inicial
+                </button>
+                <span id="promo-save-status" style="display: none; font-weight: 700; color: #008844; font-size: 0.95rem;"></span>
+              </div>
+            </form>
           </div>
         </div>
 
