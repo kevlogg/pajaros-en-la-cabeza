@@ -22,6 +22,7 @@ const STORAGE_KEY_PRODUCTS = 'pajaros_products_v1';
 const STORAGE_KEY_CATEGORIES = 'pajaros_categories_v1';
 const STORAGE_KEY_HERO_IMAGE = 'pajaros_hero_image_v1';
 const STORAGE_KEY_PROMO = 'pajaros_promo_bar_v1';
+const STORAGE_KEY_GALLERY = 'pajaros_gallery_v1';
 
 const DEFAULT_HERO_IMAGE = '/assets/hero_banner.png';
 export const DEFAULT_PROMO_BAR = {
@@ -38,11 +39,13 @@ const productsCollectionRef = collection(db, 'products');
 const categoriesCollectionRef = collection(db, 'categories');
 const heroDocRef = doc(db, 'settings', 'hero');
 const promoDocRef = doc(db, 'settings', 'promo');
+const galleryCollectionRef = collection(db, 'gallery');
 
 let cachedProducts = [];
 let cachedCategories = [];
 let cachedHeroImage = DEFAULT_HERO_IMAGE;
 let cachedPromoBar = { ...DEFAULT_PROMO_BAR };
+let cachedGallery = [];
 const subscribers = [];
 
 // Initialize local cache from localStorage
@@ -51,16 +54,19 @@ try {
   const savedCats = localStorage.getItem(STORAGE_KEY_CATEGORIES);
   const savedHero = localStorage.getItem(STORAGE_KEY_HERO_IMAGE);
   const savedPromo = localStorage.getItem(STORAGE_KEY_PROMO);
+  const savedGallery = localStorage.getItem(STORAGE_KEY_GALLERY);
 
   cachedProducts = savedProds ? JSON.parse(savedProds) : [];
   cachedCategories = savedCats ? JSON.parse(savedCats) : [];
   cachedHeroImage = savedHero || DEFAULT_HERO_IMAGE;
   cachedPromoBar = savedPromo ? { ...DEFAULT_PROMO_BAR, ...JSON.parse(savedPromo) } : { ...DEFAULT_PROMO_BAR };
+  cachedGallery = savedGallery ? JSON.parse(savedGallery) : [];
 } catch (e) {
   cachedProducts = [];
   cachedCategories = [];
   cachedHeroImage = DEFAULT_HERO_IMAGE;
   cachedPromoBar = { ...DEFAULT_PROMO_BAR };
+  cachedGallery = [];
 }
 
 let isFirestoreConnected = false;
@@ -82,6 +88,7 @@ function notifySubscribers() {
         categories: cachedCategories, 
         heroImage: cachedHeroImage, 
         promoBar: cachedPromoBar,
+        gallery: cachedGallery,
         firestoreStatus: getFirestoreStatus() 
       }); 
     } catch(err){}
@@ -150,10 +157,30 @@ try {
   }, (err) => {
     console.warn('Firestore promo bar snapshot error:', err);
   });
+
+  onSnapshot(galleryCollectionRef, (snapshot) => {
+    const items = [];
+    snapshot.forEach(docSnap => items.push({ id: docSnap.id, ...docSnap.data() }));
+    items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    cachedGallery = items;
+    localStorage.setItem(STORAGE_KEY_GALLERY, JSON.stringify(items));
+    notifySubscribers();
+  }, (err) => {
+    console.warn('Firestore gallery snapshot error:', err);
+  });
 } catch (e) {
   isFirestoreConnected = false;
   firestoreErrorNotice = 'Falló inicialización de Firestore: ' + (e.message || e);
   console.warn('Firestore initialization fallback to LocalStorage:', e);
+}
+
+// Format File Size Helper
+export function formatFileSize(bytes) {
+  if (!bytes || bytes <= 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 // Getters
@@ -171,6 +198,48 @@ export function getHeroImage() {
 
 export function getPromoBar() {
   return cachedPromoBar || { ...DEFAULT_PROMO_BAR };
+}
+
+export function getGalleryImages() {
+  return cachedGallery;
+}
+
+export async function addGalleryImage(imageData) {
+  const imgId = `gal-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+  const newImage = {
+    id: imgId,
+    name: imageData.name || 'Foto de Galería',
+    url: imageData.url,
+    size: imageData.size || 0,
+    sizeFormatted: imageData.sizeFormatted || (imageData.size ? formatFileSize(imageData.size) : 'Web'),
+    createdAt: new Date().toISOString()
+  };
+
+  cachedGallery.unshift(newImage);
+  localStorage.setItem(STORAGE_KEY_GALLERY, JSON.stringify(cachedGallery));
+  notifySubscribers();
+
+  try {
+    await setDoc(doc(db, 'gallery', imgId), newImage);
+  } catch (err) {
+    console.warn('Firestore addGalleryImage error:', err);
+  }
+
+  return newImage;
+}
+
+export async function deleteGalleryImage(id) {
+  cachedGallery = cachedGallery.filter(item => item.id !== id);
+  localStorage.setItem(STORAGE_KEY_GALLERY, JSON.stringify(cachedGallery));
+  notifySubscribers();
+
+  try {
+    await deleteDoc(doc(db, 'gallery', id));
+  } catch (err) {
+    console.warn('Firestore deleteGalleryImage error:', err);
+  }
+
+  return cachedGallery;
 }
 
 export async function setPromoBar(promoData) {
@@ -375,7 +444,8 @@ export function exportStoreData() {
     categories: cachedCategories,
     products: cachedProducts,
     heroImage: cachedHeroImage,
-    promoBar: cachedPromoBar
+    promoBar: cachedPromoBar,
+    gallery: cachedGallery
   }, null, 2);
 }
 
@@ -390,11 +460,13 @@ export async function importStoreData(jsonContent) {
     cachedProducts = parsed.products;
     if (parsed.heroImage) cachedHeroImage = parsed.heroImage;
     if (parsed.promoBar) cachedPromoBar = { ...DEFAULT_PROMO_BAR, ...parsed.promoBar };
+    if (parsed.gallery) cachedGallery = parsed.gallery;
 
     localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(cachedCategories));
     localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(cachedProducts));
     localStorage.setItem(STORAGE_KEY_HERO_IMAGE, cachedHeroImage);
     localStorage.setItem(STORAGE_KEY_PROMO, JSON.stringify(cachedPromoBar));
+    localStorage.setItem(STORAGE_KEY_GALLERY, JSON.stringify(cachedGallery));
     notifySubscribers();
 
     // Sync imported data to Firestore if available
@@ -410,6 +482,11 @@ export async function importStoreData(jsonContent) {
       }
       if (cachedPromoBar) {
         await setDoc(promoDocRef, cachedPromoBar);
+      }
+      if (cachedGallery && cachedGallery.length > 0) {
+        for (const img of cachedGallery) {
+          await setDoc(doc(db, 'gallery', img.id), img);
+        }
       }
     } catch (fsErr) {
       console.warn('Firestore sync warning during import:', fsErr);

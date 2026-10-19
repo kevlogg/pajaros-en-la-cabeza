@@ -19,6 +19,9 @@ import {
   getPromoBar,
   setPromoBar,
   DEFAULT_PROMO_BAR,
+  getGalleryImages,
+  addGalleryImage,
+  deleteGalleryImage,
   exportStoreData, 
   importStoreData, 
   getFirestoreStatus
@@ -237,13 +240,18 @@ function renderAdminCategories() {
 function updateCountsAndSelects() {
   const products = getProducts();
   const categories = getCategories();
+  const gallery = getGalleryImages();
 
   const prodCountBadge = document.getElementById('sidebar-prod-count');
   const catCountBadge = document.getElementById('sidebar-cat-count');
+  const galleryCountBadge = document.getElementById('sidebar-gallery-count');
+  const galleryTotalCount = document.getElementById('gallery-total-count');
   const categorySelect = document.getElementById('prod-form-category');
 
   if (prodCountBadge) prodCountBadge.textContent = products.length;
   if (catCountBadge) catCountBadge.textContent = categories.length;
+  if (galleryCountBadge) galleryCountBadge.textContent = gallery.length;
+  if (galleryTotalCount) galleryTotalCount.textContent = `${gallery.length} Fotos Guardadas`;
 
   if (categorySelect) {
     categorySelect.innerHTML = categories.map(cat => `
@@ -338,11 +346,134 @@ function updateAdminPromoPreview() {
   previewTrack.innerHTML = singleItem.repeat(4);
 }
 
+// Render Gallery Grid in Admin Tab
+function renderAdminGallery(filterQuery = '') {
+  const container = document.getElementById('admin-gallery-grid');
+  if (!container) return;
+
+  const images = getGalleryImages();
+  const query = (filterQuery || document.getElementById('gallery-search-input')?.value || '').toLowerCase().trim();
+
+  const filtered = query 
+    ? images.filter(img => (img.name && img.name.toLowerCase().includes(query)) || (img.url && img.url.toLowerCase().includes(query)))
+    : images;
+
+  const totalBadge = document.getElementById('gallery-total-count');
+  if (totalBadge) totalBadge.textContent = `${filtered.length} de ${images.length} Fotos Guardadas`;
+
+  if (images.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 3rem 1.5rem; background: var(--color-bg-alt); border: 2.5px dashed var(--color-border); border-radius: 12px;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🖼️</div>
+        <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; margin: 0 0 0.4rem 0;">Tu Galería en la Nube está vacía</h3>
+        <p style="color: #666; font-size: 0.92rem; margin: 0 0 1.25rem 0; max-width: 500px; margin-inline: auto;">
+          Sube tus fotos de prendas, modelos o estampados para guardarlas en Firebase y tenerlas disponibles en cualquier computadora o celular al crear productos.
+        </p>
+        <label class="btn btn-primary btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
+          <span>📤 Subir Primeras Fotos</span>
+          <input type="file" id="empty-gallery-file-input" accept="image/*" multiple style="display: none;">
+        </label>
+      </div>
+    `;
+
+    document.getElementById('empty-gallery-file-input')?.addEventListener('change', (e) => {
+      handleGalleryFilesUpload(e.target.files);
+    });
+    return;
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 2.5rem; background: var(--color-bg-alt); border: 2px solid var(--color-border); border-radius: 10px;">
+        <p style="font-weight: 700; color: #777; margin: 0;">No se encontraron fotos que coincidan con "${query}".</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map(img => {
+    const formattedDate = img.createdAt ? new Date(img.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—';
+    return `
+      <div class="admin-gallery-card" data-id="${img.id}">
+        <div class="admin-gallery-media" data-url="${img.url}" data-name="${img.name || 'Foto'}" data-size="${img.sizeFormatted || ''}" data-date="${formattedDate}">
+          <img src="${img.url}" alt="${img.name || 'Foto'}" loading="lazy">
+        </div>
+        <div class="admin-gallery-body">
+          <h4 class="admin-gallery-title" title="${img.name || 'Foto'}">${img.name || 'Foto sin título'}</h4>
+          <div class="admin-gallery-meta">
+            <span>📅 ${formattedDate}</span>
+            <span class="badge" style="font-size: 0.65rem; background: #EBE7DF; color: #2B2B2B;">${img.sizeFormatted || 'Web'}</span>
+          </div>
+          <div class="admin-gallery-actions">
+            <button type="button" class="btn btn-outline btn-sm copy-gallery-link-btn" data-url="${img.url}" style="flex: 1; padding: 0.35rem 0.4rem; font-size: 0.72rem;">
+              📋 Copiar
+            </button>
+            <button type="button" class="btn btn-dark btn-sm view-gallery-img-btn" data-url="${img.url}" data-name="${img.name || 'Foto'}" data-size="${img.sizeFormatted || ''}" data-date="${formattedDate}" style="padding: 0.35rem 0.5rem; font-size: 0.72rem;">
+              🔍
+            </button>
+            <button type="button" class="btn btn-dark btn-sm delete-gallery-img-btn" data-id="${img.id}" style="background-color: var(--color-magenta); padding: 0.35rem 0.5rem; font-size: 0.72rem;">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Click on media or view button opens lightbox
+  container.querySelectorAll('.admin-gallery-media, .view-gallery-img-btn').forEach(el => {
+    el.addEventListener('click', () => {
+      const url = el.getAttribute('data-url');
+      const name = el.getAttribute('data-name');
+      const size = el.getAttribute('data-size') || '';
+      const date = el.getAttribute('data-date') || '';
+      openGalleryLightbox({ url, name, sizeFormatted: size, createdAt: date });
+    });
+  });
+
+  // Copy link handler
+  container.querySelectorAll('.copy-gallery-link-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const url = btn.getAttribute('data-url');
+      if (url) {
+        navigator.clipboard.writeText(url).then(() => {
+          const originalText = btn.textContent;
+          btn.textContent = '✓ Copiado';
+          btn.style.background = '#E6F7ED';
+          btn.style.color = '#008844';
+          btn.style.borderColor = '#B3E6C8';
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+            btn.style.color = '';
+            btn.style.borderColor = '';
+          }, 2000);
+        });
+      }
+    });
+  });
+
+  // Delete image handler
+  container.querySelectorAll('.delete-gallery-img-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      if (confirm('¿Eliminar esta foto de la galería en la nube?')) {
+        await deleteGalleryImage(id);
+        renderAdminGallery();
+        updateCountsAndSelects();
+      }
+    });
+  });
+}
+
 // Render All Admin Views
 function renderAllAdminData() {
   updateCountsAndSelects();
   renderAdminProducts();
   renderAdminCategories();
+  renderAdminGallery();
   renderAdminPromoBar();
 }
 
@@ -898,6 +1029,292 @@ function setupPromoBarManager() {
   });
 }
 
+// Upload files to Firebase Storage and add to Gallery
+async function handleGalleryFilesUpload(files) {
+  const fileList = Array.from(files || []);
+  if (fileList.length === 0) return;
+
+  const statusBox = document.getElementById('gallery-upload-status');
+  if (statusBox) {
+    statusBox.style.display = 'block';
+    statusBox.style.background = '#FFF8E6';
+    statusBox.style.color = '#B7791F';
+    statusBox.style.border = '2px solid #FEEBC8';
+    statusBox.textContent = `⏳ Subiendo ${fileList.length} foto(s) a Firebase Storage... por favor espera.`;
+  }
+
+  let uploadedCount = 0;
+  let failedCount = 0;
+
+  for (let i = 0; i < fileList.length; i++) {
+    const file = fileList[i];
+    try {
+      if (statusBox) {
+        statusBox.textContent = `⏳ Subiendo (${i + 1}/${fileList.length}): ${file.name}...`;
+      }
+      const downloadUrl = await uploadImageToFirebase(file);
+      if (downloadUrl) {
+        await addGalleryImage({
+          name: file.name,
+          url: downloadUrl,
+          size: file.size
+        });
+        uploadedCount++;
+      } else {
+        failedCount++;
+      }
+    } catch (err) {
+      console.warn('Upload error for file:', file.name, err);
+      failedCount++;
+    }
+  }
+
+  renderAdminGallery();
+  updateCountsAndSelects();
+
+  if (statusBox) {
+    if (failedCount === 0) {
+      statusBox.style.background = '#E6F7ED';
+      statusBox.style.color = '#008844';
+      statusBox.style.border = '2px solid #B3E6C8';
+      statusBox.textContent = `✅ ¡${uploadedCount} foto(s) subidas y almacenadas con éxito en tu Galería Cloud!`;
+    } else {
+      statusBox.style.background = '#FFF0F0';
+      statusBox.style.color = '#CC0044';
+      statusBox.style.border = '2px solid #FFCCE0';
+      statusBox.textContent = `⚠️ Se subieron ${uploadedCount} foto(s). Fallaron ${failedCount}. Revisa tu conexión.`;
+    }
+
+    setTimeout(() => {
+      statusBox.style.display = 'none';
+    }, 4500);
+  }
+}
+
+// Setup Gallery Tab Manager
+function setupGalleryManager() {
+  const fileInput = document.getElementById('gallery-file-input');
+  const dropzone = document.getElementById('gallery-dropzone');
+  const urlInput = document.getElementById('gallery-url-input');
+  const addUrlBtn = document.getElementById('gallery-add-url-btn');
+  const searchInput = document.getElementById('gallery-search-input');
+
+  fileInput?.addEventListener('change', (e) => {
+    handleGalleryFilesUpload(e.target.files);
+    e.target.value = '';
+  });
+
+  dropzone?.addEventListener('click', () => {
+    fileInput?.click();
+  });
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropzone?.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.style.borderColor = 'var(--color-magenta)';
+      dropzone.style.background = '#FFF0F5';
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropzone?.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.style.borderColor = 'var(--color-border)';
+      dropzone.style.background = 'var(--color-bg-alt)';
+    });
+  });
+
+  dropzone?.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    if (dt && dt.files && dt.files.length > 0) {
+      handleGalleryFilesUpload(dt.files);
+    }
+  });
+
+  addUrlBtn?.addEventListener('click', async () => {
+    const url = urlInput?.value.trim();
+    if (!url) return;
+
+    try {
+      const fileName = url.split('/').pop().split('?')[0] || 'Foto URL';
+      await addGalleryImage({
+        name: fileName,
+        url: url,
+        size: 0
+      });
+      urlInput.value = '';
+      renderAdminGallery();
+      updateCountsAndSelects();
+    } catch (err) {
+      alert('Error al guardar foto por URL: ' + err.message);
+    }
+  });
+
+  searchInput?.addEventListener('input', (e) => {
+    renderAdminGallery(e.target.value);
+  });
+}
+
+// Gallery Lightbox Modal Setup
+function openGalleryLightbox(imgData) {
+  const modal = document.getElementById('gallery-lightbox-modal');
+  const img = document.getElementById('lightbox-img');
+  const title = document.getElementById('lightbox-title');
+  const info = document.getElementById('lightbox-info');
+  const copyBtn = document.getElementById('lightbox-copy-url-btn');
+  const downloadLink = document.getElementById('lightbox-download-link');
+
+  if (!modal || !imgData) return;
+
+  img.src = imgData.url;
+  if (title) title.textContent = imgData.name || 'Foto de Galería';
+  if (info) info.textContent = `${imgData.sizeFormatted ? `Tamaño: ${imgData.sizeFormatted}` : ''} ${imgData.createdAt ? `• ${imgData.createdAt}` : ''}`;
+  if (downloadLink) downloadLink.href = imgData.url;
+
+  if (copyBtn) {
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(imgData.url).then(() => {
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = '✓ ¡Copiado!';
+        setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+      });
+    };
+  }
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function setupGalleryLightboxModal() {
+  const modal = document.getElementById('gallery-lightbox-modal');
+  const closeBtn = document.getElementById('close-lightbox-modal');
+  if (!modal) return;
+
+  function closeModal() {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  closeBtn?.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+}
+
+// Gallery Picker for Product Modal
+let pickerSelectedUrls = new Set();
+
+function openGalleryPicker() {
+  const modal = document.getElementById('gallery-picker-modal');
+  const grid = document.getElementById('gallery-picker-grid');
+  const searchInput = document.getElementById('picker-search-input');
+  const countBadge = document.getElementById('picker-selected-count-badge');
+
+  if (!modal || !grid) return;
+
+  pickerSelectedUrls = new Set(currentModalImages);
+  if (searchInput) searchInput.value = '';
+
+  function renderPickerGrid(query = '') {
+    const images = getGalleryImages();
+    const q = query.toLowerCase().trim();
+    const filtered = q 
+      ? images.filter(img => (img.name && img.name.toLowerCase().includes(q)) || (img.url && img.url.toLowerCase().includes(q))) 
+      : images;
+
+    if (countBadge) {
+      countBadge.textContent = `${pickerSelectedUrls.size} seleccionada(s)`;
+    }
+
+    if (images.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #777;">
+          <p>No tienes fotos guardadas en la Galería Cloud.</p>
+          <p style="font-size: 0.85rem;">Ve a la pestaña <strong>🖼️ Galería</strong> en el menú para subir tus fotos a la nube.</p>
+        </div>
+      `;
+      return;
+    }
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #777;">Sin resultados para "${query}".</div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(img => {
+      const isSelected = pickerSelectedUrls.has(img.url);
+      return `
+        <div class="picker-thumb-card ${isSelected ? 'selected' : ''}" data-url="${img.url}">
+          <img src="${img.url}" alt="${img.name || 'Foto'}" loading="lazy">
+          <div class="picker-check-badge">✓</div>
+          <div class="picker-thumb-name">${img.name || 'Foto'}</div>
+        </div>
+      `;
+    }).join('');
+
+    grid.querySelectorAll('.picker-thumb-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const url = card.getAttribute('data-url');
+        if (pickerSelectedUrls.has(url)) {
+          pickerSelectedUrls.delete(url);
+          card.classList.remove('selected');
+        } else {
+          pickerSelectedUrls.add(url);
+          card.classList.add('selected');
+        }
+        if (countBadge) countBadge.textContent = `${pickerSelectedUrls.size} seleccionada(s)`;
+      });
+    });
+  }
+
+  renderPickerGrid();
+
+  searchInput?.addEventListener('input', (e) => {
+    renderPickerGrid(e.target.value);
+  });
+
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function setupGalleryPickerModal() {
+  const modal = document.getElementById('gallery-picker-modal');
+  const closeBtn = document.getElementById('close-gallery-picker-modal');
+  const cancelBtn = document.getElementById('cancel-gallery-picker-btn');
+  const confirmBtn = document.getElementById('confirm-gallery-picker-btn');
+  const openPickerBtn = document.getElementById('open-gallery-picker-btn');
+
+  if (!modal) return;
+
+  function closeModal() {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  openPickerBtn?.addEventListener('click', openGalleryPicker);
+  closeBtn?.addEventListener('click', closeModal);
+  cancelBtn?.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  confirmBtn?.addEventListener('click', () => {
+    // Merge selected URLs into currentModalImages
+    pickerSelectedUrls.forEach(url => {
+      if (!currentModalImages.includes(url)) {
+        currentModalImages.push(url);
+      }
+    });
+
+    const urlInput = document.getElementById('prod-form-image');
+    if (urlInput) {
+      urlInput.value = currentModalImages.join(', ');
+    }
+    renderProductImagesPreview();
+    closeModal();
+  });
+}
+
 // Initialize Admin App
 document.addEventListener('DOMContentLoaded', () => {
   setupLoginForm();
@@ -908,6 +1325,9 @@ document.addEventListener('DOMContentLoaded', () => {
   setupBackupHandlers();
   setupHeroImageManager();
   setupPromoBarManager();
+  setupGalleryManager();
+  setupGalleryPickerModal();
+  setupGalleryLightboxModal();
   setupConditionsAccordion();
   loadPlanData();
   checkAuthUI();
