@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plantillas Personalizables & Regalos Rápidos | Pájaros en la Cabeza</title>
+  <meta name="description" content="Catálogo de plantillas personalizables para regalos rápidos. Elige tu diseño base, escribe tu texto o sube tu foto y mira el resultado en vivo antes de pedir.">
+  
+  <!-- Favicon / Fonts -->
+  <link rel="icon" type="image/jpeg" href="/assets/logopajaros.jpg">
+  <link rel="shortcut icon" type="image/jpeg" href="/assets/logopajaros.jpg">
+  <link rel="apple-touch-icon" href="/assets/logopajaros.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=Space+Mono:wght@700&display=display" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="./src/styles/variables.css">
+  <link rel="stylesheet" href="./src/styles/main.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-bar">
+    <div class="top-bar-track">
+      <div class="top-bar-item">
+        <span class="dot"></span> ⚡ REGALOS RÁPIDOS CON VISTA PREVIA EN VIVO
+      </div>
+      <div class="top-bar-item">
+        <span class="dot"></span> ✅ PERSONALIZACIÓN DESDE 1 UNIDAD
+      </div>
+      <div class="top-bar-item">
+        <span class="dot"></span> 📦 ENVÍOS A TODO EL PAÍS
+      </div>
+      <div class="top-bar-item">
+        <span class="dot"></span> ⚡ REGALOS RÁPIDOS CON VISTA PREVIA EN VIVO
+      </div>
+      <div class="top-bar-item">
+        <span class="dot"></span> ✅ PERSONALIZACIÓN DESDE 1 UNIDAD
+      </div>
+      <div class="top-bar-item">
+        <span class="dot"></span> 📦 ENVÍOS A TODO EL PAÍS
+      </div>
+    </div>
+  </div>
+
+  <!-- Header & Navigation -->
+  <header class="site-header" id="header">
+    <div class="container header-container">
+      
+      <!-- Official Brand Logo -->
+      <a href="/" class="logo-brand" aria-label="Pájaros en la Cabeza Inicio">
+        <img src="/assets/logopajaros.jpg" alt="Pájaros en la Cabeza - Logo Oficial" class="official-logo-img" width="220" height="56">
+      </a>
+
+      <!-- Main Navigation -->
+      <nav class="main-nav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="/" class="nav-link">Inicio</a></li>
+          <li><a href="/tienda" class="nav-link">Tienda 🛍️</a></li>
+          <li><a href="/plantillas" class="nav-link active" style="color: var(--color-magenta); font-weight: 800;">Plantillas ⚡</a></li>
+          <li><a href="/#servicios" class="nav-link">Servicios & Envíos</a></li>
+          <li><a href="/#contacto" class="nav-link">Contacto</a></li>
+        </ul>
+      </nav>
+
+      <!-- Mobile Menu Toggle -->
+      <div class="header-actions">
+        <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Abrir menú">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Hero Banner Section -->
+  <section class="plantillas-banner-section">
+    <div class="container">
+      <div class="tpl-hero-card">
+        
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+          <div class="tpl-badge-pill">
+            <span>⚡ REGALOS RÁPIDOS EN 2 MINUTOS</span>
+          </div>
+          <h1 class="section-title" style="margin: 0; font-size: clamp(2rem, 4vw, 3rem);">
+            Catálogo de <span style="background: var(--color-yellow); padding: 0 0.35rem; border: var(--border-thin);">Plantillas Personalizables</span>
+          </h1>
+          <p style="font-size: 1.05rem; color: #444; max-width: 780px; margin-top: 0.4rem; line-height: 1.55;">
+            ¿Necesitas un detalle inolvidable para un cumpleaños, aniversario, o fecha especial? Elige una de nuestras plantillas prediseñadas, <strong>modifica el texto o sube tu foto favorita</strong> y mira el resultado en tiempo real antes de pedir.
+          </p>
+        </div>
+
+        <!-- 3-Step Process Guide -->
+        <div class="tpl-steps-grid">
+          <div class="tpl-step-item">
+            <div class="tpl-step-num">1</div>
+            <div class="tpl-step-text">
+              <h4>Elige la Plantilla</h4>
+              <p>Busca por ocasión: parejas, cumpleaños, mascotas, amistad o música.</p>
+            </div>
+          </div>
+
+          <div class="tpl-step-item">
+            <div class="tpl-step-num">2</div>
+            <div class="tpl-step-text">
+              <h4>Personaliza en Vivo</h4>
+              <p>Cambia nombres, fechas y sube tu foto con vista previa instantánea.</p>
+            </div>
+          </div>
+
+          <div class="tpl-step-item">
+            <div class="tpl-step-num">3</div>
+            <div class="tpl-step-text">
+              <h4>Pide por WhatsApp</h4>
+              <p>Te preparamos el mensaje listo con tu diseño y lo enviamos a tu casa.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter and Search Row -->
+        <div style="display: flex; flex-direction: column; gap: 1rem; border-top: var(--border-thin); padding-top: 1.25rem;">
+          <div style="display: grid; grid-template-columns: 1fr 220px; gap: 1rem; align-items: center;">
+            <div style="position: relative;">
+              <input type="text" id="tpl-search-input" class="form-input" placeholder="🔍 Buscar plantilla (ej: polaroid, cumpleaños, mascota, música)...">
+            </div>
+            <div>
+              <select id="tpl-product-filter" class="form-select" style="font-weight: 700;">
+                <option value="all">Soporte: Todos</option>
+                <option value="remera">Remeras</option>
+                <option value="hoodie">Buzos Hoodie</option>
+                <option value="taza">Tazas</option>
+                <option value="totebag">Totebags</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Occasion Category Chips -->
+          <div class="tpl-filter-bar" id="tpl-category-filters">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Templates Grid Section -->
+  <section class="section-padding" style="background-color: var(--color-white);">
+    <div class="container">
+      
+      <div class="section-title-wrap" style="text-align: left; margin-bottom: 2rem;">
+        <span class="section-tag" style="background: var(--color-magenta); color: #FFF;">DISEÑOS LISTOS PARA EDITAR</span>
+        <h2 class="section-title" style="margin-top: 0.4rem;">Elige tu Regalo Personalizado</h2>
+      </div>
+
+      <!-- Templates Grid -->
+      <div class="templates-grid" id="templates-cards-container">
+        <!-- Rendered dynamically via JS -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- INTERACTIVE CUSTOMIZER MODAL STUDIO -->
+  <div class="customizer-modal" id="customizer-modal" aria-hidden="true" role="dialog">
+    <div class="customizer-dialog">
+      
+      <!-- Studio Header -->
+      <div class="customizer-header">
+        <div class="customizer-header-title">
+          <span style="font-size: 1.4rem;">🎨</span>
+          <div>
+            <h3 id="customizer-tpl-name">Personalizador de Plantilla</h3>
+            <span id="customizer-tpl-subtitle" style="font-size: 0.78rem; color: #DDD; font-family: var(--font-mono);">Vista Previa en Vivo</span>
+          </div>
+        </div>
+        <button type="button" class="customizer-header-close" id="customizer-close-btn" aria-label="Cerrar personalizador">✕</button>
+      </div>
+
+      <!-- Studio Body (2 Columns) -->
+      <div class="customizer-body">
+        
+        <!-- Left: Canvas Mockup Column -->
+        <div class="customizer-canvas-col">
+          <div class="canvas-mockup-frame">
+            <div class="canvas-live-badge">
+              <span class="pulse-dot"></span> EN VIVO
+            </div>
+            <canvas id="customizer-canvas" class="canvas-element" width="600" height="600"></canvas>
+          </div>
+
+          <!-- Canvas Download & Hint Bar -->
+          <div class="canvas-actions-bar">
+            <button type="button" class="btn btn-outline btn-sm" id="btn-download-preview" style="font-size: 0.8rem; padding: 0.5rem 0.9rem; flex: 1;">
+              <span>Descargar Foto 📸</span>
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" id="btn-copy-summary" style="font-size: 0.8rem; padding: 0.5rem 0.9rem;" title="Copiar resumen">
+              <span>Copiar Datos 📋</span>
+            </button>
+          </div>
+          <span style="font-size: 0.75rem; color: #666; font-weight: 600;">* Los cambios que haces a la derecha se reflejan al instante en la prenda.</span>
+        </div>
+
+        <!-- Right: Controls Column -->
+        <div class="customizer-controls-col">
+          
+          <!-- 1. Product Type Selector -->
+          <div class="control-section">
+            <div class="control-section-header">
+              <h4 class="control-section-title">1. Elige el Producto</h4>
+            </div>
+            <div class="product-type-chips" id="customizer-product-types">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- 2. Garment / Item Color -->
+          <div class="control-section" id="customizer-color-section">
+            <div class="control-section-header">
+              <h4 class="control-section-title">2. Color del Artículo</h4>
+              <span id="selected-color-name" style="font-size: 0.8rem; font-weight: 700; color: var(--color-magenta);">Negro</span>
+            </div>
+            <div class="colors-grid" id="customizer-colors-grid">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- 3. Size Selector (for Garments) -->
+          <div class="control-section" id="customizer-size-section">
+            <div class="control-section-header">
+              <h4 class="control-section-title">3. Talle Disponible</h4>
+              <span id="selected-size-name" style="font-size: 0.8rem; font-weight: 700;">M</span>
+            </div>
+            <div class="sizes-grid" id="customizer-sizes-grid">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- 4. Photo Upload (if template requires photo) -->
+          <div class="control-section" id="customizer-photo-section" style="display: none;">
+            <div class="control-section-header">
+              <h4 class="control-section-title">📷 Tu Foto Personalizada</h4>
+              <span style="font-size: 0.75rem; font-weight: 700; color: var(--color-magenta);">Encuadre Automático</span>
+            </div>
+
+            <div class="photo-dropzone" id="photo-dropzone">
+              <input type="file" id="photo-file-input" accept="image/*" style="display: none;">
+              <span style="font-size: 2rem;">📸</span>
+              <strong style="font-size: 0.9rem;">Haz clic para subir tu foto</strong>
+              <span style="font-size: 0.78rem; color: #777;">Formatos JPG, PNG o WebP (hasta 10MB)</span>
+            </div>
+
+            <!-- Uploaded State -->
+            <div class="photo-preview-bar" id="photo-preview-bar" style="display: none;">
+              <img src="" alt="Foto cargada" class="photo-preview-thumb" id="photo-thumb-preview">
+              <div class="photo-preview-info">
+                <span class="filename" id="photo-filename">foto_personalizada.jpg</span>
+                <span class="status">✓ Foto aplicada en la plantilla</span>
+              </div>
+              <button type="button" class="btn-remove-photo" id="btn-remove-photo">Quitar</button>
+            </div>
+          </div>
+
+          <!-- 5. Dynamic Text Fields -->
+          <div class="control-section" id="customizer-text-fields-section">
+            <div class="control-section-header">
+              <h4 class="control-section-title">✏️ Textos Personalizados</h4>
+            </div>
+            <div id="customizer-dynamic-inputs" style="display: flex; flex-direction: column; gap: 0.85rem;">
+              <!-- Rendered via JS based on template.fields -->
+            </div>
+          </div>
+
+          <!-- 6. Payment & Summary Box -->
+          <div class="customizer-summary-box">
+            <div class="summary-row">
+              <span>Producto seleccionado:</span>
+              <span id="summary-product-name" style="font-weight: 700;">Remera Algodón</span>
+            </div>
+            <div class="summary-row">
+              <span>Forma de Pago:</span>
+              <select id="customizer-payment-select" class="form-select" style="padding: 0.35rem 0.6rem; font-size: 0.85rem; width: auto;">
+                <option value="0.85">Efectivo Eft (15% OFF)</option>
+                <option value="0.9" selected>Transferencia (10% OFF)</option>
+                <option value="1.0">Mercado Pago (1 pago)</option>
+              </select>
+            </div>
+            <div class="summary-row total-row">
+              <span>Total Estimado:</span>
+              <div class="summary-total-price" id="summary-total-display">$17.550</div>
+            </div>
+          </div>
+
+          <!-- Action Button: Order on WhatsApp -->
+          <button type="button" class="btn btn-primary" id="btn-order-whatsapp" style="width: 100%; padding: 1.1rem; font-size: 1.05rem;">
+            <span>Pedir por WhatsApp con mi Diseño</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+            </svg>
+          </button>
+
+          <p style="text-align: center; font-size: 0.78rem; color: #777; margin: 0;">
+            🚚 Despachos a todo el país. Al enviar el mensaje, podrás adjuntar la foto original en alta resolución.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+  <footer class="site-footer" id="contacto">
+    <div class="container">
+      <div class="footer-grid">
+        
+        <!-- Col 1: Brand Info & Payments -->
+        <div class="footer-brand">
+          <a href="/" class="footer-logo-card" aria-label="Pájaros en la Cabeza Inicio">
+            <img src="/logofooter.jpg" alt="Pájaros en la Cabeza - Logo Oficial" class="official-logo-img-footer" width="320" height="105">
+          </a>
+
+          <p>
+            Especialistas en ropa personalizada, plantillas de regalos rápidos y accesorios urbanos con asesoría de imagen profesional.
+          </p>
+
+          <div class="payments-box">
+            <div class="payments-title">Métodos de Pago Aceptados</div>
+            <div class="payment-badges-grid">
+              <div class="payment-badge"><span>🏦</span> Transferencia</div>
+              <div class="payment-badge"><span>💵</span> Efectivo (Eft)</div>
+              <div class="payment-badge" style="background-color: var(--color-yellow);"><span>💳</span> Mercado Pago</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 2: Navigation -->
+        <div>
+          <h4 style="color: var(--color-yellow); margin-bottom: 1.2rem;">Navegación</h4>
+          <ul style="display: flex; flex-direction: column; gap: 0.8rem;">
+            <li><a href="/" style="color: #DDD;">• Inicio</a></li>
+            <li><a href="/tienda" style="color: #DDD;">• Tienda Completa</a></li>
+            <li><a href="/plantillas" style="color: var(--color-yellow); font-weight: 700;">• Plantillas Personalizables ⚡</a></li>
+            <li><a href="/#servicios" style="color: #DDD;">• Asesoría de Imagen & Envíos</a></li>
+            <li><a href="/#contacto" style="color: #DDD;">• Contacto</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Assistance & Contact -->
+        <div class="footer-form-card">
+          <h4 style="margin-bottom: 0.4rem;">¿Tienes un diseño propio?</h4>
+          <p style="font-size: 0.85rem; margin-bottom: 1rem; color: var(--color-taupe-dark);">
+            Si prefieres estampar tu propio logo o imagen desde cero, escríbenos directamente por WhatsApp.
+          </p>
+          <a href="https://wa.me/5493517620847?text=Hola%20P%C3%A1jaros%20en%20la%20Cabeza!%20Tengo%20un%20dise%C3%B1o%20propio%20para%20estampar." target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <span>Chatear por WhatsApp</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+          </a>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 Pájaros en la Cabeza. Todos los derechos reservados. <a href="/admin" class="hidden-admin-lock" title="Acceso Panel de Administración" aria-label="Acceso Admin">🔒</a></span>
+        <span>Ropa personalizada & Regalos rápidos</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating WhatsApp Button -->
+  <a href="https://wa.me/5493517620847?text=Hola%20P%C3%A1jaros%20en%20la%20Cabeza!%20Quisiera%20consultar%20por%20las%20plantillas%20personalizables." target="_blank" rel="noopener noreferrer" class="floating-whatsapp-btn" aria-label="Contactar por WhatsApp">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+    </svg>
+    <span class="whatsapp-text">¡Chatea con nosotras!</span>
+  </a>
+
+  <!-- JavaScript Module -->
+  <script type="module" src="./src/plantillas.js"></script>
+</body>
+</html>

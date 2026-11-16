@@ -17,12 +17,14 @@ import {
   getDownloadURL 
 } from 'firebase/storage';
 import { BRAND_INFO, SHIPPING_RATES, ARGENTINA_PROVINCES } from './products.js';
+import { INITIAL_TEMPLATES } from './templates.js';
 
 const STORAGE_KEY_PRODUCTS = 'pajaros_products_v1';
 const STORAGE_KEY_CATEGORIES = 'pajaros_categories_v1';
 const STORAGE_KEY_HERO_IMAGE = 'pajaros_hero_image_v1';
 const STORAGE_KEY_PROMO = 'pajaros_promo_bar_v1';
 const STORAGE_KEY_GALLERY = 'pajaros_gallery_v1';
+const STORAGE_KEY_TEMPLATES = 'pajaros_templates_v1';
 
 const DEFAULT_HERO_IMAGE = '/assets/hero_banner.png';
 export const DEFAULT_PROMO_BAR = {
@@ -40,12 +42,14 @@ const categoriesCollectionRef = collection(db, 'categories');
 const heroDocRef = doc(db, 'settings', 'hero');
 const promoDocRef = doc(db, 'settings', 'promo');
 const galleryCollectionRef = collection(db, 'gallery');
+const templatesCollectionRef = collection(db, 'templates');
 
 let cachedProducts = [];
 let cachedCategories = [];
 let cachedHeroImage = DEFAULT_HERO_IMAGE;
 let cachedPromoBar = { ...DEFAULT_PROMO_BAR };
 let cachedGallery = [];
+let cachedTemplates = [...INITIAL_TEMPLATES];
 const subscribers = [];
 
 // Initialize local cache from localStorage
@@ -55,18 +59,21 @@ try {
   const savedHero = localStorage.getItem(STORAGE_KEY_HERO_IMAGE);
   const savedPromo = localStorage.getItem(STORAGE_KEY_PROMO);
   const savedGallery = localStorage.getItem(STORAGE_KEY_GALLERY);
+  const savedTemplates = localStorage.getItem(STORAGE_KEY_TEMPLATES);
 
   cachedProducts = savedProds ? JSON.parse(savedProds) : [];
   cachedCategories = savedCats ? JSON.parse(savedCats) : [];
   cachedHeroImage = savedHero || DEFAULT_HERO_IMAGE;
   cachedPromoBar = savedPromo ? { ...DEFAULT_PROMO_BAR, ...JSON.parse(savedPromo) } : { ...DEFAULT_PROMO_BAR };
   cachedGallery = savedGallery ? JSON.parse(savedGallery) : [];
+  cachedTemplates = savedTemplates ? JSON.parse(savedTemplates) : [...INITIAL_TEMPLATES];
 } catch (e) {
   cachedProducts = [];
   cachedCategories = [];
   cachedHeroImage = DEFAULT_HERO_IMAGE;
   cachedPromoBar = { ...DEFAULT_PROMO_BAR };
   cachedGallery = [];
+  cachedTemplates = [...INITIAL_TEMPLATES];
 }
 
 let isFirestoreConnected = false;
@@ -89,6 +96,7 @@ function notifySubscribers() {
         heroImage: cachedHeroImage, 
         promoBar: cachedPromoBar,
         gallery: cachedGallery,
+        templates: cachedTemplates,
         firestoreStatus: getFirestoreStatus() 
       }); 
     } catch(err){}
@@ -168,6 +176,18 @@ try {
   }, (err) => {
     console.warn('Firestore gallery snapshot error:', err);
   });
+
+  onSnapshot(templatesCollectionRef, (snapshot) => {
+    const tpls = [];
+    snapshot.forEach(docSnap => tpls.push({ id: docSnap.id, ...docSnap.data() }));
+    if (tpls.length > 0) {
+      cachedTemplates = tpls;
+      localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(tpls));
+      notifySubscribers();
+    }
+  }, (err) => {
+    console.warn('Firestore templates snapshot error:', err);
+  });
 } catch (e) {
   isFirestoreConnected = false;
   firestoreErrorNotice = 'Falló inicialización de Firestore: ' + (e.message || e);
@@ -202,6 +222,93 @@ export function getPromoBar() {
 
 export function getGalleryImages() {
   return cachedGallery;
+}
+
+export function getTemplates() {
+  return cachedTemplates;
+}
+
+export function getTemplateById(id) {
+  return cachedTemplates.find(t => t.id === id) || cachedTemplates[0];
+}
+
+export async function addTemplate(tplData) {
+  const tplId = tplData.id || `tpl-${Date.now()}`;
+  const newTemplate = {
+    id: tplId,
+    name: tplData.name || 'Nueva Plantilla',
+    subtitle: tplData.subtitle || 'Regalo rápido personalizable',
+    category: tplData.category || 'parejas',
+    categoryLabel: tplData.categoryLabel || 'Parejas & Amor',
+    badge: tplData.badge || 'Nuevo',
+    badgeColor: tplData.badgeColor || 'yellow',
+    description: tplData.description || '',
+    basePrice: Number(tplData.basePrice) || 19500,
+    hasPhoto: Boolean(tplData.hasPhoto),
+    photoAspect: tplData.photoAspect || 'square',
+    defaultProduct: tplData.defaultProduct || 'remera',
+    allowedProducts: tplData.allowedProducts || ['remera', 'hoodie', 'taza', 'totebag'],
+    fields: tplData.fields || [
+      { id: 'names', label: 'Texto Principal', placeholder: 'Escribe aquí...', defaultValue: 'Texto Personalizado', maxLength: 35 }
+    ],
+    designStyle: tplData.designStyle || 'polaroid'
+  };
+
+  cachedTemplates.unshift(newTemplate);
+  localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(cachedTemplates));
+  notifySubscribers();
+
+  try {
+    await setDoc(doc(db, 'templates', tplId), newTemplate);
+  } catch (err) {
+    console.warn('Firestore template write error:', err);
+  }
+
+  return newTemplate;
+}
+
+export async function updateTemplate(id, tplData) {
+  const index = cachedTemplates.findIndex(t => t.id === id);
+  if (index === -1) return null;
+
+  const updated = {
+    ...cachedTemplates[index],
+    ...tplData,
+    basePrice: Number(tplData.basePrice) || cachedTemplates[index].basePrice
+  };
+
+  cachedTemplates[index] = updated;
+  localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(cachedTemplates));
+  notifySubscribers();
+
+  try {
+    await setDoc(doc(db, 'templates', id), updated);
+  } catch (err) {
+    console.warn('Firestore template update error:', err);
+  }
+
+  return updated;
+}
+
+export async function deleteTemplate(id) {
+  cachedTemplates = cachedTemplates.filter(t => t.id !== id);
+  localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(cachedTemplates));
+  notifySubscribers();
+
+  try {
+    await deleteDoc(doc(db, 'templates', id));
+  } catch (err) {
+    console.warn('Firestore template delete error:', err);
+  }
+
+  return cachedTemplates;
+}
+
+export function resetTemplatesToDefault() {
+  cachedTemplates = [...INITIAL_TEMPLATES];
+  localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(cachedTemplates));
+  notifySubscribers();
+  return cachedTemplates;
 }
 
 export async function addGalleryImage(imageData) {
@@ -443,6 +550,7 @@ export function exportStoreData() {
     exportDate: new Date().toISOString(),
     categories: cachedCategories,
     products: cachedProducts,
+    templates: cachedTemplates,
     heroImage: cachedHeroImage,
     promoBar: cachedPromoBar,
     gallery: cachedGallery
@@ -458,12 +566,14 @@ export async function importStoreData(jsonContent) {
     
     cachedCategories = parsed.categories;
     cachedProducts = parsed.products;
+    if (parsed.templates && Array.isArray(parsed.templates)) cachedTemplates = parsed.templates;
     if (parsed.heroImage) cachedHeroImage = parsed.heroImage;
     if (parsed.promoBar) cachedPromoBar = { ...DEFAULT_PROMO_BAR, ...parsed.promoBar };
     if (parsed.gallery) cachedGallery = parsed.gallery;
 
     localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(cachedCategories));
     localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(cachedProducts));
+    localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(cachedTemplates));
     localStorage.setItem(STORAGE_KEY_HERO_IMAGE, cachedHeroImage);
     localStorage.setItem(STORAGE_KEY_PROMO, JSON.stringify(cachedPromoBar));
     localStorage.setItem(STORAGE_KEY_GALLERY, JSON.stringify(cachedGallery));
@@ -476,6 +586,11 @@ export async function importStoreData(jsonContent) {
       }
       for (const prod of cachedProducts) {
         await setDoc(doc(db, 'products', prod.id), prod);
+      }
+      if (cachedTemplates && cachedTemplates.length > 0) {
+        for (const tpl of cachedTemplates) {
+          await setDoc(doc(db, 'templates', tpl.id), tpl);
+        }
       }
       if (cachedHeroImage) {
         await setDoc(heroDocRef, { url: cachedHeroImage, updatedAt: new Date().toISOString() });
@@ -492,7 +607,7 @@ export async function importStoreData(jsonContent) {
       console.warn('Firestore sync warning during import:', fsErr);
     }
 
-    return { success: true, countCategories: cachedCategories.length, countProducts: cachedProducts.length };
+    return { success: true, countCategories: cachedCategories.length, countProducts: cachedProducts.length, countTemplates: cachedTemplates.length };
   } catch (err) {
     return { success: false, error: err.message };
   }

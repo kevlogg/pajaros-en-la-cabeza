@@ -22,10 +22,17 @@ import {
   getGalleryImages,
   addGalleryImage,
   deleteGalleryImage,
+  getTemplates,
+  addTemplate,
+  updateTemplate,
+  deleteTemplate,
+  resetTemplatesToDefault,
   exportStoreData, 
   importStoreData, 
   getFirestoreStatus
 } from './data/store.js';
+import { TEMPLATE_CATEGORIES, TEMPLATE_PRODUCTS } from './data/templates.js';
+import { renderTemplatePreview } from './utils/customizerCanvas.js';
 
 const ADMIN_PASSWORD = 'adminpajaros';
 const AUTH_KEY = 'pajaros_admin_authenticated';
@@ -241,16 +248,19 @@ function updateCountsAndSelects() {
   const products = getProducts();
   const categories = getCategories();
   const gallery = getGalleryImages();
+  const templates = getTemplates();
 
   const prodCountBadge = document.getElementById('sidebar-prod-count');
   const catCountBadge = document.getElementById('sidebar-cat-count');
   const galleryCountBadge = document.getElementById('sidebar-gallery-count');
+  const templatesCountBadge = document.getElementById('sidebar-templates-count');
   const galleryTotalCount = document.getElementById('gallery-total-count');
   const categorySelect = document.getElementById('prod-form-category');
 
   if (prodCountBadge) prodCountBadge.textContent = products.length;
   if (catCountBadge) catCountBadge.textContent = categories.length;
   if (galleryCountBadge) galleryCountBadge.textContent = gallery.length;
+  if (templatesCountBadge) templatesCountBadge.textContent = templates.length;
   if (galleryTotalCount) galleryTotalCount.textContent = `${gallery.length} Fotos Guardadas`;
 
   if (categorySelect) {
@@ -472,6 +482,7 @@ function renderAdminGallery(filterQuery = '') {
 function renderAllAdminData() {
   updateCountsAndSelects();
   renderAdminProducts();
+  renderAdminTemplates();
   renderAdminCategories();
   renderAdminGallery();
   renderAdminPromoBar();
@@ -702,6 +713,240 @@ function openEditCategoryModal(id) {
   document.getElementById('cat-form-image').value = cat.image || '';
   document.getElementById('cat-form-description').value = cat.description || '';
   document.getElementById('cat-form-badge').value = cat.badge || '';
+
+  modal.classList.add('active');
+}
+
+// Render Templates in Admin Panel
+function renderAdminTemplates() {
+  const container = document.getElementById('admin-templates-container');
+  if (!container) return;
+
+  const templates = getTemplates();
+
+  if (templates.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 2.5rem; background: #FFF; border: 2px dashed #CBD5E0; border-radius: 12px;">
+        <span style="font-size: 2rem;">🎨</span>
+        <h4 style="margin: 0.5rem 0 0.25rem 0;">No hay plantillas registradas</h4>
+        <p style="color: #666; font-size: 0.85rem; margin: 0;">Haz clic en "+ Nueva Plantilla" o restablece las plantillas iniciales.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = templates.map(tpl => {
+    const fieldsList = (tpl.fields || []).map(f => f.label).join(', ') || 'Sin campos de texto';
+    return `
+      <div class="admin-tpl-card" style="background: #FFFFFF; border: 3px solid var(--color-border); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-flat); display: flex; flex-direction: column;">
+        <div style="height: 180px; background: #EFECE6; border-bottom: 2.5px solid var(--color-border); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+          <canvas width="360" height="240" id="admin-tpl-canvas-${tpl.id}" style="width: 100%; height: 100%; object-fit: cover;"></canvas>
+          <div style="position: absolute; top: 8px; left: 8px;">
+            <span class="badge badge-${tpl.badgeColor || 'yellow'}" style="font-size: 0.72rem;">${tpl.badge || 'Plantilla'}</span>
+          </div>
+          ${tpl.hasPhoto ? `
+            <div style="position: absolute; bottom: 8px; right: 8px; background: #000; color: #FFF; font-size: 0.68rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--color-yellow);">
+              📷 Lleva Foto
+            </div>
+          ` : `
+            <div style="position: absolute; bottom: 8px; right: 8px; background: #555; color: #FFF; font-size: 0.68rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;">
+              ✏️ Solo Texto
+            </div>
+          `}
+        </div>
+
+        <div style="padding: 1.1rem; display: flex; flex-direction: column; gap: 0.6rem; flex-grow: 1;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <span style="font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--color-magenta); text-transform: uppercase;">
+              ${tpl.categoryLabel || tpl.category}
+            </span>
+            <strong style="font-family: var(--font-heading); font-size: 1.1rem;">
+              $${(tpl.basePrice || 19500).toLocaleString('es-AR')}
+            </strong>
+          </div>
+
+          <h4 style="margin: 0; font-size: 1.05rem; line-height: 1.25;">${tpl.name}</h4>
+          <p style="margin: 0; font-size: 0.8rem; color: #666; line-height: 1.35;">${tpl.subtitle || tpl.description || ''}</p>
+
+          <div style="background: #F8F7F4; border: 1px solid #E2DED5; padding: 0.5rem 0.7rem; border-radius: 6px; font-size: 0.75rem; color: #444;">
+            <strong>Campos:</strong> ${fieldsList}
+          </div>
+
+          <div style="margin-top: auto; padding-top: 0.8rem; border-top: 1px solid #EEE; display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-outline btn-sm edit-tpl-btn" data-id="${tpl.id}" style="flex: 1; padding: 0.45rem;">
+              Editar
+            </button>
+            <button type="button" class="btn btn-dark btn-sm delete-tpl-btn" data-id="${tpl.id}" style="background-color: var(--color-magenta); padding: 0.45rem 0.75rem;">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Render miniature previews on each card canvas
+  templates.forEach(tpl => {
+    const canvas = document.getElementById(`admin-tpl-canvas-${tpl.id}`);
+    if (canvas) {
+      const prodKey = tpl.defaultProduct || 'remera';
+      const prodInfo = TEMPLATE_PRODUCTS[prodKey] || TEMPLATE_PRODUCTS.remera;
+      const color = prodInfo.colors[0];
+      const defaultFields = {};
+      if (tpl.fields) {
+        tpl.fields.forEach(f => {
+          defaultFields[f.id] = f.defaultValue || '';
+        });
+      }
+
+      renderTemplatePreview(canvas, {
+        template: tpl,
+        productType: prodKey,
+        color: color,
+        fieldValues: defaultFields,
+        userImage: null
+      });
+    }
+  });
+
+  // Bind edit and delete handlers
+  container.querySelectorAll('.edit-tpl-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      openEditTemplateModal(id);
+    });
+  });
+
+  container.querySelectorAll('.delete-tpl-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      if (confirm('¿Estás seguro de eliminar esta plantilla?')) {
+        await deleteTemplate(id);
+        renderAllAdminData();
+      }
+    });
+  });
+}
+
+// Template Modal Handling
+function setupTemplateModal() {
+  const modal = document.getElementById('admin-template-modal');
+  const openBtn = document.getElementById('open-add-template-modal');
+  const closeBtn = document.getElementById('close-template-modal');
+  const resetBtn = document.getElementById('btn-reset-templates');
+  const form = document.getElementById('template-form');
+  const modalTitle = document.getElementById('template-modal-title');
+
+  if (!modal || !form) return;
+
+  function closeModal() {
+    modal.classList.remove('active');
+    form.reset();
+    document.getElementById('template-form-id').value = '';
+  }
+
+  openBtn?.addEventListener('click', () => {
+    form.reset();
+    document.getElementById('template-form-id').value = '';
+    if (modalTitle) modalTitle.textContent = 'Nueva Plantilla Personalizable';
+    modal.classList.add('active');
+  });
+
+  closeBtn?.addEventListener('click', closeModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  resetBtn?.addEventListener('click', () => {
+    if (confirm('¿Restablecer el catálogo con las plantillas predeterminadas de Pájaros en la Cabeza?')) {
+      resetTemplatesToDefault();
+      renderAllAdminData();
+    }
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('template-form-id').value;
+    const name = document.getElementById('template-form-name').value;
+    const subtitle = document.getElementById('template-form-subtitle').value;
+    const category = document.getElementById('template-form-category').value;
+    const basePrice = Number(document.getElementById('template-form-price').value) || 19500;
+    const badge = document.getElementById('template-form-badge').value || 'Regalo Rápido';
+    const badgeColor = document.getElementById('template-form-badge-color').value || 'yellow';
+    const designStyle = document.getElementById('template-form-style').value || 'polaroid';
+    const defaultProduct = document.getElementById('template-form-default-prod').value || 'remera';
+    const hasPhoto = document.getElementById('template-form-has-photo').checked;
+
+    const f1Label = document.getElementById('template-form-field1-label').value.trim();
+    const f1Def = document.getElementById('template-form-field1-default').value.trim();
+    const f2Label = document.getElementById('template-form-field2-label').value.trim();
+    const f2Def = document.getElementById('template-form-field2-default').value.trim();
+
+    const fields = [];
+    if (f1Label) {
+      fields.push({ id: 'field1', label: f1Label, placeholder: f1Def, defaultValue: f1Def, maxLength: 35 });
+    }
+    if (f2Label) {
+      fields.push({ id: 'field2', label: f2Label, placeholder: f2Def, defaultValue: f2Def, maxLength: 40 });
+    }
+
+    const catObj = TEMPLATE_CATEGORIES.find(c => c.id === category);
+
+    const tplData = {
+      name,
+      subtitle,
+      description: subtitle,
+      category,
+      categoryLabel: catObj ? catObj.name : category,
+      basePrice,
+      badge,
+      badgeColor,
+      designStyle,
+      defaultProduct,
+      hasPhoto,
+      photoAspect: designStyle === 'pet_badge' ? 'circle' : 'square',
+      fields: fields.length > 0 ? fields : [{ id: 'names', label: 'Texto', defaultValue: 'Mi Regalo', maxLength: 35 }]
+    };
+
+    if (id) {
+      await updateTemplate(id, tplData);
+    } else {
+      await addTemplate(tplData);
+    }
+
+    closeModal();
+    renderAllAdminData();
+  });
+}
+
+function openEditTemplateModal(id) {
+  const templates = getTemplates();
+  const tpl = templates.find(t => t.id === id);
+  if (!tpl) return;
+
+  const modal = document.getElementById('admin-template-modal');
+  const modalTitle = document.getElementById('template-modal-title');
+  if (modalTitle) modalTitle.textContent = 'Editar Plantilla';
+
+  document.getElementById('template-form-id').value = tpl.id;
+  document.getElementById('template-form-name').value = tpl.name || '';
+  document.getElementById('template-form-subtitle').value = tpl.subtitle || tpl.description || '';
+  document.getElementById('template-form-category').value = tpl.category || 'parejas';
+  document.getElementById('template-form-price').value = tpl.basePrice || 19500;
+  document.getElementById('template-form-badge').value = tpl.badge || '';
+  document.getElementById('template-form-badge-color').value = tpl.badgeColor || 'yellow';
+  document.getElementById('template-form-style').value = tpl.designStyle || 'polaroid';
+  document.getElementById('template-form-default-prod').value = tpl.defaultProduct || 'remera';
+  document.getElementById('template-form-has-photo').checked = Boolean(tpl.hasPhoto);
+
+  const f1 = (tpl.fields && tpl.fields[0]) ? tpl.fields[0] : null;
+  const f2 = (tpl.fields && tpl.fields[1]) ? tpl.fields[1] : null;
+
+  document.getElementById('template-form-field1-label').value = f1 ? f1.label : '';
+  document.getElementById('template-form-field1-default').value = f1 ? (f1.defaultValue || '') : '';
+  document.getElementById('template-form-field2-label').value = f2 ? f2.label : '';
+  document.getElementById('template-form-field2-default').value = f2 ? (f2.defaultValue || '') : '';
 
   modal.classList.add('active');
 }
@@ -1320,6 +1565,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupLoginForm();
   setupTabNavigation();
   setupProductModal();
+  setupTemplateModal();
   setupCategoryModal();
   setupResetButton();
   setupBackupHandlers();

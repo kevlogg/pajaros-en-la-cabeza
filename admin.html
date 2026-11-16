@@ -84,6 +84,10 @@
             <span>🛍️ Productos</span>
             <span class="nav-count-badge" id="sidebar-prod-count">0</span>
           </button>
+          <button class="admin-nav-btn" data-tab="templates">
+            <span>🎨 Plantillas</span>
+            <span class="nav-count-badge" id="sidebar-templates-count">0</span>
+          </button>
           <button class="admin-nav-btn" data-tab="categories">
             <span>📁 Categorías</span>
             <span class="nav-count-badge" id="sidebar-cat-count">0</span>
@@ -197,6 +201,28 @@ service cloud.firestore {
           </div>
 
           <div class="products-admin-grid" id="admin-products-container">
+            <!-- Rendered via admin.js -->
+          </div>
+        </div>
+
+        <!-- TAB: PLANTILLAS PERSONALIZABLES -->
+        <div class="admin-tab-content" id="tab-templates">
+          <div class="panel-header">
+            <div>
+              <h2>Plantillas Personalizables (Regalos Rápidos)</h2>
+              <p>Administra los diseños base que tus clientes personalizan en vivo con texto y foto antes de encargar.</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-outline" id="btn-reset-templates">
+                🔄 Restablecer Plantillas Base
+              </button>
+              <button type="button" class="btn btn-primary" id="open-add-template-modal">
+                + Nueva Plantilla
+              </button>
+            </div>
+          </div>
+
+          <div class="templates-admin-grid" id="admin-templates-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
             <!-- Rendered via admin.js -->
           </div>
         </div>
@@ -714,6 +740,130 @@ service cloud.firestore {
           <button type="button" id="lightbox-copy-url-btn" class="btn btn-outline btn-sm">📋 Copiar Link</button>
           <a id="lightbox-download-link" href="" target="_blank" class="btn btn-primary btn-sm">Abrir en Pestaña ↗</a>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL AGREGAR / EDITAR PLANTILLA PERSONALIZABLE -->
+  <div class="modal-overlay" id="admin-template-modal">
+    <div class="modal-card" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 id="template-modal-title">Nueva Plantilla Personalizable</h3>
+        <button class="modal-close-btn" id="close-template-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="template-form">
+          <input type="hidden" id="template-form-id">
+
+          <div class="form-group">
+            <label class="form-label" for="template-form-name">Nombre de la Plantilla:</label>
+            <input type="text" id="template-form-name" class="form-input" required placeholder="Ej: Marco Polaroid 'Nuestra Historia'">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="template-form-subtitle">Subtítulo / Bajada:</label>
+            <input type="text" id="template-form-subtitle" class="form-input" placeholder="Ej: El regalo más romántico para aniversarios">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="template-form-category">Ocasión / Categoría:</label>
+              <select id="template-form-category" class="form-select" required>
+                <option value="parejas">Parejas & Amor ❤️</option>
+                <option value="cumpleanos">Cumpleaños 🎂</option>
+                <option value="mascotas">Mascotas 🐾</option>
+                <option value="amistad">Amistad & Squad 🤝</option>
+                <option value="urbano">Música & Urbano 🎧</option>
+                <option value="familia">Familia & Fechas 🏆</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="template-form-price">Precio Base Sugerido ($):</label>
+              <input type="number" id="template-form-price" class="form-input" required value="19500" min="1000" step="500">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="template-form-badge">Badge Destacado:</label>
+              <input type="text" id="template-form-badge" class="form-input" placeholder="Ej: Más Vendido 🔥">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="template-form-badge-color">Color de Badge:</label>
+              <select id="template-form-badge-color" class="form-select">
+                <option value="yellow">Amarillo Canary</option>
+                <option value="magenta">Magenta Pop</option>
+                <option value="black">Negro Flat</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="template-form-style">Estilo de Diseño (Motor Gráfico):</label>
+              <select id="template-form-style" class="form-select">
+                <option value="polaroid">Polaroid / Foto con fecha</option>
+                <option value="music_player">Reproductor de Música / Canción</option>
+                <option value="vintage_year">Vintage Year / Año universitario</option>
+                <option value="pet_badge">Emblema de Mascota / Escudo</option>
+                <option value="editorial_bff">Editorial Besties / Cartel</option>
+                <option value="award_badge">Trofeo / Medalla Familiar</option>
+                <option value="minimalist_monogram">Monograma Minimalista</option>
+                <option value="pop_birthday">Pop Birthday / Fiesta</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="template-form-default-prod">Producto por Defecto:</label>
+              <select id="template-form-default-prod" class="form-select">
+                <option value="remera">Remera Algodón</option>
+                <option value="hoodie">Buzo Hoodie</option>
+                <option value="taza">Taza Cerámica</option>
+                <option value="totebag">Totebag</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="background: var(--color-bg-alt); padding: 0.8rem; border: var(--border-thin); border-radius: 6px;">
+            <label style="display: flex; align-items: center; gap: 0.6rem; font-weight: 700; cursor: pointer; margin: 0;">
+              <input type="checkbox" id="template-form-has-photo" style="width: 20px; height: 20px;">
+              <span>Esta plantilla permite al cliente cargar su propia foto</span>
+            </label>
+          </div>
+
+          <!-- Campos de Texto Dinámicos -->
+          <div style="border-top: var(--border-thin); padding-top: 1rem;">
+            <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Campos de Texto Personalizables para el Cliente:</label>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 0.8rem;">
+              <div>
+                <label style="font-size: 0.75rem; font-weight: 700; color: #666;">Etiqueta Campo 1:</label>
+                <input type="text" id="template-form-field1-label" class="form-input" placeholder="Ej: Nombres de la pareja" value="Nombres">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; font-weight: 700; color: #666;">Texto de ejemplo 1:</label>
+                <input type="text" id="template-form-field1-default" class="form-input" placeholder="Ej: Sofía & Lucas" value="Sofía & Lucas">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+              <div>
+                <label style="font-size: 0.75rem; font-weight: 700; color: #666;">Etiqueta Campo 2:</label>
+                <input type="text" id="template-form-field2-label" class="form-input" placeholder="Ej: Fecha o Dedicatoria" value="Fecha">
+              </div>
+              <div>
+                <label style="font-size: 0.75rem; font-weight: 700; color: #666;">Texto de ejemplo 2:</label>
+                <input type="text" id="template-form-field2-default" class="form-input" placeholder="Ej: 14 . 02 . 2023" value="14 . 02 . 2023">
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.25rem;">
+            Guardar Plantilla
+          </button>
+        </form>
       </div>
     </div>
   </div>

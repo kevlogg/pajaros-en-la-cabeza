@@ -2,7 +2,9 @@
    MAIN APPLICATION LOGIC - PÁJAROS EN LA CABEZA
    ========================================================================== */
 
-import { BRAND_INFO, SHIPPING_RATES, ARGENTINA_PROVINCES, getCategories, getProducts, getHeroImage, getPromoBar, subscribeToStore } from './data/store.js';
+import { BRAND_INFO, SHIPPING_RATES, ARGENTINA_PROVINCES, getCategories, getProducts, getHeroImage, getPromoBar, getTemplates, subscribeToStore } from './data/store.js';
+import { TEMPLATE_PRODUCTS } from './data/templates.js';
+import { renderTemplatePreview } from './utils/customizerCanvas.js';
 
 function renderPromoBar(promo) {
   const container = document.getElementById('promo-bar-section');
@@ -359,6 +361,83 @@ function setupContactForm() {
   });
 }
 
+// Render Featured Templates on Home Page
+function renderHomeFeaturedTemplates() {
+  const container = document.getElementById('home-featured-templates');
+  if (!container) return;
+
+  const templates = getTemplates().slice(0, 3);
+  if (templates.length === 0) return;
+
+  container.innerHTML = templates.map(tpl => {
+    const prodKey = tpl.defaultProduct || 'remera';
+    const prodInfo = TEMPLATE_PRODUCTS[prodKey] || TEMPLATE_PRODUCTS.remera;
+    const priceDisplay = `$${(tpl.basePrice || prodInfo.basePrice).toLocaleString('es-AR')}`;
+
+    return `
+      <div class="template-card">
+        <div class="template-preview-wrap">
+          <canvas class="template-preview-canvas" width="400" height="300" id="home-tpl-canvas-${tpl.id}"></canvas>
+          <div class="template-card-overlay">
+            <span class="badge badge-${tpl.badgeColor || 'yellow'}">${tpl.badge || 'Regalo Rápido'}</span>
+          </div>
+          ${tpl.hasPhoto ? `
+            <div class="template-photo-badge">
+              <span>📷</span>
+              <span>Lleva Foto</span>
+            </div>
+          ` : `
+            <div class="template-photo-badge" style="background: var(--color-taupe-dark); border-color: #666;">
+              <span>✏️</span>
+              <span>Solo Texto</span>
+            </div>
+          `}
+        </div>
+
+        <div class="template-card-body">
+          <span class="template-category-tag">${tpl.categoryLabel || tpl.category}</span>
+          <h3 class="template-card-title">${tpl.name}</h3>
+          <p class="template-card-desc">${tpl.subtitle || tpl.description}</p>
+
+          <div class="template-card-footer">
+            <div class="template-price-box">
+              <span class="template-price-label">Desde</span>
+              <span class="template-price-val">${priceDisplay}</span>
+            </div>
+            <a href="/plantillas?tpl=${tpl.id}" class="btn btn-primary btn-sm">
+              <span>Personalizar ✨</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Render miniature live canvases
+  templates.forEach(tpl => {
+    const canvas = document.getElementById(`home-tpl-canvas-${tpl.id}`);
+    if (canvas) {
+      const prodKey = tpl.defaultProduct || 'remera';
+      const prodInfo = TEMPLATE_PRODUCTS[prodKey] || TEMPLATE_PRODUCTS.remera;
+      const color = prodInfo.colors[0];
+      const defaultFields = {};
+      if (tpl.fields) {
+        tpl.fields.forEach(f => {
+          defaultFields[f.id] = f.defaultValue || '';
+        });
+      }
+
+      renderTemplatePreview(canvas, {
+        template: tpl,
+        productType: prodKey,
+        color: color,
+        fieldValues: defaultFields,
+        userImage: null
+      });
+    }
+  });
+}
+
 // Mobile Menu Toggle
 function setupMobileMenu() {
   const toggle = document.getElementById('mobile-toggle');
@@ -394,17 +473,19 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHeroImage();
   renderCategories();
   renderProducts(getProducts());
+  renderHomeFeaturedTemplates();
   setupShippingCalculator();
   setupQuoteCalculator();
   setupContactForm();
   setupMobileMenu();
 
   // Re-render when Firebase updates store
-  subscribeToStore(({ products, heroImage, promoBar }) => {
+  subscribeToStore(({ products, heroImage, promoBar, templates }) => {
     if (promoBar) renderPromoBar(promoBar);
     renderHeroImage(heroImage);
     renderCategories();
     renderProducts(products);
+    if (templates) renderHomeFeaturedTemplates();
   });
 
   // Filter Buttons Event Delegation
