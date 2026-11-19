@@ -73,12 +73,66 @@ function isExcludedCategory(catId, catName) {
     id.includes('ropa-personalizada') ||
     id.includes('ropa-institucional') ||
     id.includes('personalizada') ||
+    id.includes('personalizado') ||
     id.includes('institucional') ||
     name.includes('ropa personalizada') ||
     name.includes('ropa institucional') ||
     name.includes('personalizada') ||
+    name.includes('personalizado') ||
     name.includes('institucional')
   );
+}
+
+/**
+ * Helper to check if an individual product must be excluded from Plantillas / Perchero.
+ * Excludes products with "institucional", "personalizada", etc. in their name, ID, category or badge.
+ */
+function isExcludedProduct(prod) {
+  if (!prod) return true;
+
+  const norm = (str) =>
+    String(str || '')
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+
+  const name = norm(prod.name);
+  const id = norm(prod.id);
+  const cat = norm(prod.category);
+  const catLabel = norm(prod.categoryLabel);
+  const badge = norm(prod.badge);
+  const desc = norm(prod.description);
+
+  // Exclude if "institucional" is present anywhere
+  if (
+    name.includes('institucional') ||
+    id.includes('institucional') ||
+    cat.includes('institucional') ||
+    catLabel.includes('institucional') ||
+    badge.includes('institucional') ||
+    desc.includes('institucional')
+  ) {
+    return true;
+  }
+
+  // Exclude if "personalizada" or "personalizado" is present in name, id, category, badge or desc
+  if (
+    name.includes('personalizada') ||
+    name.includes('personalizado') ||
+    id.includes('personalizada') ||
+    id.includes('personalizado') ||
+    cat.includes('personalizada') ||
+    cat.includes('personalizado') ||
+    catLabel.includes('personalizada') ||
+    catLabel.includes('personalizado') ||
+    badge.includes('personalizada') ||
+    badge.includes('personalizado')
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -105,8 +159,10 @@ function setFilteredStoreData(rawProducts, rawCategories) {
     activeCategoryFilter = 'all';
   }
 
-  // 3. Filter products for perchero track
+  // 3. Filter products for perchero track: check product itself + category
   allProducts = productsList.filter(prod => {
+    if (isExcludedProduct(prod)) return false;
+
     const prodCat = String(prod.category || '').toLowerCase();
     const prodCatNorm = prodCat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
@@ -116,8 +172,8 @@ function setFilteredStoreData(rawProducts, rawCategories) {
     return true;
   });
 
-  // If the currently selected product was in an excluded category, re-select
-  if (currentProduct && !allProducts.some(p => p.id === currentProduct.id)) {
+  // If the currently selected product was in an excluded category or product, re-select
+  if (currentProduct && (!allProducts.some(p => p.id === currentProduct.id) || isExcludedProduct(currentProduct))) {
     currentProduct = null;
   }
 }
