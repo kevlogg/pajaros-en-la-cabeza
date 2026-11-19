@@ -1,348 +1,779 @@
 /* ==========================================================================
-   PLANTILLAS & LIVE CUSTOMIZER PAGE - PÁJAROS EN LA CABEZA
+   PLANTILLAS CON PRODUCTOS REALES & ESTAMPA DESLIZABLE - PÁJAROS EN LA CABEZA
    ========================================================================== */
 
-import { getTemplates, subscribeToStore } from './data/store.js';
-import { TEMPLATE_CATEGORIES, TEMPLATE_PRODUCTS } from './data/templates.js';
-import { renderTemplatePreview, downloadCanvas } from './utils/customizerCanvas.js';
+import { getProducts, getCategories, subscribeToStore } from './data/store.js';
 
-// Page Filter State
-let activeCategory = 'all';
-let selectedProductFilter = 'all';
+// Application State
+let allProducts = [];
+let allCategories = [];
+let currentProduct = null;
+let activeCategoryFilter = 'all';
 let searchQuery = '';
 
-// Customizer Active Studio State
-let currentTemplate = null;
-let currentProductType = 'remera';
-let currentColor = null;
-let currentSize = 'M';
-let currentFieldValues = {};
-let currentUserImage = null;
-let currentUserImageFilename = '';
-let currentPaymentDiscount = 0.9; // 10% OFF default
+// Design Overlay State (persists across product switching!)
+const currentDesign = {
+  imageSrc: null,
+  imageElement: null,
+  filename: '',
+  posX: 50,          // Percentage of stage width (0 - 100)
+  posY: 38,          // Percentage of stage height (0 - 100)
+  scale: 1.0,        // Scale multiplier (0.3 - 2.2)
+  rotation: 0,       // Rotation degrees (-180 to 180)
+  blendMode: 'normal'// 'normal' | 'multiply'
+};
+
+// Order Configuration State
+let selectedColor = 'Negro';
+let selectedSize = 'M';
+let selectedQuantity = 1;
+let selectedPaymentFactor = 0.9; // 10% OFF Transferencia default
+
+// Pointer Dragging State
+let isDragging = false;
+let startPointerX = 0;
+let startPointerY = 0;
+let startPosX = 50;
+let startPosY = 38;
 
 /**
- * Render Category Chips Filter
+ * Format currency in Argentine Pesos
  */
-function renderCategoryFilters() {
-  const container = document.getElementById('tpl-category-filters');
-  if (!container) return;
-
-  container.innerHTML = TEMPLATE_CATEGORIES.map(cat => `
-    <button type="button" class="tpl-filter-chip ${activeCategory === cat.id ? 'active' : ''}" data-cat-id="${cat.id}">
-      <span>${cat.emoji}</span>
-      <span>${cat.name}</span>
-    </button>
-  `).join('');
-
-  container.querySelectorAll('.tpl-filter-chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      activeCategory = btn.getAttribute('data-cat-id');
-      renderCategoryFilters();
-      renderTemplatesGrid();
-    });
-  });
+function formatCurrency(amount) {
+  const num = Math.round(Number(amount) || 0);
+  return '$' + num.toLocaleString('es-AR');
 }
 
 /**
- * Render All Templates in the Grid
+ * Fallback illustration if image is missing
  */
-function renderTemplatesGrid() {
-  const container = document.getElementById('templates-cards-container');
+function getPlaceholderImg() {
+  return '/assets/logopajaros.jpg';
+}
+
+/**
+ * Initialize Store & URL Params
+ */
+function initStudio() {
+  // Mobile Hamburger Menu
+  const mobileToggle = document.getElementById('mobile-toggle');
+  const mainNav = document.querySelector('.main-nav');
+  if (mobileToggle && mainNav) {
+    mobileToggle.addEventListener('click', () => {
+      mainNav.classList.toggle('active');
+    });
+  }
+
+  // Subscribe to store updates
+  subscribeToStore(({ products, categories }) => {
+    allProducts = products || [];
+    allCategories = categories || [];
+    updateCategorySelect();
+    renderVerticalProductsGallery();
+
+    // Select initial product if not set
+    if (!currentProduct && allProducts.length > 0) {
+      checkInitialProductSelection();
+    }
+  });
+
+  // Get current cache
+  allProducts = getProducts() || [];
+  allCategories = getCategories() || [];
+  updateCategorySelect();
+  renderVerticalProductsGallery();
+  checkInitialProductSelection();
+
+  // Setup Event Listeners
+  setupGalleryFilters();
+  setupDraggablePointerEvents();
+  setupStageControls();
+  setupFileUploadHandlers();
+  setupOrderControls();
+}
+
+/**
+ * Select product by URL param or default to first
+ */
+function checkInitialProductSelection() {
+  if (allProducts.length === 0) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const targetId = params.get('product') || params.get('id');
+
+  let chosen = allProducts.find(p => p.id === targetId);
+  if (!chosen) {
+    chosen = allProducts[0];
+  }
+
+  selectProduct(chosen);
+}
+
+/**
+ * Populate Category Dropdown
+ */
+function updateCategorySelect() {
+  const select = document.getElementById('gallery-cat-filter');
+  if (!select) return;
+
+  const currentVal = select.value;
+  select.innerHTML = `<option value="all">Todas las Categorías</option>` +
+    allCategories.map(cat => `
+      <option value="${cat.id}">${cat.name}</option>
+    `).join('');
+
+  if (currentVal) {
+    select.value = currentVal;
+  }
+}
+
+/**
+ * Filter & Render Vertical Products Gallery
+ */
+function renderVerticalProductsGallery() {
+  const container = document.getElementById('vertical-products-list');
+  const badge = document.getElementById('products-count-badge');
   if (!container) return;
 
-  const allTemplates = getTemplates();
+  let filtered = [...allProducts];
 
-  // Filter by category
-  let filtered = allTemplates;
-  if (activeCategory !== 'all') {
-    filtered = filtered.filter(t => t.category === activeCategory);
+  // Category filter
+  if (activeCategoryFilter !== 'all') {
+    filtered = filtered.filter(p => p.category === activeCategoryFilter);
   }
 
-  // Filter by product support
-  if (selectedProductFilter !== 'all') {
-    filtered = filtered.filter(t => 
-      !t.allowedProducts || t.allowedProducts.includes(selectedProductFilter)
-    );
-  }
-
-  // Filter by search query
+  // Search filter
   if (searchQuery.trim() !== '') {
     const q = searchQuery.toLowerCase().trim();
-    filtered = filtered.filter(t => 
-      t.name.toLowerCase().includes(q) ||
-      (t.subtitle && t.subtitle.toLowerCase().includes(q)) ||
-      (t.description && t.description.toLowerCase().includes(q)) ||
-      (t.categoryLabel && t.categoryLabel.toLowerCase().includes(q))
+    filtered = filtered.filter(p => 
+      (p.name && p.name.toLowerCase().includes(q)) ||
+      (p.categoryLabel && p.categoryLabel.toLowerCase().includes(q)) ||
+      (p.description && p.description.toLowerCase().includes(q))
     );
+  }
+
+  if (badge) {
+    badge.textContent = `${filtered.length} producto${filtered.length === 1 ? '' : 's'}`;
   }
 
   if (filtered.length === 0) {
     container.innerHTML = `
-      <div style="grid-column: 1/-1; text-align: center; padding: 3.5rem 1.5rem; background: var(--color-taupe-light); border: var(--border-heavy); border-radius: 12px;">
-        <span style="font-size: 2.8rem; display: block; margin-bottom: 0.5rem;">🔍</span>
-        <h3 style="margin: 0 0 0.5rem 0; font-family: var(--font-heading); font-weight: 800;">No se encontraron plantillas</h3>
-        <p style="color: #666; font-size: 0.95rem; margin: 0;">Prueba seleccionando otra categoría o borrando la búsqueda.</p>
+      <div style="text-align: center; padding: 2.5rem 1rem; color: #777;">
+        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">🔍</span>
+        <strong style="color: var(--color-black); display: block;">Sin resultados</strong>
+        <span style="font-size: 0.8rem;">Probá buscando con otro término o categoría.</span>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = filtered.map(tpl => {
-    const defaultProdKey = tpl.defaultProduct || 'remera';
-    const prodInfo = TEMPLATE_PRODUCTS[defaultProdKey] || TEMPLATE_PRODUCTS.remera;
-    const priceDisplay = `$${(tpl.basePrice || prodInfo.basePrice).toLocaleString('es-AR')}`;
+  container.innerHTML = filtered.map(prod => {
+    const isSelected = currentProduct && currentProduct.id === prod.id;
+    const prodImg = (Array.isArray(prod.images) && prod.images.length > 0) 
+      ? prod.images[0] 
+      : (prod.image || getPlaceholderImg());
+    const priceFormatted = formatCurrency(prod.price);
+    const categoryName = prod.categoryLabel || prod.category || 'Tienda';
 
     return `
-      <div class="template-card" data-tpl-id="${tpl.id}">
-        
-        <div class="template-preview-wrap">
-          <canvas class="template-preview-canvas" width="400" height="300" id="card-canvas-${tpl.id}"></canvas>
-          
-          <div class="template-card-overlay">
-            <span class="badge badge-${tpl.badgeColor || 'yellow'}">${tpl.badge || 'Regalo Rápido'}</span>
-          </div>
-
-          ${tpl.hasPhoto ? `
-            <div class="template-photo-badge">
-              <span>📷</span>
-              <span>Lleva Foto</span>
-            </div>
-          ` : `
-            <div class="template-photo-badge" style="background: var(--color-taupe-dark); border-color: #666;">
-              <span>✏️</span>
-              <span>Solo Texto</span>
-            </div>
-          `}
+      <button type="button" class="gallery-product-card ${isSelected ? 'selected' : ''}" data-product-id="${prod.id}" role="option" aria-selected="${isSelected}">
+        ${isSelected ? `<span class="gallery-selected-tag">✓ Activo</span>` : ''}
+        <img class="gallery-product-thumb" src="${prodImg}" alt="${prod.name}" loading="lazy">
+        <div class="gallery-product-info">
+          <span class="gallery-product-badge">${categoryName}</span>
+          <h4 class="gallery-product-title">${prod.name}</h4>
+          <span class="gallery-product-price">${priceFormatted}</span>
         </div>
-
-        <div class="template-card-body">
-          <span class="template-category-tag">${tpl.categoryLabel || tpl.category}</span>
-          <h3 class="template-card-title">${tpl.name}</h3>
-          <p class="template-card-desc">${tpl.subtitle || tpl.description}</p>
-
-          <div class="template-card-footer">
-            <div class="template-price-box">
-              <span class="template-price-label">Desde</span>
-              <span class="template-price-val">${priceDisplay}</span>
-            </div>
-            <button type="button" class="btn btn-primary btn-sm btn-open-customizer" data-template-id="${tpl.id}">
-              <span>Personalizar ✨</span>
-            </button>
-          </div>
-        </div>
-
-      </div>
+      </button>
     `;
   }).join('');
 
-  // Render live preview on each card's miniature canvas
-  filtered.forEach(tpl => {
-    const canvas = document.getElementById(`card-canvas-${tpl.id}`);
-    if (canvas) {
-      const prodKey = tpl.defaultProduct || 'remera';
-      const prodInfo = TEMPLATE_PRODUCTS[prodKey] || TEMPLATE_PRODUCTS.remera;
-      const color = prodInfo.colors[0];
-      const defaultFields = {};
-      if (tpl.fields) {
-        tpl.fields.forEach(f => {
-          defaultFields[f.id] = f.defaultValue || '';
-        });
-      }
-
-      renderTemplatePreview(canvas, {
-        template: tpl,
-        productType: prodKey,
-        color: color,
-        fieldValues: defaultFields,
-        userImage: null
-      });
-    }
-  });
-
-  // Attach click events on "Personalizar" buttons
-  container.querySelectorAll('.btn-open-customizer').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const tplId = btn.getAttribute('data-template-id');
-      const targetTpl = allTemplates.find(t => t.id === tplId);
-      if (targetTpl) {
-        openCustomizer(targetTpl);
+  // Add click listeners
+  container.querySelectorAll('.gallery-product-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const prodId = btn.getAttribute('data-product-id');
+      const prod = allProducts.find(p => p.id === prodId);
+      if (prod) {
+        selectProduct(prod);
       }
     });
   });
 }
 
 /**
- * Open and Setup the Interactive Customizer Studio Modal
+ * Switch Active Product
  */
-function openCustomizer(tpl) {
-  currentTemplate = tpl;
-  currentProductType = tpl.defaultProduct || 'remera';
-  
-  // Set default product info and colors
-  const prodInfo = TEMPLATE_PRODUCTS[currentProductType] || TEMPLATE_PRODUCTS.remera;
-  currentColor = prodInfo.colors[0];
-  currentSize = prodInfo.sizes[0] || 'M';
+function selectProduct(product) {
+  if (!product) return;
+  currentProduct = product;
 
-  // Initialize fields
-  currentFieldValues = {};
-  if (tpl.fields) {
-    tpl.fields.forEach(f => {
-      currentFieldValues[f.id] = f.defaultValue || '';
+  // Update URL param without full reload
+  try {
+    const url = new URL(window.location);
+    url.searchParams.set('product', product.id);
+    window.history.replaceState({}, '', url);
+  } catch (e) {
+    // ignore
+  }
+
+  // Update Vertical Gallery Highlight
+  renderVerticalProductsGallery();
+
+  // Update Stage Header & Background Image
+  const titleEl = document.getElementById('stage-product-title');
+  const priceEl = document.getElementById('stage-product-price');
+  const imgEl = document.getElementById('stage-product-img');
+
+  if (titleEl) titleEl.textContent = product.name;
+  if (priceEl) priceEl.textContent = formatCurrency(product.price);
+
+  const prodImg = (Array.isArray(product.images) && product.images.length > 0) 
+    ? product.images[0] 
+    : (product.image || getPlaceholderImg());
+
+  if (imgEl) {
+    imgEl.style.opacity = '0.4';
+    imgEl.onload = () => { imgEl.style.opacity = '1'; };
+    imgEl.src = prodImg;
+    imgEl.alt = product.name;
+  }
+
+  // Update Options & Pricing in Order Column
+  renderProductOptions();
+  calculateTotalPrice();
+}
+
+/**
+ * Setup Search & Category Filters
+ */
+function setupGalleryFilters() {
+  const searchInput = document.getElementById('gallery-search-input');
+  const catSelect = document.getElementById('gallery-cat-filter');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderVerticalProductsGallery();
     });
   }
 
-  // Reset photo
-  currentUserImage = null;
-  currentUserImageFilename = '';
-
-  // Update modal header
-  document.getElementById('customizer-tpl-name').textContent = tpl.name;
-  document.getElementById('customizer-tpl-subtitle').textContent = `${tpl.categoryLabel} • Regalo Rápido`;
-
-  // Render Product Selector
-  renderCustomizerProducts();
-
-  // Render Colors & Sizes
-  renderCustomizerColorsAndSizes();
-
-  // Render Photo upload section
-  setupCustomizerPhotoSection();
-
-  // Render Text inputs
-  renderCustomizerDynamicInputs();
-
-  // Recalculate price
-  updateCustomizerSummary();
-
-  // Render Canvas
-  updateCustomizerCanvas();
-
-  // Show Modal
-  const modal = document.getElementById('customizer-modal');
-  modal.classList.add('active');
-  modal.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
+  if (catSelect) {
+    catSelect.addEventListener('change', (e) => {
+      activeCategoryFilter = e.target.value;
+      renderVerticalProductsGallery();
+    });
+  }
 }
 
 /**
- * Close Customizer
+ * Setup Pointer Dragging for the Uploaded Design
  */
-function closeCustomizer() {
-  const modal = document.getElementById('customizer-modal');
-  modal.classList.remove('active');
-  modal.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
-}
+function setupDraggablePointerEvents() {
+  const draggableLayer = document.getElementById('draggable-design-layer');
+  const stageViewport = document.getElementById('mockup-stage-viewport');
 
-/**
- * Render Product selection buttons in the Customizer
- */
-function renderCustomizerProducts() {
-  const container = document.getElementById('customizer-product-types');
-  if (!container) return;
+  if (!draggableLayer || !stageViewport) return;
 
-  const allowed = currentTemplate.allowedProducts || ['remera', 'hoodie', 'taza', 'totebag'];
-  const productIcons = {
-    remera: '👕',
-    hoodie: '🧥',
-    taza: '☕',
-    totebag: '👜'
+  // Pointer Down (Mouse click or Touch start)
+  draggableLayer.addEventListener('pointerdown', (e) => {
+    // Only drag with primary pointer / left button
+    if (e.button !== undefined && e.button !== 0) return;
+
+    isDragging = true;
+    startPointerX = e.clientX;
+    startPointerY = e.clientY;
+    startPosX = currentDesign.posX;
+    startPosY = currentDesign.posY;
+
+    draggableLayer.setPointerCapture(e.pointerId);
+    draggableLayer.classList.add('is-dragging');
+    draggableLayer.setAttribute('aria-grabbed', 'true');
+    e.preventDefault();
+  });
+
+  // Pointer Move (Mouse move or Touch move)
+  draggableLayer.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+
+    const stageRect = stageViewport.getBoundingClientRect();
+    if (stageRect.width === 0 || stageRect.height === 0) return;
+
+    const deltaX = e.clientX - startPointerX;
+    const deltaY = e.clientY - startPointerY;
+
+    // Convert pixels to percentage of stage viewport
+    const deltaPercentX = (deltaX / stageRect.width) * 100;
+    const deltaPercentY = (deltaY / stageRect.height) * 100;
+
+    let newX = startPosX + deltaPercentX;
+    let newY = startPosY + deltaPercentY;
+
+    // Boundary constraints: Keep design accessible on stage
+    newX = Math.max(8, Math.min(92, newX));
+    newY = Math.max(8, Math.min(92, newY));
+
+    currentDesign.posX = newX;
+    currentDesign.posY = newY;
+
+    updateDraggableTransform();
+  });
+
+  // Pointer Up / Cancel
+  const handlePointerEnd = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    draggableLayer.classList.remove('is-dragging');
+    draggableLayer.setAttribute('aria-grabbed', 'false');
+    try {
+      draggableLayer.releasePointerCapture(e.pointerId);
+    } catch (err) {
+      // ignore
+    }
   };
 
-  container.innerHTML = allowed.map(pKey => {
-    const pInfo = TEMPLATE_PRODUCTS[pKey];
-    if (!pInfo) return '';
-    const isActive = currentProductType === pKey;
+  draggableLayer.addEventListener('pointerup', handlePointerEnd);
+  draggableLayer.addEventListener('pointercancel', handlePointerEnd);
 
-    return `
-      <button type="button" class="product-type-chip ${isActive ? 'active' : ''}" data-product="${pKey}">
-        <span style="font-size: 1.3rem;">${productIcons[pKey] || '🛍️'}</span>
-        <span>${pInfo.name.split(' ')[0]}</span>
-      </button>
-    `;
-  }).join('');
+  // Keyboard accessibility for positioning (Arrow keys)
+  draggableLayer.addEventListener('keydown', (e) => {
+    const step = e.shiftKey ? 5 : 1;
+    let handled = false;
 
-  container.querySelectorAll('.product-type-chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const pKey = btn.getAttribute('data-product');
-      if (pKey === currentProductType) return;
-      currentProductType = pKey;
+    if (e.key === 'ArrowLeft') {
+      currentDesign.posX = Math.max(8, currentDesign.posX - step);
+      handled = true;
+    } else if (e.key === 'ArrowRight') {
+      currentDesign.posX = Math.min(92, currentDesign.posX + step);
+      handled = true;
+    } else if (e.key === 'ArrowUp') {
+      currentDesign.posY = Math.max(8, currentDesign.posY - step);
+      handled = true;
+    } else if (e.key === 'ArrowDown') {
+      currentDesign.posY = Math.min(92, currentDesign.posY + step);
+      handled = true;
+    }
 
-      const pInfo = TEMPLATE_PRODUCTS[currentProductType];
-      currentColor = pInfo.colors[0];
-      currentSize = pInfo.sizes[0] || 'M';
-
-      renderCustomizerProducts();
-      renderCustomizerColorsAndSizes();
-      updateCustomizerSummary();
-      updateCustomizerCanvas();
-    });
+    if (handled) {
+      e.preventDefault();
+      updateDraggableTransform();
+    }
   });
 }
 
 /**
- * Render Colors & Sizes for the currently active product
+ * Update Draggable Layer Styles from currentDesign state
  */
-function renderCustomizerColorsAndSizes() {
-  const pInfo = TEMPLATE_PRODUCTS[currentProductType] || TEMPLATE_PRODUCTS.remera;
+function updateDraggableTransform() {
+  const layer = document.getElementById('draggable-design-layer');
+  const boxFrame = document.getElementById('design-box-frame');
+  const imgEl = document.getElementById('design-rendered-img');
 
-  // 1. Colors
-  const colorsContainer = document.getElementById('customizer-colors-grid');
-  const colorNameLabel = document.getElementById('selected-color-name');
-  if (colorsContainer) {
-    colorsContainer.innerHTML = pInfo.colors.map(col => `
-      <button type="button" 
-        class="color-swatch ${currentColor.id === col.id ? 'active' : ''}" 
-        data-color-id="${col.id}" 
-        style="background-color: ${col.hex};" 
-        title="${col.name}"
-        aria-label="Color ${col.name}">
-      </button>
-    `).join('');
+  if (!layer || !boxFrame) return;
 
-    colorNameLabel.textContent = currentColor.name;
+  // Position layer with percentages
+  layer.style.left = `${currentDesign.posX}%`;
+  layer.style.top = `${currentDesign.posY}%`;
 
-    colorsContainer.querySelectorAll('.color-swatch').forEach(btn => {
+  // Scale and rotate the inner frame
+  boxFrame.style.transform = `scale(${currentDesign.scale}) rotate(${currentDesign.rotation}deg)`;
+
+  // Apply blend mode
+  if (imgEl) {
+    imgEl.style.mixBlendMode = currentDesign.blendMode;
+  }
+}
+
+/**
+ * Setup Stage Toolbar Controls (Presets, Sliders, Blend mode)
+ */
+function setupStageControls() {
+  // Preset Buttons
+  const presetButtons = document.querySelectorAll('.preset-chip');
+  presetButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      presetButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const preset = btn.getAttribute('data-preset');
+      applyLocationPreset(preset);
+    });
+  });
+
+  // Scale Slider
+  const scaleSlider = document.getElementById('slider-scale');
+  const scaleLabel = document.getElementById('scale-value-label');
+  const btnScaleDown = document.getElementById('btn-scale-down');
+  const btnScaleUp = document.getElementById('btn-scale-up');
+
+  if (scaleSlider) {
+    scaleSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      currentDesign.scale = val / 100;
+      if (scaleLabel) scaleLabel.textContent = `${val}%`;
+      updateDraggableTransform();
+    });
+  }
+
+  if (btnScaleDown && scaleSlider) {
+    btnScaleDown.addEventListener('click', () => {
+      let val = Math.max(30, parseInt(scaleSlider.value, 10) - 10);
+      scaleSlider.value = val;
+      scaleSlider.dispatchEvent(new Event('input'));
+    });
+  }
+
+  if (btnScaleUp && scaleSlider) {
+    btnScaleUp.addEventListener('click', () => {
+      let val = Math.min(220, parseInt(scaleSlider.value, 10) + 10);
+      scaleSlider.value = val;
+      scaleSlider.dispatchEvent(new Event('input'));
+    });
+  }
+
+  // Rotation Slider
+  const rotateSlider = document.getElementById('slider-rotation');
+  const rotateLabel = document.getElementById('rotation-value-label');
+  const btnRotateReset = document.getElementById('btn-rotate-reset');
+  const btnRotate90 = document.getElementById('btn-rotate-90');
+
+  if (rotateSlider) {
+    rotateSlider.addEventListener('input', (e) => {
+      const deg = parseInt(e.target.value, 10);
+      currentDesign.rotation = deg;
+      if (rotateLabel) rotateLabel.textContent = `${deg}°`;
+      updateDraggableTransform();
+    });
+  }
+
+  if (btnRotateReset && rotateSlider) {
+    btnRotateReset.addEventListener('click', () => {
+      rotateSlider.value = 0;
+      rotateSlider.dispatchEvent(new Event('input'));
+    });
+  }
+
+  if (btnRotate90 && rotateSlider) {
+    btnRotate90.addEventListener('click', () => {
+      let deg = (currentDesign.rotation + 90);
+      if (deg > 180) deg = deg - 360;
+      rotateSlider.value = deg;
+      rotateSlider.dispatchEvent(new Event('input'));
+    });
+  }
+
+  // Blend Mode Selector
+  const blendSelect = document.getElementById('select-blend-mode');
+  if (blendSelect) {
+    blendSelect.addEventListener('change', (e) => {
+      currentDesign.blendMode = e.target.value;
+      updateDraggableTransform();
+    });
+  }
+}
+
+/**
+ * Apply Location Presets
+ */
+function applyLocationPreset(preset) {
+  switch (preset) {
+    case 'pecho-centro':
+      currentDesign.posX = 50;
+      currentDesign.posY = 38;
+      currentDesign.scale = 1.0;
+      currentDesign.rotation = 0;
+      break;
+
+    case 'bolsillo':
+      currentDesign.posX = 65; // Left chest as viewed on screen
+      currentDesign.posY = 34;
+      currentDesign.scale = 0.65;
+      currentDesign.rotation = 0;
+      break;
+
+    case 'centro-grande':
+      currentDesign.posX = 50;
+      currentDesign.posY = 44;
+      currentDesign.scale = 1.45;
+      currentDesign.rotation = 0;
+      break;
+
+    case 'inferior':
+      currentDesign.posX = 50;
+      currentDesign.posY = 68;
+      currentDesign.scale = 0.95;
+      currentDesign.rotation = 0;
+      break;
+
+    case 'reset-pos':
+    default:
+      currentDesign.posX = 50;
+      currentDesign.posY = 42;
+      currentDesign.scale = 1.0;
+      currentDesign.rotation = 0;
+      break;
+  }
+
+  // Sync sliders
+  const scaleSlider = document.getElementById('slider-scale');
+  const scaleLabel = document.getElementById('scale-value-label');
+  const rotateSlider = document.getElementById('slider-rotation');
+  const rotateLabel = document.getElementById('rotation-value-label');
+
+  if (scaleSlider) scaleSlider.value = Math.round(currentDesign.scale * 100);
+  if (scaleLabel) scaleLabel.textContent = `${Math.round(currentDesign.scale * 100)}%`;
+  if (rotateSlider) rotateSlider.value = currentDesign.rotation;
+  if (rotateLabel) rotateLabel.textContent = `${currentDesign.rotation}°`;
+
+  updateDraggableTransform();
+}
+
+/**
+ * Setup File Upload & Drag-and-Drop
+ */
+function setupFileUploadHandlers() {
+  const fileInput = document.getElementById('design-file-input');
+  const uploadZone = document.getElementById('upload-zone-compact');
+  const stagePrompt = document.getElementById('stage-upload-prompt');
+  const stageViewport = document.getElementById('mockup-stage-viewport');
+  const btnRemove = document.getElementById('btn-remove-design');
+  const btnSample = document.getElementById('btn-load-sample');
+
+  // Trigger file input
+  if (uploadZone && fileInput) {
+    uploadZone.addEventListener('click', () => fileInput.click());
+  }
+  if (stagePrompt && fileInput) {
+    stagePrompt.addEventListener('click', () => fileInput.click());
+  }
+
+  // File Input Changed
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) handleSelectedFile(file);
+    });
+  }
+
+  // Drag and Drop on Upload Zone
+  if (uploadZone) {
+    ['dragenter', 'dragover'].forEach(evt => {
+      uploadZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('drag-over');
+      });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      uploadZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('drag-over');
+      });
+    });
+    uploadZone.addEventListener('drop', (e) => {
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) handleSelectedFile(file);
+    });
+  }
+
+  // Drag and Drop directly onto the Mockup Stage!
+  if (stageViewport) {
+    stageViewport.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      stageViewport.style.outline = '3px dashed var(--color-magenta)';
+    });
+    stageViewport.addEventListener('dragleave', () => {
+      stageViewport.style.outline = 'none';
+    });
+    stageViewport.addEventListener('drop', (e) => {
+      e.preventDefault();
+      stageViewport.style.outline = 'none';
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) handleSelectedFile(file);
+    });
+  }
+
+  // Remove Design
+  if (btnRemove) {
+    btnRemove.addEventListener('click', () => {
+      removeDesign();
+    });
+  }
+
+  // Load Sample Logo
+  if (btnSample) {
+    btnSample.addEventListener('click', () => {
+      loadSampleDesign();
+    });
+  }
+}
+
+/**
+ * Handle File Selection
+ */
+function handleSelectedFile(file) {
+  if (!file.type.startsWith('image/')) {
+    alert('Por favor selecciona un archivo de imagen válido (PNG, JPG, SVG o WebP).');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    applyDesignImage(dataUrl, file.name);
+  };
+  reader.readAsDataURL(file);
+}
+
+/**
+ * Load Sample Design
+ */
+function loadSampleDesign() {
+  applyDesignImage('/assets/logopajaros.jpg', 'logo_pajaros_muestra.jpg');
+}
+
+/**
+ * Apply Design Image to State and DOM
+ */
+function applyDesignImage(src, filename) {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    currentDesign.imageSrc = src;
+    currentDesign.imageElement = img;
+    currentDesign.filename = filename || 'estampa.png';
+
+    // Update Stage Elements
+    const draggableLayer = document.getElementById('draggable-design-layer');
+    const stagePrompt = document.getElementById('stage-upload-prompt');
+    const renderedImg = document.getElementById('design-rendered-img');
+
+    if (renderedImg) {
+      renderedImg.src = src;
+      // Adjust default size according to aspect ratio
+      const naturalAspect = img.naturalWidth / img.naturalHeight;
+      if (naturalAspect > 1.4) {
+        renderedImg.style.width = '180px';
+        renderedImg.style.height = 'auto';
+      } else if (naturalAspect < 0.7) {
+        renderedImg.style.height = '180px';
+        renderedImg.style.width = 'auto';
+      } else {
+        renderedImg.style.width = '150px';
+        renderedImg.style.height = 'auto';
+      }
+    }
+
+    if (stagePrompt) stagePrompt.style.display = 'none';
+    if (draggableLayer) {
+      draggableLayer.style.display = 'inline-flex';
+      updateDraggableTransform();
+    }
+
+    // Update Right Column Card
+    const uploadZone = document.getElementById('upload-zone-compact');
+    const uploadedCard = document.getElementById('uploaded-file-card');
+    const thumbEl = document.getElementById('uploaded-file-thumb');
+    const filenameEl = document.getElementById('uploaded-filename');
+
+    if (uploadZone) uploadZone.style.display = 'none';
+    if (uploadedCard) uploadedCard.style.display = 'flex';
+    if (thumbEl) thumbEl.src = src;
+    if (filenameEl) filenameEl.textContent = currentDesign.filename;
+  };
+  img.src = src;
+}
+
+/**
+ * Remove Current Design
+ */
+function removeDesign() {
+  currentDesign.imageSrc = null;
+  currentDesign.imageElement = null;
+  currentDesign.filename = '';
+
+  const draggableLayer = document.getElementById('draggable-design-layer');
+  const stagePrompt = document.getElementById('stage-upload-prompt');
+  const uploadZone = document.getElementById('upload-zone-compact');
+  const uploadedCard = document.getElementById('uploaded-file-card');
+  const fileInput = document.getElementById('design-file-input');
+
+  if (draggableLayer) draggableLayer.style.display = 'none';
+  if (stagePrompt) stagePrompt.style.display = 'block';
+  if (uploadZone) uploadZone.style.display = 'flex';
+  if (uploadedCard) uploadedCard.style.display = 'none';
+  if (fileInput) fileInput.value = '';
+}
+
+/**
+ * Render Product Options (Color and Size)
+ */
+function renderProductOptions() {
+  const colorContainer = document.getElementById('color-pills-grid');
+  const colorLabel = document.getElementById('label-selected-color');
+  const sizeContainer = document.getElementById('size-pills-grid');
+  const sizeLabel = document.getElementById('label-selected-size');
+
+  if (!currentProduct) return;
+
+  // Colors
+  const availableColors = (currentProduct.colors && currentProduct.colors.length > 0)
+    ? currentProduct.colors
+    : ['Negro', 'Blanco', 'Gris Topo', 'Beige Arena'];
+
+  if (!availableColors.includes(selectedColor)) {
+    selectedColor = availableColors[0];
+  }
+  if (colorLabel) colorLabel.textContent = selectedColor;
+
+  if (colorContainer) {
+    const colorHexMap = {
+      'Negro': '#111111',
+      'Blanco': '#FFFFFF',
+      'Gris Topo': '#555555',
+      'Gris': '#888888',
+      'Beige Arena': '#E6D7BD',
+      'Beige': '#E6D7BD',
+      'Rosa': '#F5B8C8',
+      'Azul': '#1E3A8A',
+      'Verde': '#15803D'
+    };
+
+    colorContainer.innerHTML = availableColors.map(color => {
+      const hex = colorHexMap[color] || '#111111';
+      const isActive = color === selectedColor;
+      return `
+        <button type="button" class="color-pill ${isActive ? 'active' : ''}" data-color="${color}" style="background-color: ${hex};" title="${color}" aria-label="Color ${color}"></button>
+      `;
+    }).join('');
+
+    colorContainer.querySelectorAll('.color-pill').forEach(btn => {
       btn.addEventListener('click', () => {
-        const colId = btn.getAttribute('data-color-id');
-        const found = pInfo.colors.find(c => c.id === colId);
-        if (found) {
-          currentColor = found;
-          colorNameLabel.textContent = currentColor.name;
-          colorsContainer.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          updateCustomizerCanvas();
-        }
+        selectedColor = btn.getAttribute('data-color');
+        if (colorLabel) colorLabel.textContent = selectedColor;
+        colorContainer.querySelectorAll('.color-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
       });
     });
   }
 
-  // 2. Sizes
-  const sizeSection = document.getElementById('customizer-size-section');
-  const sizesContainer = document.getElementById('customizer-sizes-grid');
-  const sizeNameLabel = document.getElementById('selected-size-name');
+  // Sizes
+  const availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  if (sizeLabel) sizeLabel.textContent = selectedSize;
 
-  if (pInfo.sizes.length <= 1) {
-    // Single size item (Taza or Totebag)
-    sizeSection.style.display = 'none';
-    currentSize = pInfo.sizes[0] || 'Único';
-  } else {
-    sizeSection.style.display = 'flex';
-    sizeNameLabel.textContent = currentSize;
+  if (sizeContainer) {
+    sizeContainer.innerHTML = availableSizes.map(size => {
+      const isActive = size === selectedSize;
+      return `
+        <button type="button" class="size-pill ${isActive ? 'active' : ''}" data-size="${size}">
+          ${size}
+        </button>
+      `;
+    }).join('');
 
-    sizesContainer.innerHTML = pInfo.sizes.map(sz => `
-      <button type="button" class="size-chip ${currentSize === sz ? 'active' : ''}" data-size="${sz}">
-        ${sz}
-      </button>
-    `).join('');
-
-    sizesContainer.querySelectorAll('.size-chip').forEach(btn => {
+    sizeContainer.querySelectorAll('.size-pill').forEach(btn => {
       btn.addEventListener('click', () => {
-        currentSize = btn.getAttribute('data-size');
-        sizeNameLabel.textContent = currentSize;
-        sizesContainer.querySelectorAll('.size-chip').forEach(b => b.classList.remove('active'));
+        selectedSize = btn.getAttribute('data-size');
+        if (sizeLabel) sizeLabel.textContent = selectedSize;
+        sizeContainer.querySelectorAll('.size-pill').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
       });
     });
@@ -350,322 +781,302 @@ function renderCustomizerColorsAndSizes() {
 }
 
 /**
- * Setup photo section (show/hide and bind file input)
+ * Setup Order Controls (Quantity, Payment, Order & Download Buttons)
  */
-function setupCustomizerPhotoSection() {
-  const photoSection = document.getElementById('customizer-photo-section');
-  const dropzone = document.getElementById('photo-dropzone');
-  const fileInput = document.getElementById('photo-file-input');
-  const previewBar = document.getElementById('photo-preview-bar');
-  const thumbImg = document.getElementById('photo-thumb-preview');
-  const filenameSpan = document.getElementById('photo-filename');
-  const removeBtn = document.getElementById('btn-remove-photo');
+function setupOrderControls() {
+  const btnQtyMinus = document.getElementById('btn-qty-minus');
+  const btnQtyPlus = document.getElementById('btn-qty-plus');
+  const qtyDisplay = document.getElementById('qty-display');
+  const paymentSelect = document.getElementById('payment-method-select');
+  const btnOrder = document.getElementById('btn-order-whatsapp');
+  const btnDownload = document.getElementById('btn-download-preview');
 
-  if (!currentTemplate.hasPhoto) {
-    photoSection.style.display = 'none';
-    return;
+  // Quantity Minus
+  if (btnQtyMinus) {
+    btnQtyMinus.addEventListener('click', () => {
+      if (selectedQuantity > 1) {
+        selectedQuantity--;
+        if (qtyDisplay) qtyDisplay.textContent = selectedQuantity;
+        calculateTotalPrice();
+      }
+    });
   }
 
-  photoSection.style.display = 'flex';
-  
-  // Reset preview UI
-  dropzone.style.display = 'flex';
-  previewBar.style.display = 'none';
-  fileInput.value = '';
+  // Quantity Plus
+  if (btnQtyPlus) {
+    btnQtyPlus.addEventListener('click', () => {
+      selectedQuantity++;
+      if (qtyDisplay) qtyDisplay.textContent = selectedQuantity;
+      calculateTotalPrice();
+    });
+  }
 
-  // Trigger file dialog
-  dropzone.onclick = () => fileInput.click();
+  // Payment Method Changed
+  if (paymentSelect) {
+    paymentSelect.addEventListener('change', (e) => {
+      selectedPaymentFactor = parseFloat(e.target.value) || 0.9;
+      calculateTotalPrice();
+    });
+  }
 
-  // Handle file select
-  fileInput.onchange = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
+  // Order via WhatsApp
+  if (btnOrder) {
+    btnOrder.addEventListener('click', () => {
+      handleWhatsAppOrder();
+    });
+  }
 
-    currentUserImageFilename = file.name;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        currentUserImage = img;
-        thumbImg.src = event.target.result;
-        filenameSpan.textContent = file.name;
-        dropzone.style.display = 'none';
-        previewBar.style.display = 'flex';
-        updateCustomizerCanvas();
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Remove photo
-  removeBtn.onclick = () => {
-    currentUserImage = null;
-    currentUserImageFilename = '';
-    fileInput.value = '';
-    dropzone.style.display = 'flex';
-    previewBar.style.display = 'none';
-    updateCustomizerCanvas();
-  };
+  // Download Mockup Preview
+  if (btnDownload) {
+    btnDownload.addEventListener('click', () => {
+      handleDownloadPreview();
+    });
+  }
 }
 
 /**
- * Render Dynamic Text Input Fields
+ * Calculate & Display Total Price
  */
-function renderCustomizerDynamicInputs() {
-  const container = document.getElementById('customizer-dynamic-inputs');
-  if (!container || !currentTemplate.fields) return;
+function calculateTotalPrice() {
+  const unitPriceEl = document.getElementById('price-unit-display');
+  const totalPriceEl = document.getElementById('price-total-num');
 
-  container.innerHTML = currentTemplate.fields.map(f => {
-    const val = currentFieldValues[f.id] || '';
-    const max = f.maxLength || 40;
+  const basePrice = (currentProduct && currentProduct.price) ? Number(currentProduct.price) : 18000;
+  const unitFormatted = formatCurrency(basePrice);
+  const total = Math.round(basePrice * selectedQuantity * selectedPaymentFactor);
+  const totalFormatted = formatCurrency(total);
 
-    return `
-      <div class="form-group" style="margin: 0;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <label class="form-label" for="input-field-${f.id}" style="font-size: 0.82rem; margin: 0;">${f.label}</label>
-          <span style="font-size: 0.72rem; color: #888;" id="char-counter-${f.id}">${val.length} / ${max}</span>
-        </div>
-        <input type="text" 
-          id="input-field-${f.id}" 
-          class="form-input" 
-          value="${val}" 
-          placeholder="${f.placeholder || ''}" 
-          maxlength="${max}"
-          data-field-id="${f.id}"
-          style="padding: 0.65rem 0.85rem; font-size: 0.9rem;">
-      </div>
-    `;
-  }).join('');
+  if (unitPriceEl) unitPriceEl.textContent = unitFormatted;
+  if (totalPriceEl) totalPriceEl.textContent = totalFormatted;
+}
 
-  // Bind input listeners for real-time live typing updates
-  container.querySelectorAll('.form-input').forEach(input => {
-    const fId = input.getAttribute('data-field-id');
-    const fDef = currentTemplate.fields.find(f => f.id === fId);
-    const counter = document.getElementById(`char-counter-${fId}`);
+/**
+ * Generate Canvas Composite Mockup
+ */
+function generateCompositeCanvas() {
+  return new Promise((resolve, reject) => {
+    if (!currentProduct) {
+      reject(new Error('No hay producto seleccionado.'));
+      return;
+    }
 
-    input.addEventListener('input', () => {
-      currentFieldValues[fId] = input.value;
-      if (counter && fDef) {
-        counter.textContent = `${input.value.length} / ${fDef.maxLength || 40}`;
+    const canvas = document.getElementById('export-canvas');
+    if (!canvas) {
+      reject(new Error('Canvas no encontrado.'));
+      return;
+    }
+
+    canvas.width = 1200;
+    canvas.height = 1200;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      reject(new Error('Error inicializando contexto canvas.'));
+      return;
+    }
+
+    // 1. Draw clean studio background
+    ctx.fillStyle = '#F8F6F0';
+    ctx.fillRect(0, 0, 1200, 1200);
+
+    // 2. Load and draw product background image
+    const rawProdImg = (Array.isArray(currentProduct.images) && currentProduct.images.length > 0)
+      ? currentProduct.images[0]
+      : (currentProduct.image || getPlaceholderImg());
+
+    // Use CORS proxy if needed for remote storage
+    const loadImgWithFallback = (url) => {
+      return new Promise((res) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => res(img);
+        img.onerror = () => {
+          // Fallback via weserv proxy for clean CORS
+          if (!url.includes('images.weserv.nl') && url.startsWith('http')) {
+            const proxyImg = new Image();
+            proxyImg.crossOrigin = 'anonymous';
+            proxyImg.onload = () => res(proxyImg);
+            proxyImg.onerror = () => res(null);
+            proxyImg.src = 'https://images.weserv.nl/?url=' + encodeURIComponent(url);
+          } else {
+            res(null);
+          }
+        };
+        img.src = url;
+      });
+    };
+
+    loadImgWithFallback(rawProdImg).then((bgImg) => {
+      if (bgImg) {
+        // Draw product centered fitting inside 1200x1200
+        const scale = Math.min(1100 / bgImg.naturalWidth, 1100 / bgImg.naturalHeight);
+        const drawW = bgImg.naturalWidth * scale;
+        const drawH = bgImg.naturalHeight * scale;
+        const drawX = (1200 - drawW) / 2;
+        const drawY = (1200 - drawH) / 2;
+        ctx.drawImage(bgImg, drawX, drawY, drawW, drawH);
       }
-      updateCustomizerCanvas();
+
+      // 3. Draw User's Design if present
+      if (currentDesign.imageSrc) {
+        loadImgWithFallback(currentDesign.imageSrc).then((designImg) => {
+          if (designImg) {
+            ctx.save();
+
+            // Calculate pixel position on 1200x1200 canvas
+            const targetX = (currentDesign.posX / 100) * 1200;
+            const targetY = (currentDesign.posY / 100) * 1200;
+
+            ctx.translate(targetX, targetY);
+            ctx.rotate((currentDesign.rotation * Math.PI) / 180);
+
+            // Apply blend mode
+            if (currentDesign.blendMode === 'multiply') {
+              ctx.globalCompositeOperation = 'multiply';
+            }
+
+            // Calculate size matching stage proportions (default base ~300px on 1200 canvas)
+            const baseRefSize = 340 * currentDesign.scale;
+            const designAspect = designImg.naturalWidth / designImg.naturalHeight;
+            let dW = baseRefSize;
+            let dH = baseRefSize / designAspect;
+
+            if (designAspect < 1) {
+              dH = baseRefSize;
+              dW = baseRefSize * designAspect;
+            }
+
+            ctx.drawImage(designImg, -dW / 2, -dH / 2, dW, dH);
+            ctx.restore();
+          }
+
+          // 4. Draw Official Brand Footer Stamp
+          ctx.save();
+          ctx.globalCompositeOperation = 'source-over';
+          
+          // Badge background
+          ctx.fillStyle = '#0D0D0D';
+          ctx.beginPath();
+          ctx.roundRect(40, 1110, 480, 50, 8);
+          ctx.fill();
+
+          ctx.fillStyle = '#FFE600';
+          ctx.font = 'bold 22px "Space Grotesk", sans-serif';
+          ctx.fillText('🦅 PÁJAROS EN LA CABEZA', 60, 1144);
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '16px "Plus Jakarta Sans", sans-serif';
+          ctx.fillText('• Mockup Personalizado', 330, 1143);
+          ctx.restore();
+
+          resolve(canvas);
+        });
+      } else {
+        // Without user design, just finish canvas
+        resolve(canvas);
+      }
     });
   });
 }
 
 /**
- * Render Canvas Live Preview
+ * Handle Download Preview
  */
-function updateCustomizerCanvas() {
-  const canvas = document.getElementById('customizer-canvas');
-  if (!canvas || !currentTemplate) return;
+function handleDownloadPreview() {
+  const btn = document.getElementById('btn-download-preview');
+  const originalText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.innerHTML = `<span>⏳ Generando imagen en alta resolución...</span>`;
+    btn.disabled = true;
+  }
 
-  renderTemplatePreview(canvas, {
-    template: currentTemplate,
-    productType: currentProductType,
-    color: currentColor,
-    fieldValues: currentFieldValues,
-    userImage: currentUserImage
-  });
+  generateCompositeCanvas()
+    .then((canvas) => {
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        const slug = (currentProduct ? currentProduct.name : 'producto')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-');
+        link.download = `pajaros-en-la-cabeza-${slug}-estampa.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        if (btn) {
+          btn.innerHTML = `<span>✓ ¡Imagen Descargada! 📸</span>`;
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }, 3000);
+        }
+      } catch (err) {
+        console.error('Error exportando canvas:', err);
+        alert('Hubo un inconveniente al generar la descarga directa. Podés realizar una captura de pantalla de la vista previa.');
+        if (btn) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      if (btn) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    });
 }
 
 /**
- * Calculate and display pricing summary
+ * Handle WhatsApp Order Flow
  */
-function updateCustomizerSummary() {
-  const pInfo = TEMPLATE_PRODUCTS[currentProductType] || TEMPLATE_PRODUCTS.remera;
-  const productNameLabel = document.getElementById('summary-product-name');
-  const totalDisplay = document.getElementById('summary-total-display');
+function handleWhatsAppOrder() {
+  if (!currentProduct) return;
 
-  const basePrice = pInfo.basePrice;
-  const finalPrice = Math.round(basePrice * currentPaymentDiscount);
+  const paymentNames = {
+    '0.85': 'Efectivo en Local (15% OFF)',
+    '0.9': 'Transferencia Bancaria (10% OFF)',
+    '1.0': 'Mercado Pago (1 pago)'
+  };
+  const paymentName = paymentNames[String(selectedPaymentFactor)] || 'Transferencia Bancaria (10% OFF)';
 
-  if (productNameLabel) {
-    productNameLabel.textContent = `${pInfo.name}`;
+  const basePrice = Number(currentProduct.price) || 18000;
+  const total = Math.round(basePrice * selectedQuantity * selectedPaymentFactor);
+  const totalFormatted = formatCurrency(total);
+
+  let message = `¡Hola Pájaros en la Cabeza! 🦅\n`;
+  message += `Quisiera encargar un producto personalizado usando la tienda como plantilla:\n\n`;
+  message += `🛍️ Producto: ${currentProduct.name}\n`;
+  message += `🎨 Color: ${selectedColor}\n`;
+  message += `📏 Talle: ${selectedSize}\n`;
+  message += `🔢 Cantidad: ${selectedQuantity} unidad(es)\n`;
+  message += `💳 Forma de Pago: ${paymentName}\n`;
+  message += `💰 Total Estimado: ${totalFormatted}\n\n`;
+
+  if (currentDesign.imageSrc) {
+    message += `📸 ¡Ya diseñé la vista previa y ubiqué mi estampa en la web! Te adjunto la imagen por este chat para que vean exactamente cómo lo quiero.\n\n`;
+  } else {
+    message += `💡 Quiero estampar un logo o imagen que te envío por acá.\n\n`;
   }
 
-  if (totalDisplay) {
-    totalDisplay.textContent = `$${finalPrice.toLocaleString('es-AR')}`;
+  message += `¿Tienen disponibilidad para coordinar el pedido y envío? ¡Muchas gracias!`;
+
+  const phone = '5493517620847';
+  const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+  // Automatically trigger download of preview so customer has it ready to attach on WhatsApp
+  if (currentDesign.imageSrc) {
+    handleDownloadPreview();
   }
 
-  return { basePrice, finalPrice };
-}
-
-/**
- * Format order summary and trigger WhatsApp redirection
- */
-function sendOrderToWhatsApp() {
-  if (!currentTemplate) return;
-
-  const pInfo = TEMPLATE_PRODUCTS[currentProductType] || TEMPLATE_PRODUCTS.remera;
-  const { finalPrice } = updateCustomizerSummary();
-
-  const paymentSelect = document.getElementById('customizer-payment-select');
-  const paymentMethodName = paymentSelect ? paymentSelect.options[paymentSelect.selectedIndex].text : 'Transferencia';
-
-  // Format dynamic fields list
-  let fieldsText = '';
-  if (currentTemplate.fields) {
-    fieldsText = currentTemplate.fields.map(f => {
-      const val = currentFieldValues[f.id] || '(Sin especificar)';
-      return `  • *${f.label}:* ${val}`;
-    }).join('\n');
-  }
-
-  const hasPhotoText = currentTemplate.hasPhoto 
-    ? (currentUserImage 
-        ? `📸 *Foto Personalizada:* ¡Te la adjunto en este chat a continuación!` 
-        : `📸 *Foto Personalizada:* (Te la envío por aquí ahora)`)
-    : `✏️ *Diseño:* Sin foto (Tipográfico / Ilustrado)`;
-
-  const message = `¡Hola Pájaros en la Cabeza! 🎁 Quiero encargar este Regalo Rápido:
-
-✨ *Plantilla:* ${currentTemplate.name}
-📂 *Categoría:* ${currentTemplate.categoryLabel}
-🛍️ *Producto:* ${pInfo.name}
-🎨 *Color:* ${currentColor.name}
-📏 *Talle:* ${currentSize}
-
-📝 *Datos Personalizados:*
-${fieldsText}
-
-${hasPhotoText}
-
-💰 *Presupuesto Estimado:* $${finalPrice.toLocaleString('es-AR')} (${paymentMethodName})
-
-¿Me confirman la disponibilidad para despachar mi pedido?`;
-
-  const whatsappUrl = `https://wa.me/5493517620847?text=${encodeURIComponent(message)}`;
+  // Open WhatsApp in new tab
   window.open(whatsappUrl, '_blank');
 }
 
-/**
- * Copy Order Summary to Clipboard
- */
-function copyOrderSummary() {
-  if (!currentTemplate) return;
-
-  const pInfo = TEMPLATE_PRODUCTS[currentProductType] || TEMPLATE_PRODUCTS.remera;
-  const { finalPrice } = updateCustomizerSummary();
-
-  let fieldsText = '';
-  if (currentTemplate.fields) {
-    fieldsText = currentTemplate.fields.map(f => `${f.label}: ${currentFieldValues[f.id] || ''}`).join(' | ');
-  }
-
-  const summary = `Plantilla: ${currentTemplate.name} | Producto: ${pInfo.name} (${currentColor.name}, Talle: ${currentSize}) | Personalización: ${fieldsText} | Total: $${finalPrice.toLocaleString('es-AR')}`;
-
-  navigator.clipboard.writeText(summary).then(() => {
-    const copyBtn = document.getElementById('btn-copy-summary');
-    if (copyBtn) {
-      const originalText = copyBtn.innerHTML;
-      copyBtn.innerHTML = `<span>¡Copiado! ✓</span>`;
-      setTimeout(() => { copyBtn.innerHTML = originalText; }, 2000);
-    }
-  });
+// Start studio on DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initStudio);
+} else {
+  initStudio();
 }
-
-/**
- * Mobile Navigation Toggle
- */
-function setupMobileMenu() {
-  const toggle = document.getElementById('mobile-toggle');
-  const nav = document.querySelector('.main-nav');
-  if (!toggle || !nav) return;
-
-  toggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    nav.classList.toggle('active');
-    toggle.classList.toggle('active');
-  });
-
-  nav.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-      nav.classList.remove('active');
-      toggle.classList.remove('active');
-    });
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.site-header')) {
-      nav.classList.remove('active');
-      toggle.classList.remove('active');
-    }
-  });
-}
-
-/**
- * Initialize Plantillas Page
- */
-document.addEventListener('DOMContentLoaded', () => {
-  renderCategoryFilters();
-  renderTemplatesGrid();
-  setupMobileMenu();
-
-  // Search input handler
-  const searchInput = document.getElementById('tpl-search-input');
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      searchQuery = e.target.value;
-      renderTemplatesGrid();
-    });
-  }
-
-  // Product support filter select
-  const productFilter = document.getElementById('tpl-product-filter');
-  if (productFilter) {
-    productFilter.addEventListener('change', (e) => {
-      selectedProductFilter = e.target.value;
-      renderTemplatesGrid();
-    });
-  }
-
-  // Modal Close Handlers
-  document.getElementById('customizer-close-btn')?.addEventListener('click', closeCustomizer);
-  const modal = document.getElementById('customizer-modal');
-  if (modal) {
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        closeCustomizer();
-      }
-    });
-  }
-
-  // Payment select change
-  document.getElementById('customizer-payment-select')?.addEventListener('change', (e) => {
-    currentPaymentDiscount = parseFloat(e.target.value) || 1.0;
-    updateCustomizerSummary();
-  });
-
-  // Download preview button
-  document.getElementById('btn-download-preview')?.addEventListener('click', () => {
-    const canvas = document.getElementById('customizer-canvas');
-    if (canvas && currentTemplate) {
-      downloadCanvas(canvas, `regalo-personalizado-${currentTemplate.id}.png`);
-    }
-  });
-
-  // Copy summary button
-  document.getElementById('btn-copy-summary')?.addEventListener('click', copyOrderSummary);
-
-  // WhatsApp order button
-  document.getElementById('btn-order-whatsapp')?.addEventListener('click', sendOrderToWhatsApp);
-
-  // Check URL parameters for direct opening (e.g. ?tpl=tpl-polaroid-love)
-  const urlParams = new URLSearchParams(window.location.search);
-  const targetTplId = urlParams.get('tpl');
-  if (targetTplId) {
-    const targetTpl = getTemplates().find(t => t.id === targetTplId);
-    if (targetTpl) {
-      setTimeout(() => openCustomizer(targetTpl), 300);
-    }
-  }
-
-  // Subscribe to real-time store updates
-  subscribeToStore(({ templates }) => {
-    if (templates) {
-      renderTemplatesGrid();
-    }
-  });
-});

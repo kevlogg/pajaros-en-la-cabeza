@@ -121,11 +121,9 @@ function renderTiendaProducts() {
 
           <div class="product-footer">
             <div class="product-price">${product.priceFormatted || `$${product.price}`}</div>
-            <div style="display: flex; gap: 0.4rem;">
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
               <a href="/producto?id=${product.id}" class="btn btn-outline btn-sm">Ver Ficha</a>
-              <button class="btn btn-primary btn-sm open-quote-modal" data-product-id="${product.id}" data-product-price="${product.price}">
-                Cotizar
-              </button>
+              <a href="/plantillas?product=${product.id}" class="btn btn-primary btn-sm" style="background: var(--color-yellow); color: var(--color-black);" title="Usar como plantilla en vivo">Estampar ⚡</a>
             </div>
           </div>
         </div>

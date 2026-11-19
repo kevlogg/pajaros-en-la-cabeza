@@ -138,6 +138,12 @@ function renderProductDetailView() {
         </div>
 
         <!-- Action CTA Buttons -->
+        <div style="margin-top: 1.25rem;">
+          <a href="/plantillas?product=${product.id}" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--color-yellow); color: var(--color-black); margin-bottom: 0.75rem; font-size: 1rem; padding: 0.95rem;">
+            <span>🎨 Usar como Plantilla y Personalizar en Vivo</span>
+          </a>
+        </div>
+
         <div class="detail-cta-group">
           <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="flex: 1;">
             <span>Consultar por WhatsApp</span>
