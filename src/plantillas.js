@@ -2,7 +2,7 @@
    PERCHERO HORIZONTAL & ESTAMPA DESLIZABLE - PÁJAROS EN LA CABEZA
    ========================================================================== */
 
-import { getProducts, getCategories, subscribeToStore } from './data/store.js';
+import { getProducts, getCategories, subscribeToStore, getAISettings, saveAISettings } from './data/store.js';
 
 // Application State
 let allProducts = [];
@@ -1247,7 +1247,7 @@ function handleWhatsAppOrder() {
 let cachedRealisticDataUrl = null;
 
 /**
- * Setup Realistic Garment Visualization Modal & Trigger Buttons
+ * Setup AI Garment Visualization Modal & Trigger Buttons
  */
 function setupRealisticVisualization() {
   const btnTrigger = document.getElementById('btn-trigger-visualize');
@@ -1257,6 +1257,9 @@ function setupRealisticVisualization() {
   const btnCloseFooter = document.getElementById('btn-modal-close-action');
   const btnDownloadRealistic = document.getElementById('btn-modal-download-realistic');
   const btnOrderWhatsApp = document.getElementById('btn-modal-order-whatsapp');
+  const btnToggleConfig = document.getElementById('btn-toggle-config-key');
+  const btnSaveKey = document.getElementById('btn-save-ai-key');
+  const inputKey = document.getElementById('input-ai-api-key');
 
   if (btnTrigger) {
     btnTrigger.addEventListener('click', openRealisticVisualization);
@@ -1287,14 +1290,55 @@ function setupRealisticVisualization() {
     }
   });
 
+  // Toggle API Key config box
+  if (btnToggleConfig) {
+    btnToggleConfig.addEventListener('click', () => {
+      const box = document.getElementById('ai-key-config-box');
+      if (box) {
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+  }
+
+  // Save AI Key and re-run visualization
+  if (btnSaveKey && inputKey) {
+    btnSaveKey.addEventListener('click', async () => {
+      const val = inputKey.value.trim();
+      const statusMsg = document.getElementById('ai-key-status-msg');
+      if (!val) {
+        alert('Por favor ingresá una clave de API válida.');
+        return;
+      }
+      btnSaveKey.disabled = true;
+      btnSaveKey.textContent = 'Guardando...';
+
+      await saveAISettings(val);
+
+      if (statusMsg) {
+        statusMsg.style.color = '#155724';
+        statusMsg.textContent = '✓ Clave guardada correctamente. Procesando imagen con IA...';
+      }
+
+      btnSaveKey.disabled = false;
+      btnSaveKey.textContent = 'Guardar y Procesar';
+
+      // Hide box and re-run
+      setTimeout(() => {
+        const box = document.getElementById('ai-key-config-box');
+        if (box) box.style.display = 'none';
+        openRealisticVisualization();
+      }, 600);
+    });
+  }
+
   if (btnDownloadRealistic) {
     btnDownloadRealistic.addEventListener('click', () => {
       if (cachedRealisticDataUrl) {
         const link = document.createElement('a');
-        const slug = (currentProduct ? currentProduct.name : 'prenda')
+        const slug = (currentProduct ? currentProduct.name : 'prenda-ia')
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-');
-        link.download = `pajaros-en-la-cabeza-${slug}-realista.png`;
+        link.download = `pajaros-en-la-cabeza-${slug}.png`;
         link.href = cachedRealisticDataUrl;
         document.body.appendChild(link);
         link.click();
@@ -1312,9 +1356,9 @@ function setupRealisticVisualization() {
 }
 
 /**
- * Open Realistic Preview Modal & Trigger High-End Rendering
+ * Open AI Visualization Modal & Call AI Endpoint
  */
-function openRealisticVisualization() {
+async function openRealisticVisualization() {
   if (!currentProduct) {
     alert('Por favor selecciona una prenda en el perchero.');
     return;
@@ -1324,65 +1368,125 @@ function openRealisticVisualization() {
   const modalProdName = document.getElementById('visualize-modal-prod-name');
   const loader = document.getElementById('visualize-loader');
   const previewImg = document.getElementById('visualize-preview-img');
+  const configBox = document.getElementById('ai-key-config-box');
+  const footerNote = document.getElementById('visualize-footer-note');
 
   if (!modal) return;
 
   if (modalProdName) {
-    modalProdName.textContent = `${currentProduct.name} • ${formatCurrency(currentProduct.price)}`;
+    modalProdName.textContent = `${currentProduct.name} • Procesando con Inteligencia Artificial...`;
   }
 
   if (loader) loader.style.display = 'flex';
-  if (previewImg) {
-    previewImg.style.display = 'none';
-    previewImg.src = '';
-  }
+  if (previewImg) previewImg.style.display = 'none';
+  if (configBox) configBox.style.display = 'none';
 
   modal.classList.add('active');
   modal.setAttribute('aria-hidden', 'false');
 
-  setTimeout(() => {
-    generateRealisticMockupCanvas()
-      .then((canvas) => {
-        const dataUrl = canvas.toDataURL('image/png');
-        cachedRealisticDataUrl = dataUrl;
-        if (previewImg) {
-          previewImg.src = dataUrl;
-          previewImg.style.display = 'block';
-        }
-        if (loader) loader.style.display = 'none';
+  // Check saved AI settings
+  const aiSettings = await getAISettings();
+  const apiKey = aiSettings ? aiSettings.apiKey : '';
+
+  const prodImg = (Array.isArray(currentProduct.images) && currentProduct.images.length > 0)
+    ? currentProduct.images[0]
+    : (currentProduct.image || '');
+
+  try {
+    // 1. Call Vercel Serverless Function /api/visualizar-ia
+    const response = await fetch('/api/visualizar-ia', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productName: currentProduct.name,
+        productImageUrl: prodImg,
+        logoBase64: currentDesign.imageSrc,
+        apiKey: apiKey || undefined
       })
-      .catch((err) => {
-        console.error('Error generando vista realista:', err);
-        if (loader) loader.style.display = 'none';
-        alert('Hubo un inconveniente al generar la vista realista.');
-      });
-  }, 40);
+    });
+
+    const result = await response.json();
+
+    if (result.success && result.imageUrl) {
+      cachedRealisticDataUrl = result.imageUrl;
+      if (previewImg) {
+        previewImg.src = result.imageUrl;
+        previewImg.style.display = 'block';
+      }
+      if (loader) loader.style.display = 'none';
+      if (modalProdName) {
+        modalProdName.textContent = `${currentProduct.name} • Fotografía Realista con IA`;
+      }
+      if (footerNote) {
+        footerNote.innerHTML = `✨ Fotografía generada con IA (${result.provider || 'Imagen 3'}) sobre la prenda oficial de Pájaros en la Cabeza.`;
+      }
+      return;
+    }
+
+    // 2. If NO_API_KEY, display clean configuration box & fallback clean render
+    if (result.error === 'NO_API_KEY') {
+      if (loader) loader.style.display = 'none';
+      if (configBox) configBox.style.display = 'block';
+
+      // Render clean, non-glitched canvas preview while key is configured
+      const canvas = await generateCleanPreviewCanvas();
+      const fallbackUrl = canvas.toDataURL('image/png');
+      cachedRealisticDataUrl = fallbackUrl;
+      if (previewImg) {
+        previewImg.src = fallbackUrl;
+        previewImg.style.display = 'block';
+      }
+      if (modalProdName) {
+        modalProdName.textContent = `${currentProduct.name} • Ingresá tu clave para procesar con IA`;
+      }
+      if (footerNote) {
+        footerNote.innerHTML = `Ingresá tu clave de API de Gemini (gratuita) o OpenAI arriba para activar la generación con Inteligencia Artificial.`;
+      }
+      return;
+    }
+
+    // 3. Any other API Error: show error message & clean fallback
+    console.warn('AI API Error:', result.message || result.error);
+    if (loader) loader.style.display = 'none';
+
+    const canvas = await generateCleanPreviewCanvas();
+    const fallbackUrl = canvas.toDataURL('image/png');
+    cachedRealisticDataUrl = fallbackUrl;
+    if (previewImg) {
+      previewImg.src = fallbackUrl;
+      previewImg.style.display = 'block';
+    }
+    if (modalProdName) {
+      modalProdName.textContent = `${currentProduct.name} • Vista Previa`;
+    }
+    if (footerNote) {
+      footerNote.innerHTML = `<span style="color: #B00;">Aviso:</span> ${result.message || 'No se pudo contactar a la IA en este momento.'} Mostrando vista directa de la prenda.`;
+    }
+
+  } catch (netErr) {
+    console.error('Network error calling AI endpoint:', netErr);
+    if (loader) loader.style.display = 'none';
+
+    const canvas = await generateCleanPreviewCanvas();
+    const fallbackUrl = canvas.toDataURL('image/png');
+    cachedRealisticDataUrl = fallbackUrl;
+    if (previewImg) {
+      previewImg.src = fallbackUrl;
+      previewImg.style.display = 'block';
+    }
+    if (modalProdName) {
+      modalProdName.textContent = `${currentProduct.name} • Vista Previa`;
+    }
+    if (footerNote) {
+      footerNote.textContent = 'Mostrando vista directa de la prenda elegida de la tienda.';
+    }
+  }
 }
 
 /**
- * Create a procedural cotton weave texture pattern
+ * Generate Clean, Non-Glitched Canvas Preview
  */
-function createCottonWeavePattern() {
-  const pCanvas = document.createElement('canvas');
-  pCanvas.width = 6;
-  pCanvas.height = 6;
-  const pCtx = pCanvas.getContext('2d');
-  
-  pCtx.fillStyle = 'rgba(0,0,0,0.06)';
-  pCtx.fillRect(0, 0, 6, 6);
-  pCtx.fillStyle = 'rgba(255,255,255,0.08)';
-  pCtx.fillRect(0, 0, 3, 3);
-  pCtx.fillRect(3, 3, 3, 3);
-  
-  const patternCanvas = document.createElement('canvas');
-  const ctx = patternCanvas.getContext('2d');
-  return ctx.createPattern(pCanvas, 'repeat');
-}
-
-/**
- * Generate Photorealistic Mockup Canvas using the EXACT store product and client design
- */
-function generateRealisticMockupCanvas() {
+function generateCleanPreviewCanvas() {
   return new Promise((resolve, reject) => {
     if (!currentProduct) {
       reject(new Error('No hay prenda seleccionada.'));
@@ -1392,160 +1496,65 @@ function generateRealisticMockupCanvas() {
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
     canvas.height = 1200;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const ctx = canvas.getContext('2d');
     if (!ctx) {
       reject(new Error('Contexto canvas no disponible.'));
       return;
     }
 
-    // 1. Studio Backdrop
+    // Clean Studio Backdrop
     const bgGrad = ctx.createRadialGradient(600, 560, 100, 600, 600, 850);
     bgGrad.addColorStop(0, '#FFFFFF');
     bgGrad.addColorStop(1, '#ECE7DC');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, 1200, 1200);
 
-    // 2. Load the EXACT product image from store
     const rawProdImg = (Array.isArray(currentProduct.images) && currentProduct.images.length > 0)
       ? currentProduct.images[0]
       : (currentProduct.image || getPlaceholderImg());
 
     loadImgWithFallback(rawProdImg).then((bgImg) => {
-      if (!bgImg) {
-        reject(new Error('No se pudo cargar la prenda.'));
-        return;
+      if (bgImg) {
+        const scaleBg = Math.min(1060 / bgImg.naturalWidth, 1060 / bgImg.naturalHeight);
+        const drawW = bgImg.naturalWidth * scaleBg;
+        const drawH = bgImg.naturalHeight * scaleBg;
+        const drawX = (1200 - drawW) / 2;
+        const drawY = (1200 - drawH) / 2;
+        ctx.drawImage(bgImg, drawX, drawY, drawW, drawH);
       }
 
-      const scaleBg = Math.min(1060 / bgImg.naturalWidth, 1060 / bgImg.naturalHeight);
-      const drawW = bgImg.naturalWidth * scaleBg;
-      const drawH = bgImg.naturalHeight * scaleBg;
-      const drawX = (1200 - drawW) / 2;
-      const drawY = (1200 - drawH) / 2;
+      if (currentDesign.imageSrc) {
+        loadImgWithFallback(currentDesign.imageSrc).then((designImg) => {
+          if (designImg) {
+            const targetX = (currentDesign.posX / 100) * 1200;
+            const targetY = (currentDesign.posY / 100) * 1200;
+            const baseRefSize = 340 * currentDesign.scale;
+            const designAspect = designImg.naturalWidth / designImg.naturalHeight;
+            let dW = baseRefSize;
+            let dH = baseRefSize / designAspect;
+            if (designAspect < 1) {
+              dH = baseRefSize;
+              dW = baseRefSize * designAspect;
+            }
+            dW = Math.round(dW);
+            dH = Math.round(dH);
 
-      // Draw subtle drop shadow for realistic volume
-      ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.18)';
-      ctx.shadowBlur = 35;
-      ctx.shadowOffsetY = 16;
-      ctx.drawImage(bgImg, drawX, drawY, drawW, drawH);
-      ctx.restore();
+            const rad = (currentDesign.rotation * Math.PI) / 180;
 
-      // If no logo uploaded, resolve with clean product
-      if (!currentDesign.imageSrc) {
-        drawRealisticFooterStamp(ctx, currentProduct.name);
-        resolve(canvas);
-        return;
-      }
+            ctx.save();
+            ctx.translate(targetX, targetY);
+            ctx.rotate(rad);
+            ctx.drawImage(designImg, -dW / 2, -dH / 2, dW, dH);
+            ctx.restore();
+          }
 
-      // 3. Load user's design image
-      loadImgWithFallback(currentDesign.imageSrc).then((designImg) => {
-        if (!designImg) {
           drawRealisticFooterStamp(ctx, currentProduct.name);
           resolve(canvas);
-          return;
-        }
-
-        const targetX = (currentDesign.posX / 100) * 1200;
-        const targetY = (currentDesign.posY / 100) * 1200;
-        const baseRefSize = 340 * currentDesign.scale;
-        const designAspect = designImg.naturalWidth / designImg.naturalHeight;
-        let dW = baseRefSize;
-        let dH = baseRefSize / designAspect;
-        if (designAspect < 1) {
-          dH = baseRefSize;
-          dW = baseRefSize * designAspect;
-        }
-        dW = Math.round(dW);
-        dH = Math.round(dH);
-
-        const rad = (currentDesign.rotation * Math.PI) / 180;
-
-        // Sample garment patch around the design area to extract fold luminance
-        const patchW = Math.round(Math.max(dW, dH) * 1.5);
-        const patchH = patchW;
-        const patchX = Math.round(targetX - patchW / 2);
-        const patchY = Math.round(targetY - patchH / 2);
-
-        const safeX = Math.max(0, Math.min(1200 - patchW, patchX));
-        const safeY = Math.max(0, Math.min(1200 - patchH, patchY));
-
-        let clothData = null;
-        try {
-          clothData = ctx.getImageData(safeX, safeY, patchW, patchH);
-        } catch (e) {
-          // ignore CORS
-        }
-
-        // Draw Base Design Ink
-        ctx.save();
-        ctx.translate(targetX, targetY);
-        ctx.rotate(rad);
-
-        // Subtle soft shadow behind the ink (gives DTF 3D depth)
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.14)';
-        ctx.shadowBlur = 3;
-        ctx.shadowOffsetY = 1.5;
-        ctx.drawImage(designImg, -dW / 2, -dH / 2, dW, dH);
-        ctx.shadowColor = 'transparent';
-
-        // Apply Cotton Texture Weave over the ink
-        ctx.globalCompositeOperation = 'source-atop';
-        const weave = createCottonWeavePattern();
-        if (weave) {
-          ctx.globalAlpha = 0.16;
-          ctx.fillStyle = weave;
-          ctx.fillRect(-dW / 2, -dH / 2, dW, dH);
-        }
-
-        // Apply Fabric Crease Shading from the real garment
-        if (clothData) {
-          const foldCanvas = document.createElement('canvas');
-          foldCanvas.width = patchW;
-          foldCanvas.height = patchH;
-          const foldCtx = foldCanvas.getContext('2d');
-          
-          const fImgData = foldCtx.createImageData(patchW, patchH);
-          const fData = fImgData.data;
-          const cData = clothData.data;
-          const totalPix = patchW * patchH;
-
-          let totalLum = 0;
-          for (let p = 0; p < totalPix; p++) {
-            const idx = p * 4;
-            totalLum += (cData[idx] * 0.299 + cData[idx + 1] * 0.587 + cData[idx + 2] * 0.114);
-          }
-          const avgLum = totalLum / totalPix;
-
-          for (let p = 0; p < totalPix; p++) {
-            const idx = p * 4;
-            const lum = cData[idx] * 0.299 + cData[idx + 1] * 0.587 + cData[idx + 2] * 0.114;
-            const diff = lum - avgLum;
-            
-            if (diff < 0) {
-              fData[idx] = 0;
-              fData[idx + 1] = 0;
-              fData[idx + 2] = 0;
-              fData[idx + 3] = Math.min(180, Math.round(Math.abs(diff) * 1.8));
-            } else {
-              fData[idx] = 255;
-              fData[idx + 1] = 255;
-              fData[idx + 2] = 255;
-              fData[idx + 3] = Math.min(140, Math.round(diff * 1.4));
-            }
-          }
-          foldCtx.putImageData(fImgData, 0, 0);
-
-          ctx.globalAlpha = 0.45;
-          ctx.drawImage(foldCanvas, -dW / 2, -dH / 2, dW, dH);
-        }
-
-        ctx.restore();
-
-        // 4. Official High-End Footer Stamp
+        });
+      } else {
         drawRealisticFooterStamp(ctx, currentProduct.name);
-
         resolve(canvas);
-      });
+      }
     });
   });
 }
@@ -1574,7 +1583,7 @@ function drawRealisticFooterStamp(ctx, productName) {
   ctx.fillStyle = '#FFFFFF';
   ctx.font = '600 14px "Plus Jakarta Sans", sans-serif';
   const nameSafe = productName || 'Prenda Oficial';
-  ctx.fillText(`• ${nameSafe} • Acabado Real`, 345, 1140);
+  ctx.fillText(`• ${nameSafe} • Vista Previa`, 345, 1140);
 
   ctx.restore();
 }

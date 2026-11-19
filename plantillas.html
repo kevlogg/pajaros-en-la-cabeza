@@ -257,17 +257,17 @@
                 </button>
               </div>
 
-              <!-- Realistic Garment Visualization Callout -->
+              <!-- AI Garment Visualization Callout -->
               <div class="visualize-banner-callout">
                 <div style="display: flex; align-items: center; gap: 0.6rem;">
-                  <span style="font-size: 1.3rem;">👁️</span>
+                  <span style="font-size: 1.4rem;">✨</span>
                   <div>
-                    <strong style="font-size: 0.86rem; display: block;">¿Querés ver cómo queda en la prenda real?</strong>
-                    <span style="font-size: 0.74rem; color: #555;">Visualizá la estampa con pliegues, sombras y textura de tela</span>
+                    <strong style="font-size: 0.86rem; display: block;">¿Querés una foto real generada con IA?</strong>
+                    <span style="font-size: 0.74rem; color: #555;">La Inteligencia Artificial procesa la prenda exacta con tu estampa</span>
                   </div>
                 </div>
                 <button type="button" class="btn-visualize-pill" id="btn-stage-visualize">
-                  <span>👁️ Visualizar Realista</span>
+                  <span>✨ Visualizar con IA</span>
                 </button>
               </div>
 
@@ -361,9 +361,9 @@
             <!-- Action Buttons -->
             <div style="display: flex; flex-direction: column; gap: 0.65rem;">
               
-              <!-- Realistic Visualization Button -->
+              <!-- AI Visualization Button -->
               <button type="button" class="btn-visualize-action" id="btn-trigger-visualize">
-                <span>👁️ Visualizar Prenda Real</span>
+                <span>✨ Visualizar con IA</span>
               </button>
 
               <!-- WhatsApp Order -->
@@ -397,19 +397,19 @@
   <!-- Offscreen Canvas for Generating High-Res Downloads -->
   <canvas id="export-canvas" width="1200" height="1200" style="display: none;"></canvas>
 
-  <!-- Photorealistic Realistic Garment Preview Modal -->
+  <!-- AI Real Garment Preview Modal -->
   <div class="visualize-modal-overlay" id="visualize-modal" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="visualize-modal-card">
       
       <div class="visualize-modal-header">
         <div style="display: flex; align-items: center; gap: 0.65rem;">
-          <span style="font-size: 1.4rem;">👁️</span>
+          <span style="font-size: 1.4rem;">✨</span>
           <div>
             <h3 style="margin: 0; font-size: 1.12rem; font-family: var(--font-heading); font-weight: 800; color: var(--color-yellow);">
-              Visualización de Prenda Real
+              Visualización con Inteligencia Artificial
             </h3>
             <span style="font-size: 0.76rem; color: #BBB;" id="visualize-modal-prod-name">
-              Prenda seleccionada
+              Prenda seleccionada • Procesando con IA
             </span>
           </div>
         </div>
@@ -419,32 +419,54 @@
       <div class="visualize-modal-body">
         
         <!-- Quality Badge -->
-        <div class="visualize-badge-banner">
-          <span>🧵 Acabado Real de Estampado Textil (DTF / Serigrafía de Alta Densidad)</span>
+        <div class="visualize-badge-banner" style="background: var(--color-yellow);">
+          <span>✨ FOTOGRAFÍA GENERADA CON INTELIGENCIA ARTIFICIAL</span>
         </div>
 
         <!-- Frame with Rendered Realistic Image -->
         <div class="visualize-preview-frame">
-          <div class="visualize-loader" id="visualize-loader" style="display: none;">
-            <span style="font-size: 1.8rem; animation: pulse 1s infinite alternate;">⏳</span>
-            <span>Generando vista fotorrealista...</span>
+          <div class="visualize-loader" id="visualize-loader" style="display: none; text-align: center; padding: 2rem 1rem;">
+            <span style="font-size: 2.4rem; display: block; margin-bottom: 0.6rem; animation: pulse 1s infinite alternate;">✨</span>
+            <strong style="font-size: 1.05rem; display: block; margin-bottom: 0.3rem;">La Inteligencia Artificial está procesando tu prenda...</strong>
+            <span style="font-size: 0.8rem; color: #666;">Generando textura fotográfica, sombras y caída textil (demora unos segundos)</span>
           </div>
-          <img id="visualize-preview-img" class="visualize-preview-img" src="" alt="Vista fotorrealista de la prenda">
+          <img id="visualize-preview-img" class="visualize-preview-img" src="" alt="Vista fotorrealista con IA de la prenda">
+        </div>
+
+        <!-- AI API Key Configuration Box (shown when needed or toggled) -->
+        <div id="ai-key-config-box" style="display: none; background: #FFFDF0; border: 2px dashed var(--color-black); border-radius: 8px; padding: 1.2rem; width: 100%; max-width: 540px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+            <span style="font-size: 1.2rem;">🔑</span>
+            <strong style="font-size: 0.95rem;">Configuración de Clave de Inteligencia Artificial</strong>
+          </div>
+          <p style="font-size: 0.82rem; color: #555; margin-bottom: 0.8rem; line-height: 1.4;">
+            Para generar fotos hiperrealistas con IA, ingresá tu clave de API gratuita de <strong>Google Gemini</strong> (obtenela gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="text-decoration: underline; font-weight: 700; color: var(--color-magenta);">Google AI Studio</a>) o tu clave de <strong>OpenAI</strong>. Se guardará de forma segura en tu tienda.
+          </p>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <input type="password" id="input-ai-api-key" placeholder="AIzaSy... o sk-..." class="form-input" style="flex: 1; min-width: 220px; padding: 0.5rem 0.8rem; font-size: 0.85rem;">
+            <button type="button" class="btn btn-primary" id="btn-save-ai-key" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+              Guardar y Procesar
+            </button>
+          </div>
+          <div id="ai-key-status-msg" style="font-size: 0.78rem; margin-top: 0.5rem; color: #666;"></div>
         </div>
 
         <!-- Info note -->
-        <div style="font-size: 0.78rem; color: #555; text-align: center; max-width: 540px; line-height: 1.4;">
-          Esta vista previa aplica las sombras, pliegues y textura del algodón de nuestra prenda real para que veas con precisión cómo quedará confeccionada.
+        <div style="font-size: 0.78rem; color: #555; text-align: center; max-width: 540px; line-height: 1.4;" id="visualize-footer-note">
+          Fotografía de catálogo generada con IA a partir de la prenda exacta de la tienda con tu estampa incrustada.
         </div>
 
       </div>
 
       <div class="visualize-modal-footer">
+        <button type="button" class="btn btn-outline" id="btn-toggle-config-key" style="font-size: 0.82rem; padding: 0.6rem 0.85rem; margin-right: auto;" title="Configurar o cambiar clave de API de IA">
+          🔑 Configurar IA
+        </button>
         <button type="button" class="btn btn-outline" id="btn-modal-close-action" style="font-size: 0.88rem; padding: 0.6rem 1rem;">
           Cerrar
         </button>
         <button type="button" class="btn btn-outline" id="btn-modal-download-realistic" style="font-size: 0.88rem; padding: 0.6rem 1.15rem;">
-          <span>📸 Descargar Foto Realista</span>
+          <span>📸 Descargar Foto</span>
         </button>
         <button type="button" class="btn btn-primary" id="btn-modal-order-whatsapp" style="font-size: 0.88rem; padding: 0.6rem 1.2rem; background: #25D366; color: #000; border-color: #000;">
           <span>💬 Encargar por WhatsApp</span>

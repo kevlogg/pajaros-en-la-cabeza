@@ -613,4 +613,42 @@ export async function importStoreData(jsonContent) {
   }
 }
 
+/**
+ * AI Settings Management (Gemini / OpenAI API Key)
+ */
+export async function getAISettings() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'ai'));
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data && data.apiKey) {
+        localStorage.setItem('pajaros_ai_key', data.apiKey);
+        return data;
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  const localKey = localStorage.getItem('pajaros_ai_key');
+  return localKey ? { apiKey: localKey } : null;
+}
+
+export async function saveAISettings(apiKey, provider = 'gemini') {
+  if (apiKey) {
+    localStorage.setItem('pajaros_ai_key', apiKey.trim());
+  } else {
+    localStorage.removeItem('pajaros_ai_key');
+  }
+
+  try {
+    await setDoc(doc(db, 'settings', 'ai'), {
+      apiKey: apiKey ? apiKey.trim() : '',
+      provider,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (e) {
+    console.warn('Could not save AI settings to Firestore:', e);
+  }
+}
+
 export { BRAND_INFO, SHIPPING_RATES, ARGENTINA_PROVINCES };
