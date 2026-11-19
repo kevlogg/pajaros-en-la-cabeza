@@ -2921,48 +2921,52 @@
 /* Physical Perchero Frame & Rail */
 .perchero-container-wrapper {
   position: relative;
-  padding: 1rem 1.4rem 2rem 1.4rem;
+  padding: 0.5rem 1.4rem 2rem 1.4rem;
   background: #F4F1EA;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
 }
 
-/* Metal Hanger Rail */
+/* Metal Hanger Rail running continuously across the perchero */
 .perchero-rail-bar {
-  width: calc(100% - 2rem);
-  height: 12px;
-  margin: 0 auto;
-  background: linear-gradient(180deg, #555 0%, #1A1A1A 60%, #333 100%);
-  border: 2px solid var(--color-black);
-  border-radius: 6px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-  position: relative;
-  z-index: 5;
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: linear-gradient(180deg, #888 0%, #333 40%, #111 75%, #444 100%);
+  border-top: 2.5px solid var(--color-black);
+  border-bottom: 2.5px solid var(--color-black);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.35);
+  z-index: 2;
+  pointer-events: none;
 }
 
 .perchero-rail-bar::before,
 .perchero-rail-bar::after {
   content: '';
   position: absolute;
-  top: -6px;
-  width: 14px;
-  height: 24px;
+  top: -8px;
+  width: 20px;
+  height: 30px;
   background: #0D0D0D;
-  border-radius: 3px;
+  border-radius: 4px;
   border: 2px solid #555;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.4);
 }
-.perchero-rail-bar::before { left: 10px; }
-.perchero-rail-bar::after { right: 10px; }
+.perchero-rail-bar::before { left: 16px; }
+.perchero-rail-bar::after { right: 16px; }
 
 /* Horizontal Perchero Scroll Track */
 .perchero-scroll-track {
   display: flex;
-  gap: 1.5rem;
+  gap: 1.8rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding: 1.25rem 0.5rem 1.5rem 0.5rem;
+  padding: 0.8rem 1rem 1.5rem 1rem;
   scroll-behavior: smooth;
-  margin-top: -6px;
   position: relative;
-  z-index: 4;
+  z-index: 3;
 }
 
 .perchero-scroll-track::-webkit-scrollbar {
@@ -2985,15 +2989,15 @@
 /* Navigation Arrow Buttons for Horizontal Scroll */
 .perchero-nav-btn {
   position: absolute;
-  top: 52%;
+  top: 55%;
   transform: translateY(-50%);
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   background: var(--color-white);
   border: var(--border-heavy);
-  box-shadow: var(--shadow-flat-sm);
+  box-shadow: var(--shadow-flat);
   border-radius: 50%;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -3006,23 +3010,19 @@
 .perchero-nav-btn:hover {
   background: var(--color-yellow);
   transform: translateY(-50%) scale(1.1);
-  box-shadow: var(--shadow-flat);
+  box-shadow: var(--shadow-flat-lg);
 }
 
-.perchero-nav-prev { left: 6px; }
-.perchero-nav-next { right: 6px; }
+.perchero-nav-prev { left: 8px; }
+.perchero-nav-next { right: 8px; }
 
-/* Perchero Product Card */
+/* Perchero Product Card hanging from the rail */
 .perchero-card {
   min-width: 250px;
   max-width: 260px;
   flex-shrink: 0;
   scroll-snap-align: start;
-  background: var(--color-white);
-  border: var(--border-heavy);
-  box-shadow: var(--shadow-flat);
-  border-radius: 12px;
-  overflow: hidden;
+  background: transparent;
   display: flex;
   flex-direction: column;
   cursor: pointer;
@@ -3031,36 +3031,52 @@
   text-align: left;
 }
 
-/* Hanger Hook on Top of Card */
-.perchero-card::before {
-  content: '';
-  display: block;
-  width: 20px;
-  height: 18px;
-  margin: 4px auto -2px auto;
-  border: 3px solid #333;
-  border-bottom: none;
-  border-radius: 12px 12px 0 0;
+/* Authentic Hanger Hook sitting and looping over the barral */
+.perchero-card-hanger {
+  width: 84px;
+  height: 46px;
+  margin: 0 auto -2px auto;
+  position: relative;
+  z-index: 5;
+  pointer-events: none;
+  filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.25));
+  transition: transform var(--transition-fast);
 }
 
-.perchero-card:hover {
-  transform: translateY(-5px);
+.perchero-card:hover .perchero-card-hanger {
+  transform: scale(1.05);
+}
+
+.perchero-card-inner {
+  background: var(--color-white);
+  border: var(--border-heavy);
+  box-shadow: var(--shadow-flat);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.perchero-card:hover .perchero-card-inner {
+  transform: translateY(-4px);
   box-shadow: var(--shadow-flat-lg);
   border-color: var(--color-black);
 }
 
-.perchero-card.selected {
+.perchero-card.selected .perchero-card-inner {
   border: 3.5px solid var(--color-magenta);
   background: #FFFDF0;
   box-shadow: var(--shadow-magenta);
-  transform: translateY(-6px);
+  transform: translateY(-5px);
 }
 
 .perchero-card.selected::after {
   content: '✓ ELEGIDO';
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 48px;
+  right: 10px;
   background: var(--color-magenta);
   color: #fff;
   font-family: var(--font-mono);
@@ -3070,14 +3086,13 @@
   border-radius: 4px;
   border: 1.5px solid var(--color-black);
   box-shadow: 1px 1px 0 var(--color-black);
-  z-index: 5;
+  z-index: 10;
 }
 
 .perchero-card-img-wrap {
   width: 100%;
   height: 250px;
   background: #F8F6F0;
-  border-top: var(--border-thin);
   border-bottom: var(--border-thick);
   overflow: hidden;
   position: relative;
@@ -3271,19 +3286,38 @@
 
 .corner-handle {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   background: var(--color-yellow);
-  border: 1.5px solid var(--color-black);
-  border-radius: 2px;
+  border: 2px solid var(--color-black);
+  border-radius: 3px;
   box-shadow: 1px 1px 0px var(--color-black);
-  pointer-events: none;
+  pointer-events: auto !important;
+  z-index: 35;
+  touch-action: none;
+  transition: transform 0.1s ease, background 0.1s ease;
 }
 
-.corner-tl { top: -6px; left: -6px; }
-.corner-tr { top: -6px; right: -6px; }
-.corner-bl { bottom: -6px; left: -6px; }
-.corner-br { bottom: -6px; right: -6px; }
+.corner-handle::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  cursor: inherit;
+}
+
+.corner-handle:hover,
+.corner-handle.is-active {
+  background: var(--color-magenta);
+  transform: scale(1.3);
+}
+
+.corner-tl { top: -8px; left: -8px; cursor: nwse-resize; }
+.corner-tr { top: -8px; right: -8px; cursor: nesw-resize; }
+.corner-bl { bottom: -8px; left: -8px; cursor: nesw-resize; }
+.corner-br { bottom: -8px; right: -8px; cursor: nwse-resize; }
 
 .drag-tooltip {
   position: absolute;
@@ -3464,15 +3498,46 @@
   cursor: pointer;
 }
 
-.blend-mode-row {
+.remove-bg-action-box {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.8rem;
+  gap: 1rem;
   background: #FFF;
   border: var(--border-thin);
-  padding: 0.5rem 0.8rem;
-  border-radius: 6px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-remove-bg-action {
+  padding: 0.6rem 1rem;
+  background: var(--color-yellow);
+  color: var(--color-black);
+  border: var(--border-thick);
+  border-radius: 8px;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.86rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-flat-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-remove-bg-action:hover {
+  background: var(--color-black);
+  color: var(--color-yellow);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-flat);
+}
+
+.btn-remove-bg-action.is-active {
+  background: var(--color-magenta);
+  color: #FFF;
+  border-color: var(--color-black);
 }
 
 /* Simplified Order & Summary Panel (Without Color / Size) */

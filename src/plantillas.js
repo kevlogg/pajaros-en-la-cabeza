@@ -14,6 +14,9 @@ let searchQuery = '';
 // Design Overlay State (persists across product changes)
 const currentDesign = {
   imageSrc: null,
+  originalImageSrc: null,
+  processedImageSrc: null,
+  isBgRemoved: false,
   imageElement: null,
   filename: '',
   posX: 50,          // Percentage of stage width (0 - 100)
@@ -33,6 +36,14 @@ let startPointerX = 0;
 let startPointerY = 0;
 let startPosX = 50;
 let startPosY = 38;
+
+// Corner Handle Resize State
+let isResizing = false;
+let activeResizeHandle = null;
+let resizeInitialDist = 0;
+let resizeInitialScale = 1.0;
+let resizeCenterX = 0;
+let resizeCenterY = 0;
 
 /**
  * Format currency in Argentine Pesos
@@ -84,6 +95,7 @@ function initStudio() {
   // Setup Event Handlers
   setupPercheroNavigation();
   setupDraggablePointerEvents();
+  setupCornerHandleResize();
   setupStageControls();
   setupFileUploadHandlers();
   setupOrderControls();
@@ -181,15 +193,35 @@ function renderHorizontalPerchero() {
 
     return `
       <div class="perchero-card ${isSelected ? 'selected' : ''}" data-product-id="${prod.id}" role="option" aria-selected="${isSelected}">
-        <div class="perchero-card-img-wrap">
-          <img class="perchero-card-img" src="${prodImg}" alt="${prod.name}" loading="lazy">
+        <div class="perchero-card-hanger" aria-hidden="true">
+          <svg viewBox="0 0 84 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; display: block;">
+            <!-- Hook Shadow -->
+            <path d="M42 27 V12 C42 5 49 2 56 6 C62 9.5 61 19 56 22" stroke="rgba(0,0,0,0.25)" stroke-width="6" stroke-linecap="round" fill="none" />
+            <!-- Hook Outer/Base -->
+            <path d="M42 27 V12 C42 5 49 2 56 6 C62 9.5 61 19 56 22" stroke="#0D0D0D" stroke-width="4.5" stroke-linecap="round" fill="none" />
+            <!-- Hook Inner Highlight (Yellow Pájaros) -->
+            <path d="M42 26 V12 C42 6 48.5 3.5 54.5 7 C59.5 10 59 18 55.5 20.5" stroke="#FFE600" stroke-width="2" stroke-linecap="round" fill="none" />
+            <!-- Hook Tip Bead -->
+            <circle cx="56" cy="22" r="2.2" fill="#0D0D0D" />
+            <!-- Wooden Hanger Body -->
+            <path d="M42 27 L6 43 C4.5 44 5.5 45.5 7.5 45.5 H76.5 C78.5 45.5 79.5 44 78 43 L42 27 Z" fill="#D4A373" stroke="#0D0D0D" stroke-width="2.5" stroke-linejoin="round" />
+            <!-- Wood Grain Line -->
+            <path d="M12 43.2 L42 29.5 L72 43.2" stroke="#F5D0A9" stroke-width="1.5" stroke-linecap="round" fill="none" />
+            <!-- Swivel Ring Collar -->
+            <circle cx="42" cy="27" r="3.2" fill="#FFE600" stroke="#0D0D0D" stroke-width="1.8"/>
+          </svg>
         </div>
-        <div class="perchero-card-body">
-          <span class="perchero-card-badge">${categoryName}</span>
-          <h3 class="perchero-card-title">${prod.name}</h3>
-          <span class="perchero-card-price">${priceFormatted}</span>
-          <div class="perchero-card-btn">
-            ${isSelected ? '✓ Prenda Elegida' : 'Diseñar esta Prenda ➔'}
+        <div class="perchero-card-inner">
+          <div class="perchero-card-img-wrap">
+            <img class="perchero-card-img" src="${prodImg}" alt="${prod.name}" loading="lazy">
+          </div>
+          <div class="perchero-card-body">
+            <span class="perchero-card-badge">${categoryName}</span>
+            <h3 class="perchero-card-title">${prod.name}</h3>
+            <span class="perchero-card-price">${priceFormatted}</span>
+            <div class="perchero-card-btn">
+              ${isSelected ? '✓ Prenda Elegida' : 'Diseñar esta Prenda ➔'}
+            </div>
           </div>
         </div>
       </div>
@@ -309,6 +341,8 @@ function setupDraggablePointerEvents() {
   if (!draggableLayer || !stageViewport) return;
 
   draggableLayer.addEventListener('pointerdown', (e) => {
+    // If clicking a corner handle, do NOT start layer dragging
+    if (e.target.closest('.corner-handle')) return;
     if (e.button !== undefined && e.button !== 0) return;
 
     isDragging = true;
@@ -362,6 +396,84 @@ function setupDraggablePointerEvents() {
 
   draggableLayer.addEventListener('pointerup', handlePointerEnd);
   draggableLayer.addEventListener('pointercancel', handlePointerEnd);
+}
+
+/**
+ * Setup Corner Handles Resizing for the Uploaded Design
+ * Scales proportionally from center when dragging any of the 4 corner handles
+ */
+function setupCornerHandleResize() {
+  const handles = document.querySelectorAll('.corner-handle');
+  const boxFrame = document.getElementById('design-box-frame');
+  const scaleSlider = document.getElementById('slider-scale');
+  const scaleLabel = document.getElementById('scale-value-label');
+
+  if (!boxFrame || handles.length === 0) return;
+
+  handles.forEach(handle => {
+    handle.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      e.stopPropagation(); // Stop layer drag
+      e.preventDefault();
+
+      isResizing = true;
+      activeResizeHandle = handle;
+      handle.classList.add('is-active');
+
+      const rect = boxFrame.getBoundingClientRect();
+      resizeCenterX = rect.left + rect.width / 2;
+      resizeCenterY = rect.top + rect.height / 2;
+
+      resizeInitialDist = Math.hypot(e.clientX - resizeCenterX, e.clientY - resizeCenterY);
+      if (resizeInitialDist < 10) resizeInitialDist = 10;
+      resizeInitialScale = currentDesign.scale || 1.0;
+
+      try {
+        handle.setPointerCapture(e.pointerId);
+      } catch (err) {}
+
+      const onPointerMove = (moveEvt) => {
+        if (!isResizing) return;
+        moveEvt.preventDefault();
+
+        const currentDist = Math.hypot(moveEvt.clientX - resizeCenterX, moveEvt.clientY - resizeCenterY);
+        const factor = currentDist / resizeInitialDist;
+        let newScale = resizeInitialScale * factor;
+
+        // Clamp scale between 0.30 (30%) and 2.20 (220%)
+        newScale = Math.max(0.30, Math.min(2.20, newScale));
+        newScale = Math.round(newScale * 100) / 100;
+
+        currentDesign.scale = newScale;
+
+        // Sync slider & label
+        const pct = Math.round(newScale * 100);
+        if (scaleSlider) scaleSlider.value = pct;
+        if (scaleLabel) scaleLabel.textContent = `${pct}%`;
+
+        updateDraggableTransform();
+      };
+
+      const onPointerUp = (upEvt) => {
+        if (!isResizing) return;
+        isResizing = false;
+        if (activeResizeHandle) {
+          activeResizeHandle.classList.remove('is-active');
+          try {
+            activeResizeHandle.releasePointerCapture(upEvt.pointerId);
+          } catch (err) {}
+          activeResizeHandle = null;
+        }
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerUp);
+        window.removeEventListener('pointercancel', onPointerUp);
+      };
+
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerUp);
+    });
+  });
 }
 
 /**
@@ -458,14 +570,162 @@ function setupStageControls() {
     });
   }
 
-  // Blend Mode Selector
-  const blendSelect = document.getElementById('select-blend-mode');
-  if (blendSelect) {
-    blendSelect.addEventListener('change', (e) => {
-      currentDesign.blendMode = e.target.value;
-      updateDraggableTransform();
+  // Background Remover Button
+  const btnToggleBg = document.getElementById('btn-toggle-remove-bg');
+  if (btnToggleBg) {
+    btnToggleBg.addEventListener('click', () => {
+      toggleBackgroundRemoval();
     });
   }
+}
+
+/**
+ * Toggle Background Removal (Transparentize White / Light Background)
+ */
+function toggleBackgroundRemoval() {
+  if (!currentDesign.imageSrc) {
+    alert('Primero subí una imagen o seleccioná un logo de muestra para quitarle el fondo.');
+    return;
+  }
+
+  const btnToggleBg = document.getElementById('btn-toggle-remove-bg');
+
+  if (currentDesign.isBgRemoved) {
+    // Restore original image
+    currentDesign.isBgRemoved = false;
+    currentDesign.imageSrc = currentDesign.originalImageSrc;
+    updateRenderedDesignSource(currentDesign.originalImageSrc);
+
+    if (btnToggleBg) {
+      btnToggleBg.classList.remove('is-active');
+      btnToggleBg.innerHTML = '<span>🪄 Quitar Fondo Blanco</span>';
+    }
+  } else {
+    // Transparentize background
+    if (btnToggleBg) {
+      btnToggleBg.innerHTML = '<span>⏳ Quitando fondo...</span>';
+    }
+
+    setTimeout(() => {
+      try {
+        const transparentUrl = processWhiteBackgroundRemoval(currentDesign.imageElement || currentDesign.imageSrc);
+        currentDesign.processedImageSrc = transparentUrl;
+        currentDesign.imageSrc = transparentUrl;
+        currentDesign.isBgRemoved = true;
+
+        updateRenderedDesignSource(transparentUrl);
+
+        if (btnToggleBg) {
+          btnToggleBg.classList.add('is-active');
+          btnToggleBg.innerHTML = '<span>✓ Fondo Quitado (Hacé clic para restaurar)</span>';
+        }
+      } catch (err) {
+        console.error('Error al quitar fondo:', err);
+        alert('No se pudo procesar la transparencia automáticamente en esta imagen. Te recomendamos subir una imagen en formato PNG sin fondo.');
+        if (btnToggleBg) {
+          btnToggleBg.classList.remove('is-active');
+          btnToggleBg.innerHTML = '<span>🪄 Quitar Fondo Blanco</span>';
+        }
+      }
+    }, 40);
+  }
+}
+
+/**
+ * Process client-side pixel manipulation to remove white or near-white background
+ */
+function processWhiteBackgroundRemoval(source) {
+  const canvas = document.createElement('canvas');
+  let img = source;
+  if (typeof source === 'string') {
+    img = new Image();
+    img.src = source;
+  }
+
+  const w = img.naturalWidth || img.width || 800;
+  const h = img.naturalHeight || img.height || 800;
+  canvas.width = w;
+  canvas.height = h;
+
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+  const len = data.length;
+
+  // Sample corner pixels to check background color
+  const cornerIdxs = [0, Math.max(0, (w - 1) * 4), Math.max(0, (h - 1) * w * 4), Math.max(0, ((h - 1) * w + (w - 1)) * 4)];
+  let avgCornerR = 0, avgCornerG = 0, avgCornerB = 0, validCorners = 0;
+
+  cornerIdxs.forEach(idx => {
+    if (idx < len) {
+      avgCornerR += data[idx];
+      avgCornerG += data[idx + 1];
+      avgCornerB += data[idx + 2];
+      validCorners++;
+    }
+  });
+
+  if (validCorners > 0) {
+    avgCornerR /= validCorners;
+    avgCornerG /= validCorners;
+    avgCornerB /= validCorners;
+  }
+
+  const isLightBg = (avgCornerR + avgCornerG + avgCornerB) / 3 > 175;
+
+  for (let i = 0; i < len; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const a = data[i + 3];
+
+    if (a === 0) continue;
+
+    const minC = Math.min(r, g, b);
+    const maxC = Math.max(r, g, b);
+    const saturation = maxC - minC;
+
+    // 1. Pure or near white (r, g, b >= 215 and low saturation)
+    if (minC >= 215 && saturation < 30) {
+      if (minC >= 240) {
+        data[i + 3] = 0;
+      } else {
+        const factor = (240 - minC) / 25;
+        data[i + 3] = Math.round(a * factor);
+      }
+    } 
+    // 2. Uniform light background matching sampled corners
+    else if (isLightBg) {
+      const dist = Math.hypot(r - avgCornerR, g - avgCornerG, b - avgCornerB);
+      if (dist < 32 && saturation < 30) {
+        data[i + 3] = 0;
+      } else if (dist < 48 && saturation < 30) {
+        data[i + 3] = Math.round(a * ((dist - 32) / 16));
+      }
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+  return canvas.toDataURL('image/png');
+}
+
+/**
+ * Update the rendered image element and preview thumbnail
+ */
+function updateRenderedDesignSource(src) {
+  const renderedImg = document.getElementById('design-rendered-img');
+  const thumbEl = document.getElementById('uploaded-file-thumb');
+
+  const newImg = new Image();
+  newImg.crossOrigin = 'anonymous';
+  newImg.onload = () => {
+    currentDesign.imageElement = newImg;
+    if (renderedImg) renderedImg.src = src;
+    if (thumbEl) thumbEl.src = src;
+  };
+  newImg.src = src;
 }
 
 /**
@@ -624,9 +884,18 @@ function applyDesignImage(src, filename) {
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
+    currentDesign.originalImageSrc = src;
+    currentDesign.processedImageSrc = null;
+    currentDesign.isBgRemoved = false;
     currentDesign.imageSrc = src;
     currentDesign.imageElement = img;
     currentDesign.filename = filename || 'mi_estampa.png';
+
+    const btnToggleBg = document.getElementById('btn-toggle-remove-bg');
+    if (btnToggleBg) {
+      btnToggleBg.classList.remove('is-active');
+      btnToggleBg.innerHTML = '<span>🪄 Quitar Fondo Blanco</span>';
+    }
 
     const draggableLayer = document.getElementById('draggable-design-layer');
     const stagePrompt = document.getElementById('stage-upload-prompt');
@@ -672,8 +941,17 @@ function applyDesignImage(src, filename) {
  */
 function removeDesign() {
   currentDesign.imageSrc = null;
+  currentDesign.originalImageSrc = null;
+  currentDesign.processedImageSrc = null;
+  currentDesign.isBgRemoved = false;
   currentDesign.imageElement = null;
   currentDesign.filename = '';
+
+  const btnToggleBg = document.getElementById('btn-toggle-remove-bg');
+  if (btnToggleBg) {
+    btnToggleBg.classList.remove('is-active');
+    btnToggleBg.innerHTML = '<span>🪄 Quitar Fondo Blanco</span>';
+  }
 
   const draggableLayer = document.getElementById('draggable-design-layer');
   const stagePrompt = document.getElementById('stage-upload-prompt');

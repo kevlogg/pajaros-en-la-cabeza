@@ -267,19 +267,18 @@
 
               </div>
 
-              <!-- Blend Mode Switch -->
-              <div class="blend-mode-row">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <span style="font-size: 1.1rem;">🪄</span>
+              <!-- Background Remover Action Button -->
+              <div class="remove-bg-action-box">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span style="font-size: 1.3rem;">🪄</span>
                   <div>
-                    <strong style="font-size: 0.82rem; display: block;">Modo de Estampa:</strong>
-                    <span style="font-size: 0.72rem; color: #666;">¿Tu archivo tiene fondo blanco? Quitalo aquí</span>
+                    <strong style="font-size: 0.86rem; display: block;">¿Tu imagen tiene fondo blanco?</strong>
+                    <span style="font-size: 0.74rem; color: #555;">Hacé clic para transparentar el fondo de tu logo</span>
                   </div>
                 </div>
-                <select id="select-blend-mode" class="form-select" style="padding: 0.35rem 0.6rem; font-size: 0.82rem; font-weight: 700; width: auto;">
-                  <option value="normal">Normal (Opaco)</option>
-                  <option value="multiply">🪄 Quitar fondo blanco (Multiplicar)</option>
-                </select>
+                <button type="button" class="btn-remove-bg-action" id="btn-toggle-remove-bg">
+                  <span>🪄 Quitar Fondo Blanco</span>
+                </button>
               </div>
 
             </div>
