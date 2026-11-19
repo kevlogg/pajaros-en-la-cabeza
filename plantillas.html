@@ -287,7 +287,10 @@
               <img id="chosen-product-thumb" class="chosen-product-thumb" src="" alt="Prenda elegida">
               <div class="chosen-product-info">
                 <h4 id="chosen-product-title" class="chosen-product-title">Prenda Seleccionada</h4>
-                <span id="chosen-product-price" class="chosen-product-price">$18.000</span>
+                <div style="display: flex; align-items: baseline; gap: 0.35rem;">
+                  <span id="chosen-product-price" class="chosen-product-price">$18.000</span>
+                  <span style="font-size: 0.72rem; color: #777; font-weight: 700;">(prenda base)</span>
+                </div>
                 <button type="button" class="btn-change-perchero" id="btn-change-perchero">
                   ↺ Cambiar prenda del perchero
                 </button>
@@ -341,20 +344,32 @@
             <!-- Payment Breakdown -->
             <div class="price-calculation-card">
               <div class="price-row">
-                <span>Precio Unitario:</span>
+                <span>Prenda Base (Unitario):</span>
                 <span id="price-unit-display" style="font-weight: 700; font-family: var(--font-mono);">$18.000</span>
               </div>
               <div class="price-row">
                 <span>Medio de Pago:</span>
                 <select id="payment-method-select" class="form-select" style="padding: 0.3rem 0.5rem; font-size: 0.8rem; width: auto; font-weight: 700;">
+                  <option value="1.0" selected>Transferencia</option>
                   <option value="0.85">Efectivo Eft (15% OFF)</option>
-                  <option value="0.9" selected>Transferencia (10% OFF)</option>
                   <option value="1.0">Mercado Pago (1 pago)</option>
                 </select>
               </div>
               <div class="price-total-row">
-                <span style="font-weight: 800; font-size: 1.05rem;">Total Estimado:</span>
-                <span class="price-total-num" id="price-total-num">$16.200</span>
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-weight: 800; font-size: 1.05rem;">Total Prenda Base:</span>
+                  <span style="font-size: 0.70rem; color: #666; font-weight: 600;">(Sin incluir diseño estampado)</span>
+                </div>
+                <span class="price-total-num" id="price-total-num">$18.000</span>
+              </div>
+            </div>
+
+            <!-- Important Clarification Callout -->
+            <div class="prenda-base-notice-box">
+              <span class="notice-icon">⚠️</span>
+              <div>
+                <strong>Aclaración importante:</strong>
+                <p>El valor que figura acá corresponde <strong>únicamente a la prenda base sin el diseño</strong>. Por WhatsApp coordinamos y <strong>terminamos de definir el valor final con tu diseño</strong> según tamaño, cantidad de colores y técnica de estampa.</p>
               </div>
             </div>
 

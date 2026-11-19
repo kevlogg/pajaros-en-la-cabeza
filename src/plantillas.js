@@ -28,7 +28,7 @@ const currentDesign = {
 
 // Order State (NO color, NO size)
 let selectedQuantity = 1;
-let selectedPaymentFactor = 0.9; // 10% OFF Transferencia default
+let selectedPaymentFactor = 1.0; // Transferencia default (sin descuento)
 
 // Pointer Dragging State
 let isDragging = false;
@@ -1121,7 +1121,7 @@ function setupOrderControls() {
 
   if (paymentSelect) {
     paymentSelect.addEventListener('change', (e) => {
-      selectedPaymentFactor = parseFloat(e.target.value) || 0.9;
+      selectedPaymentFactor = parseFloat(e.target.value) || 1.0;
       calculateTotalPrice();
     });
   }
@@ -1242,31 +1242,28 @@ function handleDownloadPreview() {
 function handleWhatsAppOrder() {
   if (!currentProduct) return;
 
-  const paymentNames = {
-    '0.85': 'Efectivo en Local (15% OFF)',
-    '0.9': 'Transferencia Bancaria (10% OFF)',
-    '1.0': 'Mercado Pago (1 pago)'
-  };
-  const paymentName = paymentNames[String(selectedPaymentFactor)] || 'Transferencia Bancaria (10% OFF)';
+  const paymentSelect = document.getElementById('payment-method-select');
+  const paymentName = (paymentSelect && paymentSelect.options[paymentSelect.selectedIndex]?.text) || 'Transferencia';
 
   const basePrice = Number(currentProduct.price) || 18000;
   const total = Math.round(basePrice * selectedQuantity * selectedPaymentFactor);
   const totalFormatted = formatCurrency(total);
 
   let message = `¡Hola Pájaros en la Cabeza! 🦅\n`;
-  message += `Quisiera encargar una prenda personalizada elegida desde el perchero virtual:\n\n`;
+  message += `Quisiera consultar para encargar una prenda personalizada elegida desde el perchero virtual:\n\n`;
   message += `🛍️ Prenda: ${currentProduct.name}\n`;
   message += `🔢 Cantidad: ${selectedQuantity} unidad(es)\n`;
   message += `💳 Forma de Pago: ${paymentName}\n`;
-  message += `💰 Total Estimado: ${totalFormatted}\n\n`;
+  message += `💰 Subtotal Prenda Base: ${totalFormatted}\n`;
+  message += `📌 (Aclaración: Sé que este valor es solo por la prenda base y que por acá definimos el valor final con el diseño)\n\n`;
 
   if (currentDesign.imageSrc) {
     message += `📸 ¡Ya diseñé la vista previa y ubiqué mi estampa en la web! Te adjunto la foto por acá para que vean exactamente cómo lo quiero.\n\n`;
   } else {
-    message += `💡 Quiero estampar un logo o imagen que te envío por acá.\n\n`;
+    message += `💡 Te adjunto mi archivo/logo por acá para cotizar el estampado.\n\n`;
   }
 
-  message += `¿Tienen disponibilidad para coordinar el pedido y envío? ¡Muchas gracias!`;
+  message += `¿Me podrían pasar el presupuesto final con el diseño? ¡Muchas gracias!`;
 
   const phone = '5493517620847';
   const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
@@ -1392,7 +1389,7 @@ async function openRealisticVisualization() {
       modalProdName.textContent = `${currentProduct.name} • Fotografía Fotorrealista`;
     }
     if (footerNote) {
-      footerNote.innerHTML = `✨ Fotografía generada a partir de la prenda oficial de <strong>Pájaros en la Cabeza</strong> con tu estampa integrada con textura textil y sombras reales.`;
+      footerNote.innerHTML = `✨ Fotografía generada a partir de la prenda oficial de <strong>Pájaros en la Cabeza</strong> con tu estampa integrada.<br><span style="color: #666; font-size: 0.76rem; display: block; margin-top: 0.35rem;">* El precio en la web corresponde únicamente a la prenda base. Por WhatsApp terminamos de definir el valor final con el diseño estampado.</span>`;
     }
   } catch (err) {
     console.error('Error generando visualización fotorrealista:', err);

@@ -3779,6 +3779,42 @@
   color: var(--color-black);
 }
 
+/* Important Clarification Callout: Base garment price only */
+.prenda-base-notice-box {
+  background: #FFFDF0;
+  border: 2px solid var(--color-black);
+  border-left: 6px solid var(--color-magenta);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  box-shadow: 2px 2px 0 var(--color-black);
+  box-sizing: border-box;
+}
+
+.prenda-base-notice-box .notice-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.prenda-base-notice-box strong {
+  font-family: var(--font-heading);
+  color: var(--color-black);
+  display: block;
+  font-size: 0.88rem;
+  margin-bottom: 0.2rem;
+}
+
+.prenda-base-notice-box p {
+  margin: 0;
+  font-size: 0.81rem;
+  color: #333;
+  line-height: 1.4;
+}
+
 /* Action Buttons */
 .btn-order-whatsapp {
   width: 100%;
