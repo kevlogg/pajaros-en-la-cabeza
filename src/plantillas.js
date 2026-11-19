@@ -556,18 +556,9 @@ function updateDraggableTransform() {
 }
 
 /**
- * Setup Stage Controls (Presets, Sliders, Blend mode)
+ * Setup Stage Controls (Sliders, Background Remover)
  */
 function setupStageControls() {
-  const presetButtons = document.querySelectorAll('.preset-chip');
-  presetButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      presetButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      applyLocationPreset(btn.getAttribute('data-preset'));
-    });
-  });
-
   // Scale Slider
   const scaleSlider = document.getElementById('slider-scale');
   const scaleLabel = document.getElementById('scale-value-label');
@@ -788,61 +779,7 @@ function updateRenderedDesignSource(src) {
   newImg.src = src;
 }
 
-/**
- * Apply Location Presets
- */
-function applyLocationPreset(preset) {
-  switch (preset) {
-    case 'pecho-centro':
-      currentDesign.posX = 50;
-      currentDesign.posY = 38;
-      currentDesign.scale = 1.0;
-      currentDesign.rotation = 0;
-      break;
 
-    case 'bolsillo':
-      currentDesign.posX = 65;
-      currentDesign.posY = 34;
-      currentDesign.scale = 0.65;
-      currentDesign.rotation = 0;
-      break;
-
-    case 'centro-grande':
-      currentDesign.posX = 50;
-      currentDesign.posY = 44;
-      currentDesign.scale = 1.45;
-      currentDesign.rotation = 0;
-      break;
-
-    case 'inferior':
-      currentDesign.posX = 50;
-      currentDesign.posY = 68;
-      currentDesign.scale = 0.95;
-      currentDesign.rotation = 0;
-      break;
-
-    case 'reset-pos':
-    default:
-      currentDesign.posX = 50;
-      currentDesign.posY = 42;
-      currentDesign.scale = 1.0;
-      currentDesign.rotation = 0;
-      break;
-  }
-
-  // Sync sliders
-  const scaleSlider = document.getElementById('slider-scale');
-  const scaleLabel = document.getElementById('scale-value-label');
-  const rotateSlider = document.getElementById('slider-rotation');
-  const rotateLabel = document.getElementById('rotation-value-label');
-
-  if (scaleSlider) scaleSlider.value = Math.round(currentDesign.scale * 100);
-  if (scaleLabel) scaleLabel.textContent = `${Math.round(currentDesign.scale * 100)}%`;
-  if (rotateSlider) rotateSlider.value = currentDesign.rotation;
-  if (rotateLabel) rotateLabel.textContent = `${currentDesign.rotation}°`;
-
-  updateDraggableTransform();
-}
 
 /**
  * Setup File Upload & Drag-and-Drop
