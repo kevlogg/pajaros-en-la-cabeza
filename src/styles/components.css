@@ -2786,11 +2786,11 @@
 }
 
 /* --------------------------------------------------------------------------
-   NUEVO STUDIO: PLANTILLAS CON PRODUCTOS REALES Y ESTAMPA DESLIZABLE
+   ESTUDIO DE PERSONALIZACIÓN: PERCHERO HORIZONTAL & ESTAMPA DESLIZABLE
    -------------------------------------------------------------------------- */
 .plantillas-studio-section {
   background-color: var(--color-taupe-bg);
-  padding: 2.5rem 0 4rem 0;
+  padding: 2rem 0 4rem 0;
   min-height: 85vh;
 }
 
@@ -2800,21 +2800,15 @@
   border: var(--border-heavy);
   box-shadow: var(--shadow-flat);
   border-radius: 12px;
-  padding: 1.8rem 2rem;
+  padding: 1.6rem 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-}
-
-.studio-hero-title-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  gap: 1rem;
 }
 
 .studio-hero-title {
   margin: 0;
-  font-size: clamp(1.8rem, 3.5vw, 2.7rem);
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
   font-family: var(--font-heading);
   font-weight: 800;
   line-height: 1.15;
@@ -2834,69 +2828,376 @@
   line-height: 1.5;
 }
 
-.studio-steps-pills {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  border-top: var(--border-thin);
-  padding-top: 1.2rem;
+/* Step Card Container */
+.step-card-panel {
+  background: var(--color-white);
+  border: var(--border-heavy);
+  box-shadow: var(--shadow-flat);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.studio-step-pill {
-  background: var(--color-taupe-light);
-  border: var(--border-thin);
-  border-radius: 8px;
-  padding: 0.75rem 0.9rem;
+.step-header-bar {
+  padding: 1rem 1.4rem;
+  background: var(--color-black);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.step-title-wrap {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  box-shadow: var(--shadow-flat-sm);
-  transition: transform var(--transition-fast);
 }
 
-.studio-step-pill:hover {
-  transform: translateY(-2px);
-  background-color: #FFF;
-}
-
-.studio-step-pill-num {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--color-magenta);
-  color: #FFF;
+.step-number-badge {
+  background: var(--color-yellow);
+  color: var(--color-black);
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 0.85rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
+  border: 1.5px solid var(--color-black);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.step-title-wrap h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-family: var(--font-heading);
+  color: var(--color-white);
+}
+
+/* ==========================================================================
+   PASO 1: EL PERCHERO HORIZONTAL (CLOTHING RACK)
+   ========================================================================== */
+.perchero-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.4rem 0.4rem 1.4rem;
+  background: #FAF9F6;
+  border-bottom: var(--border-thin);
+  flex-wrap: wrap;
+}
+
+.perchero-filter-chips {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.perchero-chip {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: var(--border-thin);
+  background: #FFF;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.perchero-chip:hover,
+.perchero-chip.active {
+  background: var(--color-yellow);
+  transform: translateY(-1px);
+}
+
+/* Physical Perchero Frame & Rail */
+.perchero-container-wrapper {
+  position: relative;
+  padding: 1rem 1.4rem 2rem 1.4rem;
+  background: #F4F1EA;
+}
+
+/* Metal Hanger Rail */
+.perchero-rail-bar {
+  width: calc(100% - 2rem);
+  height: 12px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #555 0%, #1A1A1A 60%, #333 100%);
+  border: 2px solid var(--color-black);
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  position: relative;
+  z-index: 5;
+}
+
+.perchero-rail-bar::before,
+.perchero-rail-bar::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  width: 14px;
+  height: 24px;
+  background: #0D0D0D;
+  border-radius: 3px;
+  border: 2px solid #555;
+}
+.perchero-rail-bar::before { left: 10px; }
+.perchero-rail-bar::after { right: 10px; }
+
+/* Horizontal Perchero Scroll Track */
+.perchero-scroll-track {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 1.25rem 0.5rem 1.5rem 0.5rem;
+  scroll-behavior: smooth;
+  margin-top: -6px;
+  position: relative;
+  z-index: 4;
+}
+
+.perchero-scroll-track::-webkit-scrollbar {
+  height: 9px;
+}
+.perchero-scroll-track::-webkit-scrollbar-track {
+  background: #E5E1D8;
+  border: 1.5px solid var(--color-black);
+  border-radius: 4px;
+}
+.perchero-scroll-track::-webkit-scrollbar-thumb {
+  background: var(--color-yellow);
+  border: 1.5px solid var(--color-black);
+  border-radius: 4px;
+}
+.perchero-scroll-track::-webkit-scrollbar-thumb:hover {
+  background: var(--color-magenta);
+}
+
+/* Navigation Arrow Buttons for Horizontal Scroll */
+.perchero-nav-btn {
+  position: absolute;
+  top: 52%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  background: var(--color-white);
+  border: var(--border-heavy);
+  box-shadow: var(--shadow-flat-sm);
+  border-radius: 50%;
+  font-size: 1.3rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  border: 1.5px solid var(--color-black);
+  cursor: pointer;
+  z-index: 10;
+  transition: all var(--transition-fast);
 }
 
-.studio-step-pill:nth-child(1) .studio-step-pill-num { background: var(--color-yellow); color: var(--color-black); }
-.studio-step-pill:nth-child(2) .studio-step-pill-num { background: var(--color-magenta); color: #FFF; }
-.studio-step-pill:nth-child(3) .studio-step-pill-num { background: var(--color-black); color: var(--color-yellow); }
-.studio-step-pill:nth-child(4) .studio-step-pill-num { background: #25D366; color: #FFF; }
+.perchero-nav-btn:hover {
+  background: var(--color-yellow);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: var(--shadow-flat);
+}
 
-.studio-step-pill-text {
-  font-size: 0.82rem;
+.perchero-nav-prev { left: 6px; }
+.perchero-nav-next { right: 6px; }
+
+/* Perchero Product Card */
+.perchero-card {
+  min-width: 250px;
+  max-width: 260px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  background: var(--color-white);
+  border: var(--border-heavy);
+  box-shadow: var(--shadow-flat);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  text-align: left;
+}
+
+/* Hanger Hook on Top of Card */
+.perchero-card::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 18px;
+  margin: 4px auto -2px auto;
+  border: 3px solid #333;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+}
+
+.perchero-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-flat-lg);
+  border-color: var(--color-black);
+}
+
+.perchero-card.selected {
+  border: 3.5px solid var(--color-magenta);
+  background: #FFFDF0;
+  box-shadow: var(--shadow-magenta);
+  transform: translateY(-6px);
+}
+
+.perchero-card.selected::after {
+  content: '✓ ELEGIDO';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--color-magenta);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1.5px solid var(--color-black);
+  box-shadow: 1px 1px 0 var(--color-black);
+  z-index: 5;
+}
+
+.perchero-card-img-wrap {
+  width: 100%;
+  height: 250px;
+  background: #F8F6F0;
+  border-top: var(--border-thin);
+  border-bottom: var(--border-thick);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.perchero-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-fast);
+}
+
+.perchero-card:hover .perchero-card-img {
+  transform: scale(1.04);
+}
+
+.perchero-card-body {
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex-grow: 1;
+}
+
+.perchero-card-badge {
+  font-size: 0.68rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #777;
+}
+
+.perchero-card-title {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.98rem;
+  margin: 0;
   line-height: 1.25;
   color: var(--color-black);
 }
 
-/* Studio 3-Column Layout */
-.plantillas-studio-layout {
+.perchero-card-price {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--color-magenta);
+}
+
+.perchero-card-btn {
+  margin-top: auto;
+  padding: 0.65rem 0.8rem;
+  background: var(--color-yellow);
+  color: var(--color-black);
+  border: var(--border-thin);
+  border-radius: 6px;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: center;
+  transition: all var(--transition-fast);
+  box-shadow: 2px 2px 0 var(--color-black);
+}
+
+.perchero-card:hover .perchero-card-btn {
+  background: var(--color-black);
+  color: var(--color-yellow);
+}
+
+.perchero-card.selected .perchero-card-btn {
+  background: var(--color-magenta);
+  color: #FFF;
+}
+
+/* ==========================================================================
+   PASO 2: SUBIR ARCHIVO & MESA DE TRABAJO CON ESTAMPA DESLIZABLE
+   ========================================================================== */
+.studio-workspace-grid {
   display: grid;
-  grid-template-columns: 320px minmax(360px, 1fr) 350px;
+  grid-template-columns: minmax(400px, 1.35fr) 380px;
   gap: 1.5rem;
+  padding: 1.5rem;
   align-items: start;
 }
 
-/* Studio Panel Base */
-.studio-panel {
+/* Recommendation Banner Callout */
+.no-bg-recommendation-box {
+  background: #FFFDF0;
+  border: 2px dashed var(--color-magenta);
+  border-radius: 8px;
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0 1.5rem 1rem 1.5rem;
+}
+
+.no-bg-recommendation-box .rec-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.no-bg-recommendation-box strong {
+  color: var(--color-magenta);
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 0.15rem;
+}
+
+.no-bg-recommendation-box p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #444;
+  line-height: 1.35;
+}
+
+/* Mockup Stage Box */
+.mockup-stage-box {
   background: var(--color-white);
   border: var(--border-heavy);
   box-shadow: var(--shadow-flat);
@@ -2906,174 +3207,12 @@
   flex-direction: column;
 }
 
-.studio-panel-header {
-  padding: 0.9rem 1.2rem;
-  background: var(--color-black);
-  color: var(--color-white);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.studio-panel-header h3 {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
-  font-family: var(--font-heading);
-  color: var(--color-white);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.studio-panel-badge {
-  background: var(--color-yellow);
-  color: var(--color-black);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 0.2rem 0.55rem;
-  border-radius: 4px;
-  border: 1px solid var(--color-black);
-}
-
-/* Column 1: Vertical Products Gallery */
-.gallery-filter-wrap {
-  padding: 0.85rem 1rem 0.5rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  border-bottom: var(--border-thin);
-  background: #FAF9F6;
-}
-
-.vertical-products-list {
-  max-height: 660px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
-  scroll-behavior: smooth;
-}
-
-.vertical-products-list::-webkit-scrollbar {
-  width: 7px;
-}
-.vertical-products-list::-webkit-scrollbar-track {
-  background: #EFECE6;
-  border-left: 1.5px solid var(--color-black);
-}
-.vertical-products-list::-webkit-scrollbar-thumb {
-  background: var(--color-yellow);
-  border: 1.5px solid var(--color-black);
-  border-radius: 4px;
-}
-.vertical-products-list::-webkit-scrollbar-thumb:hover {
-  background: var(--color-magenta);
-}
-
-.gallery-product-card {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 0.75rem;
-  background: var(--color-taupe-light);
-  border: var(--border-thin);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  position: relative;
-  text-align: left;
-  width: 100%;
-}
-
-.gallery-product-card:hover {
-  background: #FFF;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-flat-sm);
-  border-color: var(--color-black);
-}
-
-.gallery-product-card.selected {
-  border: 3.5px solid var(--color-magenta);
-  background: #FFFDF0;
-  box-shadow: var(--shadow-magenta);
-  transform: translateY(-2px);
-}
-
-.gallery-product-thumb {
-  width: 74px;
-  height: 74px;
-  border-radius: 6px;
-  border: var(--border-thin);
-  object-fit: cover;
-  background: #fff;
-  flex-shrink: 0;
-}
-
-.gallery-product-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex-grow: 1;
-  overflow: hidden;
-}
-
-.gallery-product-title {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 0.95rem;
-  margin: 0;
-  line-height: 1.25;
-  color: var(--color-black);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.gallery-product-price {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--color-magenta);
-}
-
-.gallery-product-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #666;
-}
-
-.gallery-selected-tag {
-  position: absolute;
-  top: -8px;
-  right: 10px;
-  background: var(--color-magenta);
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 10px;
-  border: 1.5px solid var(--color-black);
-  box-shadow: 1px 1px 0 var(--color-black);
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-
-/* Column 2: Mockup Stage */
-.mockup-stage-viewport {
+.stage-viewport-area {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  min-height: 380px;
-  max-height: 540px;
+  min-height: 400px;
+  max-height: 580px;
   background-color: #F8F6F0;
   background-image: 
     radial-gradient(#D5D0C5 1.5px, transparent 1.5px),
@@ -3097,7 +3236,7 @@
   transition: opacity 0.2s ease;
 }
 
-/* Interactive Draggable Design Layer */
+/* Draggable Design Layer */
 .draggable-design-layer {
   position: absolute;
   cursor: grab;
@@ -3116,7 +3255,7 @@
 
 .design-box-frame {
   position: relative;
-  border: 2px dashed var(--color-magenta);
+  border: 2.5px dashed var(--color-magenta);
   padding: 3px;
   background: transparent;
   display: flex;
@@ -3127,7 +3266,7 @@
 
 .draggable-design-layer.is-dragging .design-box-frame {
   border-color: var(--color-black);
-  background: rgba(255, 230, 0, 0.08);
+  background: rgba(255, 230, 0, 0.1);
 }
 
 .corner-handle {
@@ -3148,7 +3287,7 @@
 
 .drag-tooltip {
   position: absolute;
-  top: -32px;
+  top: -34px;
   left: 50%;
   transform: translateX(-50%);
   background: var(--color-black);
@@ -3164,7 +3303,7 @@
   letter-spacing: 0.03em;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .design-rendered-img {
@@ -3176,19 +3315,19 @@
   user-select: none;
 }
 
-/* Empty Stage State */
+/* Prompt to Upload (shown when no design uploaded yet) */
 .stage-upload-prompt {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 82%;
-  max-width: 350px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(6px);
+  width: 86%;
+  max-width: 380px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
   border: 3px dashed var(--color-magenta);
   border-radius: 12px;
-  padding: 1.8rem 1.4rem;
+  padding: 1.8rem 1.5rem;
   text-align: center;
   cursor: pointer;
   box-shadow: var(--shadow-flat);
@@ -3206,25 +3345,30 @@
 .stage-upload-prompt .prompt-icon {
   font-size: 2.8rem;
   display: block;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
 }
 
 .stage-upload-prompt h4 {
-  margin: 0 0 0.4rem 0;
-  font-size: 1.15rem;
+  margin: 0 0 0.3rem 0;
+  font-size: 1.25rem;
   font-family: var(--font-heading);
   font-weight: 800;
   color: var(--color-black);
 }
 
-.stage-upload-prompt p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #666;
-  line-height: 1.4;
+.stage-upload-prompt .prompt-recommendation {
+  background: var(--color-yellow);
+  padding: 0.3rem 0.6rem;
+  border: var(--border-thin);
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-black);
+  display: inline-block;
+  margin: 0.4rem 0 0.8rem 0;
 }
 
-/* Stage Toolbar Controls */
+/* Stage Controls Toolbar */
 .stage-toolbar-wrap {
   padding: 1rem 1.25rem;
   background: #FAF8F2;
@@ -3331,18 +3475,86 @@
   border-radius: 6px;
 }
 
-/* Column 3: Order & Controls Panel */
-.studio-order-panel {
-  padding: 1.25rem;
+/* Simplified Order & Summary Panel (Without Color / Size) */
+.studio-order-card {
+  background: var(--color-white);
+  border: var(--border-heavy);
+  box-shadow: var(--shadow-flat);
+  border-radius: 12px;
+  padding: 1.4rem;
   display: flex;
   flex-direction: column;
   gap: 1.15rem;
 }
 
+/* Chosen Product Card */
+.chosen-product-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem;
+  background: var(--color-taupe-light);
+  border: var(--border-thin);
+  border-radius: 8px;
+}
+
+.chosen-product-thumb {
+  width: 58px;
+  height: 58px;
+  border-radius: 6px;
+  border: var(--border-thin);
+  object-fit: cover;
+  background: #FFF;
+  flex-shrink: 0;
+}
+
+.chosen-product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.chosen-product-title {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chosen-product-price {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--color-magenta);
+}
+
+.btn-change-perchero {
+  background: transparent;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #666;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.btn-change-perchero:hover {
+  color: var(--color-magenta);
+}
+
+/* Upload Compact Box */
 .upload-zone-compact {
   border: 2px dashed var(--color-black);
   border-radius: 8px;
-  padding: 1rem 0.8rem;
+  padding: 1.1rem 0.8rem;
   text-align: center;
   background: var(--color-taupe-light);
   cursor: pointer;
@@ -3350,7 +3562,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .upload-zone-compact:hover,
@@ -3433,78 +3645,7 @@
   color: var(--color-magenta);
 }
 
-/* Product Options */
-.order-options-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.option-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.84rem;
-  font-weight: 700;
-  font-family: var(--font-heading);
-}
-
-.size-pills-grid {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.size-pill {
-  min-width: 38px;
-  padding: 0.4rem 0.6rem;
-  background: #FFF;
-  border: var(--border-thin);
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-align: center;
-  cursor: pointer;
-  box-shadow: 2px 2px 0 var(--color-black);
-  transition: all var(--transition-fast);
-}
-
-.size-pill:hover {
-  background: var(--color-yellow);
-}
-
-.size-pill.active {
-  background: var(--color-black);
-  color: var(--color-yellow);
-}
-
-.color-pills-grid {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.color-pill {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2.5px solid var(--color-black);
-  cursor: pointer;
-  box-shadow: 2px 2px 0 var(--color-black);
-  transition: transform var(--transition-fast);
-  position: relative;
-}
-
-.color-pill:hover {
-  transform: scale(1.1);
-}
-
-.color-pill.active {
-  outline: 3px solid var(--color-magenta);
-  outline-offset: 2px;
-}
-
+/* Quantity */
 .qty-control-row {
   display: flex;
   align-items: center;
@@ -3572,7 +3713,7 @@
   color: var(--color-black);
 }
 
-/* Actions */
+/* Action Buttons */
 .btn-order-whatsapp {
   width: 100%;
   padding: 1.1rem;
@@ -3595,39 +3736,24 @@
   gap: 0.5rem;
 }
 
-/* Responsive Media Queries */
-@media (max-width: 1100px) {
-  .plantillas-studio-layout {
-    grid-template-columns: 290px 1fr 310px;
-    gap: 1rem;
-  }
-  .studio-steps-pills {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 900px) {
-  .plantillas-studio-layout {
-    grid-template-columns: 1fr;
-  }
-  .vertical-products-list {
-    max-height: 260px;
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-  .gallery-product-card {
-    min-width: 220px;
-    flex-shrink: 0;
-  }
-  .studio-steps-pills {
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .studio-workspace-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
+  .perchero-card {
+    min-width: 210px;
+    max-width: 220px;
+  }
+  .perchero-card-img-wrap {
+    height: 200px;
+  }
   .sliders-grid {
     grid-template-columns: 1fr;
   }
 }
+
 

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personalizador con Productos Reales | Pájaros en la Cabeza</title>
-  <meta name="description" content="Usá los productos reales de nuestra tienda como plantilla. Subí tu foto, logo o diseño, deslizalo libremente sobre la prenda y mirá cómo queda antes de pedir.">
+  <title>Perchero Virtual & Personalizador | Pájaros en la Cabeza</title>
+  <meta name="description" content="Elegí cualquier producto de la tienda en el perchero horizontal, subí tu archivo sin fondo y deslizalo libremente para ubicar tu estampa.">
   
   <!-- Favicon / Fonts -->
   <link rel="icon" type="image/jpeg" href="/assets/logopajaros.jpg">
@@ -25,22 +25,22 @@
   <div class="top-bar">
     <div class="top-bar-track">
       <div class="top-bar-item">
-        <span class="dot"></span> ⚡ USÁ LOS PRODUCTOS REALES COMO PLANTILLA
+        <span class="dot"></span> 👕 ELEGÍ TU PRENDA EN EL PERCHERO HORIZONTAL
       </div>
       <div class="top-bar-item">
-        <span class="dot"></span> ✋ SUBÍ TU IMAGEN Y DESLIZALA DONDE QUIERAS
+        <span class="dot"></span> 💡 SUBÍ TU ARCHIVO (RECOMENDADO SIN FONDO)
       </div>
       <div class="top-bar-item">
-        <span class="dot"></span> 📦 ENVÍOS A TODO EL PAÍS
+        <span class="dot"></span> ✋ DESLIZALO LIBREMENTE SOBRE LA PRENDA
       </div>
       <div class="top-bar-item">
-        <span class="dot"></span> ⚡ USÁ LOS PRODUCTOS REALES COMO PLANTILLA
+        <span class="dot"></span> 👕 ELEGÍ TU PRENDA EN EL PERCHERO HORIZONTAL
       </div>
       <div class="top-bar-item">
-        <span class="dot"></span> ✋ SUBÍ TU IMAGEN Y DESLIZALA DONDE QUIERAS
+        <span class="dot"></span> 💡 SUBÍ TU ARCHIVO (RECOMENDADO SIN FONDO)
       </div>
       <div class="top-bar-item">
-        <span class="dot"></span> 📦 ENVÍOS A TODO EL PAÍS
+        <span class="dot"></span> ✋ DESLIZALO LIBREMENTE SOBRE LA PRENDA
       </div>
     </div>
   </div>
@@ -77,332 +77,325 @@
     </div>
   </header>
 
-  <!-- Plantillas Studio Main Section -->
+  <!-- Studio Main Section -->
   <main class="plantillas-studio-section">
     <div class="container">
       
       <!-- Studio Hero Header -->
       <div class="studio-hero-header">
-        <div class="studio-hero-title-row">
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
           <div class="tpl-badge-pill">
-            <span>⚡ PERSONALIZADOR EN VIVO CON PRODUCTOS REALES</span>
+            <span>⚡ ESTUDIO DE PERSONALIZACIÓN</span>
           </div>
           <h1 class="studio-hero-title">
-            Usá los Productos de la Tienda como <span class="highlight-yellow">Plantilla</span>
+            Diseñá sobre nuestras prendas en el <span class="highlight-yellow">Perchero Virtual</span>
           </h1>
           <p class="studio-hero-desc">
-            Elegí cualquier prenda real de nuestra tienda en la galería vertical, subí tu foto, diseño o logo y <strong>deslizalo libremente con el mouse o con el dedo</strong> para ubicar tu estampa exactamente donde quieras.
+            Primero elegí la prenda que querés en el perchero horizontal. Luego subí tu archivo o logo (<strong>te recomendamos que sea sin fondo</strong>) y deslizalo libremente para ubicar tu estampa.
           </p>
         </div>
+      </div>
 
-        <!-- 4-Step Visual Process Guide -->
-        <div class="studio-steps-pills">
-          <div class="studio-step-pill">
-            <div class="studio-step-pill-num">1</div>
-            <div class="studio-step-pill-text">Elegí el producto en la galería vertical</div>
+      <!-- ====================================================================
+           PASO 1: EL PERCHERO HORIZONTAL DE PRODUCTOS
+           ==================================================================== -->
+      <section class="step-card-panel" id="perchero-step" aria-label="Paso 1: Perchero de productos">
+        
+        <div class="step-header-bar">
+          <div class="step-title-wrap">
+            <span class="step-number-badge">PASO 1</span>
+            <h2>Elegí qué producto querés diseñar</h2>
           </div>
-          <div class="studio-step-pill">
-            <div class="studio-step-pill-num">2</div>
-            <div class="studio-step-pill-text">Subí tu imagen, logo o foto favorita</div>
+          <span class="studio-panel-badge" id="products-count-badge">Cargando perchero...</span>
+        </div>
+
+        <!-- Controls: Category Chips & Search -->
+        <div class="perchero-controls-row">
+          <div class="perchero-filter-chips" id="perchero-filter-chips">
+            <button type="button" class="perchero-chip active" data-cat="all">Todos los Productos</button>
+            <!-- Rendered dynamically -->
           </div>
-          <div class="studio-step-pill">
-            <div class="studio-step-pill-num">3</div>
-            <div class="studio-step-pill-text">Deslizá y ubicá tu estampa a gusto</div>
-          </div>
-          <div class="studio-step-pill">
-            <div class="studio-step-pill-num">4</div>
-            <div class="studio-step-pill-text">Descargá o pedí directo por WhatsApp</div>
+          <div style="max-width: 260px; width: 100%;">
+            <input type="text" id="perchero-search-input" class="form-input" style="padding: 0.4rem 0.75rem; font-size: 0.82rem;" placeholder="🔍 Filtrar prenda...">
           </div>
         </div>
-      </div>
 
-      <!-- Main Studio 3-Column Workspace -->
-      <div class="plantillas-studio-layout">
+        <!-- Perchero Rail & Scroll Track Wrapper -->
+        <div class="perchero-container-wrapper">
+          
+          <!-- Prev / Next Desktop Arrow Buttons -->
+          <button type="button" class="perchero-nav-btn perchero-nav-prev" id="btn-perchero-prev" aria-label="Desplazar perchero a la izquierda">‹</button>
+          <button type="button" class="perchero-nav-btn perchero-nav-next" id="btn-perchero-next" aria-label="Desplazar perchero a la derecha">›</button>
+
+          <!-- The Hanging Metal Rail -->
+          <div class="perchero-rail-bar"></div>
+
+          <!-- Horizontal Scroll Track with Cards -->
+          <div class="perchero-scroll-track" id="perchero-scroll-track" role="listbox" aria-label="Perchero con productos de la tienda">
+            <div style="padding: 3rem 1.5rem; text-align: center; width: 100%; color: #666;">
+              <span style="font-size: 2rem; display: block; margin-bottom: 0.4rem;">👕</span>
+              Cargando perchero de la tienda...
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           PASO 2: SUBIR ARCHIVO & MESA DE TRABAJO CON ESTAMPA DESLIZABLE
+           ==================================================================== -->
+      <section class="step-card-panel" id="studio-step" aria-label="Paso 2: Subir archivo y ubicar estampa">
         
-        <!-- Column 1: Vertical Products Gallery -->
-        <aside class="studio-panel studio-gallery-panel" id="studio-gallery-panel">
-          <div class="studio-panel-header">
-            <h3>
-              <span>📦</span>
-              <span>Productos de la Tienda</span>
-            </h3>
-            <span class="studio-panel-badge" id="products-count-badge">Cargando...</span>
+        <div class="step-header-bar">
+          <div class="step-title-wrap">
+            <span class="step-number-badge" style="background: var(--color-magenta); color: #fff;">PASO 2</span>
+            <h2>Subí tu archivo y ubicá tu estampa</h2>
           </div>
+          <span style="font-size: 0.82rem; font-family: var(--font-heading); color: var(--color-yellow); font-weight: 800;" id="step2-product-badge">
+            Remera Personalizada
+          </span>
+        </div>
 
-          <!-- Category & Search Filter -->
-          <div class="gallery-filter-wrap">
-            <div style="position: relative;">
-              <input type="text" id="gallery-search-input" class="form-input" style="padding: 0.45rem 0.75rem; font-size: 0.82rem;" placeholder="🔍 Buscar producto...">
-            </div>
-            <div>
-              <select id="gallery-cat-filter" class="form-select" style="padding: 0.4rem 0.6rem; font-size: 0.82rem; font-weight: 700;">
-                <option value="all">Todas las Categorías</option>
-                <!-- Rendered dynamically -->
-              </select>
-            </div>
+        <!-- No Background Recommendation Callout -->
+        <div class="no-bg-recommendation-box" style="margin-top: 1.25rem;">
+          <span class="rec-icon">💡</span>
+          <div>
+            <strong>Recomendación importante:</strong>
+            <p>Te sugerimos subir un archivo <strong>sin fondo (formato PNG transparente o SVG)</strong> para que la estampa se fusione de manera limpia y natural con la tela de la prenda.</p>
           </div>
+        </div>
 
-          <!-- Scrollable Vertical Products List -->
-          <div class="vertical-products-list" id="vertical-products-list" role="listbox" aria-label="Lista de productos para usar como plantilla">
-            <!-- Rendered dynamically via JS -->
-            <div style="text-align: center; padding: 2.5rem 1rem; color: #777;">
-              <span style="font-size: 1.8rem; display: block; margin-bottom: 0.4rem;">⏳</span>
-              <span>Cargando productos de la tienda...</span>
-            </div>
-          </div>
-        </aside>
-
-        <!-- Column 2: Interactive Mockup Stage -->
-        <section class="studio-panel studio-stage-panel" id="studio-stage-panel" aria-label="Mesa de trabajo y visualizador de estampa">
-          <div class="studio-panel-header">
-            <div style="display: flex; align-items: center; gap: 0.6rem; overflow: hidden;">
-              <span style="font-size: 1.2rem;">🎨</span>
-              <div style="display: flex; flex-direction: column; overflow: hidden;">
-                <h3 id="stage-product-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Remera Personalizada</h3>
-                <span id="stage-product-price" style="font-size: 0.78rem; font-family: var(--font-mono); color: var(--color-yellow);">$18.000</span>
-              </div>
-            </div>
-            <span style="font-size: 0.75rem; color: #FFF; background: rgba(255,255,255,0.15); padding: 0.2rem 0.6rem; border-radius: 4px; white-space: nowrap;">
-              ✋ Deslizá para mover
-            </span>
-          </div>
-
-          <!-- Stage Viewport Container -->
-          <div class="mockup-stage-viewport" id="mockup-stage-viewport">
+        <!-- Studio Workspace Grid -->
+        <div class="studio-workspace-grid">
+          
+          <!-- Column 1: Interactive Mockup Stage -->
+          <div class="mockup-stage-box">
             
-            <!-- Real Product Background Image -->
-            <img id="stage-product-img" class="mockup-bg-image" src="" alt="Producto base para plantilla">
-
-            <!-- Empty State Prompt (shown when no design uploaded) -->
-            <div class="stage-upload-prompt" id="stage-upload-prompt" role="button" tabindex="0" aria-label="Subir imagen para estampar">
-              <span class="prompt-icon">📸</span>
-              <h4>Subí tu archivo o imagen</h4>
-              <p>Hacé clic acá o arrastrá tu foto para estamparla y <strong>deslizarla libremente</strong> sobre este producto.</p>
-              <div style="margin-top: 0.75rem;">
-                <span class="btn btn-primary btn-sm" style="font-size: 0.8rem; padding: 0.45rem 1rem;">
-                  <span>Elegir Archivo 📁</span>
-                </span>
-              </div>
-            </div>
-
-            <!-- Draggable Design Layer (visible once image is loaded) -->
-            <div class="draggable-design-layer" id="draggable-design-layer" style="display: none;" role="button" aria-grabbed="false" tabindex="0" aria-label="Estampa movible. Arrastrá para posicionar.">
-              <div class="drag-tooltip">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg>
-                <span>Deslizá para mover</span>
-              </div>
-
-              <div class="design-box-frame" id="design-box-frame">
-                <span class="corner-handle corner-tl"></span>
-                <span class="corner-handle corner-tr"></span>
-                <span class="corner-handle corner-bl"></span>
-                <span class="corner-handle corner-br"></span>
-                <img id="design-rendered-img" class="design-rendered-img" src="" alt="Diseño del cliente">
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Stage Controls Toolbar -->
-          <div class="stage-toolbar-wrap">
-            
-            <!-- Quick Location Presets -->
-            <div>
-              <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 0.4rem; font-family: var(--font-mono);">
-                📍 Ubicaciones rápidas de estampa:
-              </div>
-              <div class="presets-row">
-                <button type="button" class="preset-chip active" data-preset="pecho-centro">
-                  <span>🎯 Pecho Centro</span>
-                </button>
-                <button type="button" class="preset-chip" data-preset="bolsillo">
-                  <span>📍 Bolsillo (Izq)</span>
-                </button>
-                <button type="button" class="preset-chip" data-preset="centro-grande">
-                  <span>📐 Estampa Grande</span>
-                </button>
-                <button type="button" class="preset-chip" data-preset="inferior">
-                  <span>⬇️ Abajo</span>
-                </button>
-                <button type="button" class="preset-chip" data-preset="reset-pos">
-                  <span>🔄 Centrar</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Sliders for Scale & Rotation -->
-            <div class="sliders-grid">
+            <!-- Stage Viewport Container -->
+            <div class="stage-viewport-area" id="mockup-stage-viewport">
               
-              <!-- Scale Slider -->
-              <div class="slider-group">
-                <div class="slider-header">
-                  <span>Tamaño / Escala:</span>
-                  <span id="scale-value-label" style="color: var(--color-magenta);">100%</span>
-                </div>
-                <div class="slider-control-row">
-                  <button type="button" class="slider-btn" id="btn-scale-down" aria-label="Reducir tamaño">-</button>
-                  <input type="range" id="slider-scale" class="slider-input" min="30" max="220" value="100" step="5" aria-label="Ajustar tamaño de la estampa">
-                  <button type="button" class="slider-btn" id="btn-scale-up" aria-label="Aumentar tamaño">+</button>
-                </div>
-              </div>
+              <!-- Real Product Background Image -->
+              <img id="stage-product-img" class="mockup-bg-image" src="" alt="Prenda elegida en el perchero">
 
-              <!-- Rotation Slider -->
-              <div class="slider-group">
-                <div class="slider-header">
-                  <span>Giro / Rotación:</span>
-                  <span id="rotation-value-label" style="color: var(--color-magenta);">0°</span>
-                </div>
-                <div class="slider-control-row">
-                  <button type="button" class="slider-btn" id="btn-rotate-reset" title="Restablecer giro" style="font-size: 0.75rem;">0°</button>
-                  <input type="range" id="slider-rotation" class="slider-input" min="-180" max="180" value="0" step="5" aria-label="Girar estampa">
-                  <button type="button" class="slider-btn" id="btn-rotate-90" title="Girar 90 grados" style="font-size: 0.75rem;">+90°</button>
+              <!-- Prompt to Upload (shown when no design uploaded yet) -->
+              <div class="stage-upload-prompt" id="stage-upload-prompt" role="button" tabindex="0" aria-label="Hacer clic para subir archivo">
+                <span class="prompt-icon">📁</span>
+                <h4>Subí tu archivo o logo</h4>
+                <span class="prompt-recommendation">✨ Recomendado: Formato PNG sin fondo</span>
+                <p>Hacé clic acá o arrastrá tu imagen para estamparla y <strong>deslizarla con el mouse o dedo</strong>.</p>
+                <div style="margin-top: 0.75rem;">
+                  <span class="btn btn-primary btn-sm" style="font-size: 0.85rem; padding: 0.5rem 1.1rem;">
+                    <span>Elegir Archivo 📁</span>
+                  </span>
                 </div>
               </div>
 
-            </div>
+              <!-- Draggable Design Layer (visible once image is loaded) -->
+              <div class="draggable-design-layer" id="draggable-design-layer" style="display: none;" role="button" aria-grabbed="false" tabindex="0" aria-label="Estampa movible. Arrastrá para posicionar sobre la prenda.">
+                <div class="drag-tooltip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg>
+                  <span>Deslizá para mover</span>
+                </div>
 
-            <!-- Blend Mode / White Background Remover Switch -->
-            <div class="blend-mode-row">
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span style="font-size: 1.1rem;">🪄</span>
-                <div>
-                  <strong style="font-size: 0.82rem; display: block;">Modo de Estampa:</strong>
-                  <span style="font-size: 0.72rem; color: #666;">Permite fundir la estampa con la tela</span>
+                <div class="design-box-frame" id="design-box-frame">
+                  <span class="corner-handle corner-tl"></span>
+                  <span class="corner-handle corner-tr"></span>
+                  <span class="corner-handle corner-bl"></span>
+                  <span class="corner-handle corner-br"></span>
+                  <img id="design-rendered-img" class="design-rendered-img" src="" alt="Diseño del cliente">
                 </div>
               </div>
-              <select id="select-blend-mode" class="form-select" style="padding: 0.35rem 0.6rem; font-size: 0.82rem; font-weight: 700; width: auto;">
-                <option value="normal">Normal (Opaco)</option>
-                <option value="multiply">🪄 Quitar fondo blanco (Multiplicar)</option>
-              </select>
+
             </div>
 
-          </div>
-        </section>
-
-        <!-- Column 3: Order Details & Controls -->
-        <aside class="studio-panel studio-order-panel" id="studio-order-panel">
-          <div class="studio-panel-header">
-            <h3>
-              <span>📋</span>
-              <span>Personalizá tu Pedido</span>
-            </h3>
-          </div>
-
-          <!-- 1. File Upload Dropzone -->
-          <div class="order-options-group">
-            <div class="option-label">
-              <span>1. Tu Archivo / Diseño</span>
-              <span style="font-size: 0.72rem; color: var(--color-magenta);">PNG, JPG, SVG</span>
-            </div>
-
-            <!-- Hidden File Input -->
-            <input type="file" id="design-file-input" accept="image/*" style="display: none;">
-
-            <!-- Empty Dropzone -->
-            <div class="upload-zone-compact" id="upload-zone-compact">
-              <span style="font-size: 1.8rem;">📁</span>
-              <strong style="font-size: 0.85rem;">Hacé clic para subir tu archivo</strong>
-              <span style="font-size: 0.72rem; color: #777;">O arrastralo directo sobre la prenda</span>
-            </div>
-
-            <!-- Uploaded File State Card -->
-            <div class="uploaded-file-card" id="uploaded-file-card" style="display: none;">
-              <img id="uploaded-file-thumb" class="uploaded-file-thumb" src="" alt="Thumbnail">
-              <div class="uploaded-file-info">
-                <span id="uploaded-filename" class="uploaded-filename">mi_diseno.png</span>
-                <span class="uploaded-status">✓ Estampa activa y deslizable</span>
+            <!-- Stage Toolbar Controls -->
+            <div class="stage-toolbar-wrap">
+              
+              <!-- Quick Location Presets -->
+              <div>
+                <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 0.4rem; font-family: var(--font-mono);">
+                  📍 Ubicaciones rápidas de estampa:
+                </div>
+                <div class="presets-row">
+                  <button type="button" class="preset-chip active" data-preset="pecho-centro">
+                    <span>🎯 Pecho Centro</span>
+                  </button>
+                  <button type="button" class="preset-chip" data-preset="bolsillo">
+                    <span>📍 Bolsillo (Izq)</span>
+                  </button>
+                  <button type="button" class="preset-chip" data-preset="centro-grande">
+                    <span>📐 Estampa Grande</span>
+                  </button>
+                  <button type="button" class="preset-chip" data-preset="inferior">
+                    <span>⬇️ Abajo</span>
+                  </button>
+                  <button type="button" class="preset-chip" data-preset="reset-pos">
+                    <span>🔄 Centrar</span>
+                  </button>
+                </div>
               </div>
-              <button type="button" class="btn-remove-design" id="btn-remove-design" title="Quitar diseño">Quitar</button>
+
+              <!-- Sliders: Scale & Rotation -->
+              <div class="sliders-grid">
+                
+                <!-- Scale Slider -->
+                <div class="slider-group">
+                  <div class="slider-header">
+                    <span>Tamaño:</span>
+                    <span id="scale-value-label" style="color: var(--color-magenta);">100%</span>
+                  </div>
+                  <div class="slider-control-row">
+                    <button type="button" class="slider-btn" id="btn-scale-down" aria-label="Reducir tamaño">-</button>
+                    <input type="range" id="slider-scale" class="slider-input" min="30" max="220" value="100" step="5" aria-label="Ajustar tamaño">
+                    <button type="button" class="slider-btn" id="btn-scale-up" aria-label="Aumentar tamaño">+</button>
+                  </div>
+                </div>
+
+                <!-- Rotation Slider -->
+                <div class="slider-group">
+                  <div class="slider-header">
+                    <span>Giro:</span>
+                    <span id="rotation-value-label" style="color: var(--color-magenta);">0°</span>
+                  </div>
+                  <div class="slider-control-row">
+                    <button type="button" class="slider-btn" id="btn-rotate-reset" title="Restablecer giro" style="font-size: 0.75rem;">0°</button>
+                    <input type="range" id="slider-rotation" class="slider-input" min="-180" max="180" value="0" step="5" aria-label="Girar estampa">
+                    <button type="button" class="slider-btn" id="btn-rotate-90" title="Girar 90 grados" style="font-size: 0.75rem;">+90°</button>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Blend Mode Switch -->
+              <div class="blend-mode-row">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="font-size: 1.1rem;">🪄</span>
+                  <div>
+                    <strong style="font-size: 0.82rem; display: block;">Modo de Estampa:</strong>
+                    <span style="font-size: 0.72rem; color: #666;">¿Tu archivo tiene fondo blanco? Quitalo aquí</span>
+                  </div>
+                </div>
+                <select id="select-blend-mode" class="form-select" style="padding: 0.35rem 0.6rem; font-size: 0.82rem; font-weight: 700; width: auto;">
+                  <option value="normal">Normal (Opaco)</option>
+                  <option value="multiply">🪄 Quitar fondo blanco (Multiplicar)</option>
+                </select>
+              </div>
+
             </div>
 
-            <!-- Sample Logo Button -->
-            <button type="button" id="btn-load-sample" class="sample-logo-btn">
-              ✨ ¿No tenés archivo? Probar con logo de muestra
-            </button>
           </div>
 
-          <!-- 2. Color Selection -->
-          <div class="order-options-group" id="group-product-colors">
-            <div class="option-label">
-              <span>2. Color del Artículo</span>
-              <span id="label-selected-color" style="color: var(--color-magenta); font-weight: 800;">Negro</span>
-            </div>
-            <div class="color-pills-grid" id="color-pills-grid">
-              <!-- Rendered via JS -->
-            </div>
-          </div>
-
-          <!-- 3. Size Selection -->
-          <div class="order-options-group" id="group-product-sizes">
-            <div class="option-label">
-              <span>3. Talle</span>
-              <span id="label-selected-size" style="font-weight: 800;">M</span>
-            </div>
-            <div class="size-pills-grid" id="size-pills-grid">
-              <!-- Rendered via JS -->
-            </div>
-          </div>
-
-          <!-- 4. Quantity Selection -->
-          <div class="order-options-group">
-            <div class="option-label">
-              <span>4. Cantidad</span>
-              <span style="font-size: 0.72rem; color: #666;">Desde 1 unidad</span>
-            </div>
-            <div class="qty-control-row">
-              <button type="button" class="qty-btn" id="btn-qty-minus">-</button>
-              <span class="qty-display" id="qty-display">1</span>
-              <button type="button" class="qty-btn" id="btn-qty-plus">+</button>
-              <span style="font-size: 0.78rem; color: #777; margin-left: auto;">Prendas o unidades</span>
-            </div>
-          </div>
-
-          <!-- 5. Payment & Pricing Breakdown -->
-          <div class="price-calculation-card">
-            <div class="price-row">
-              <span>Precio Unitario:</span>
-              <span id="price-unit-display" style="font-weight: 700; font-family: var(--font-mono);">$18.000</span>
-            </div>
-            <div class="price-row">
-              <span>Medio de Pago:</span>
-              <select id="payment-method-select" class="form-select" style="padding: 0.3rem 0.5rem; font-size: 0.8rem; width: auto; font-weight: 700;">
-                <option value="0.85">Efectivo Eft (15% OFF)</option>
-                <option value="0.9" selected>Transferencia (10% OFF)</option>
-                <option value="1.0">Mercado Pago (1 pago)</option>
-              </select>
-            </div>
-            <div class="price-total-row">
-              <span style="font-weight: 800; font-size: 1.05rem;">Total Estimado:</span>
-              <span class="price-total-num" id="price-total-num">$16.200</span>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+          <!-- Column 2: Simplified Order Panel (NO color, NO talle) -->
+          <div class="studio-order-card">
             
-            <!-- WhatsApp Order -->
-            <button type="button" class="btn btn-primary btn-order-whatsapp" id="btn-order-whatsapp">
-              <span>Pedir por WhatsApp con este Diseño</span>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
-              </svg>
-            </button>
+            <h3 style="margin: 0; font-size: 1.15rem; font-family: var(--font-heading); font-weight: 800; border-bottom: var(--border-thin); padding-bottom: 0.65rem;">
+              📦 Tu Pedido
+            </h3>
 
-            <!-- Download Preview Image -->
-            <button type="button" class="btn btn-outline btn-download-preview" id="btn-download-preview">
-              <span>📸 Descargar Foto con mi Estampa</span>
-            </button>
+            <!-- Chosen Product Summary Card -->
+            <div class="chosen-product-card">
+              <img id="chosen-product-thumb" class="chosen-product-thumb" src="" alt="Prenda elegida">
+              <div class="chosen-product-info">
+                <h4 id="chosen-product-title" class="chosen-product-title">Remera Personalizada</h4>
+                <span id="chosen-product-price" class="chosen-product-price">$18.000</span>
+                <button type="button" class="btn-change-perchero" id="btn-change-perchero">
+                  ↺ Cambiar prenda del perchero
+                </button>
+              </div>
+            </div>
+
+            <!-- Upload File Box -->
+            <div style="display: flex; flex-direction: column; gap: 0.45rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.84rem; font-weight: 700;">
+                <span>Archivo o Estampa</span>
+                <span style="font-size: 0.72rem; color: var(--color-magenta);">PNG sin fondo</span>
+              </div>
+
+              <!-- Hidden File Input -->
+              <input type="file" id="design-file-input" accept="image/*" style="display: none;">
+
+              <!-- Empty Dropzone -->
+              <div class="upload-zone-compact" id="upload-zone-compact">
+                <span style="font-size: 1.8rem;">📁</span>
+                <strong style="font-size: 0.85rem;">Hacé clic para subir tu archivo</strong>
+                <span style="font-size: 0.72rem; color: #777;">O arrastralo directo sobre la prenda</span>
+              </div>
+
+              <!-- Uploaded File State Card -->
+              <div class="uploaded-file-card" id="uploaded-file-card" style="display: none;">
+                <img id="uploaded-file-thumb" class="uploaded-file-thumb" src="" alt="Thumbnail">
+                <div class="uploaded-file-info">
+                  <span id="uploaded-filename" class="uploaded-filename">mi_diseno.png</span>
+                  <span class="uploaded-status">✓ Estampa activa y deslizable</span>
+                </div>
+                <button type="button" class="btn-remove-design" id="btn-remove-design" title="Quitar diseño">Quitar</button>
+              </div>
+
+              <!-- Sample Logo Button -->
+              <button type="button" id="btn-load-sample" class="sample-logo-btn">
+                ✨ ¿No tenés archivo? Probar con logo de muestra
+              </button>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div style="display: flex; flex-direction: column; gap: 0.45rem;">
+              <span style="font-size: 0.84rem; font-weight: 700;">Cantidad de Unidades</span>
+              <div class="qty-control-row">
+                <button type="button" class="qty-btn" id="btn-qty-minus">-</button>
+                <span class="qty-display" id="qty-display">1</span>
+                <button type="button" class="qty-btn" id="btn-qty-plus">+</button>
+                <span style="font-size: 0.78rem; color: #777; margin-left: auto;">Desde 1 unidad</span>
+              </div>
+            </div>
+
+            <!-- Payment Breakdown -->
+            <div class="price-calculation-card">
+              <div class="price-row">
+                <span>Precio Unitario:</span>
+                <span id="price-unit-display" style="font-weight: 700; font-family: var(--font-mono);">$18.000</span>
+              </div>
+              <div class="price-row">
+                <span>Medio de Pago:</span>
+                <select id="payment-method-select" class="form-select" style="padding: 0.3rem 0.5rem; font-size: 0.8rem; width: auto; font-weight: 700;">
+                  <option value="0.85">Efectivo Eft (15% OFF)</option>
+                  <option value="0.9" selected>Transferencia (10% OFF)</option>
+                  <option value="1.0">Mercado Pago (1 pago)</option>
+                </select>
+              </div>
+              <div class="price-total-row">
+                <span style="font-weight: 800; font-size: 1.05rem;">Total Estimado:</span>
+                <span class="price-total-num" id="price-total-num">$16.200</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+              
+              <!-- WhatsApp Order -->
+              <button type="button" class="btn btn-primary btn-order-whatsapp" id="btn-order-whatsapp">
+                <span>Pedir por WhatsApp con este Diseño</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                </svg>
+              </button>
+
+              <!-- Download Preview Image -->
+              <button type="button" class="btn btn-outline btn-download-preview" id="btn-download-preview">
+                <span>📸 Descargar Foto con mi Estampa</span>
+              </button>
+
+            </div>
+
+            <div style="font-size: 0.72rem; color: #666; text-align: center; line-height: 1.4; border-top: 1px solid #DDD; padding-top: 0.6rem;">
+              ✓ Atención personalizada • Envíos a todo el país • Te asesoramos con la resolución antes de estampar.
+            </div>
 
           </div>
 
-          <!-- Trust Badges -->
-          <div style="font-size: 0.72rem; color: #666; text-align: center; line-height: 1.4; border-top: 1px solid #DDD; padding-top: 0.6rem;">
-            ✓ Atención personalizada directa • Envíos a todo el país • Te asesoramos con la resolución antes de estampar.
-          </div>
+        </div>
 
-        </aside>
-
-      </div>
+      </section>
 
     </div>
   </main>
@@ -441,7 +434,7 @@
           <ul style="display: flex; flex-direction: column; gap: 0.8rem;">
             <li><a href="/" style="color: #DDD;">• Inicio</a></li>
             <li><a href="/tienda" style="color: #DDD;">• Tienda Completa</a></li>
-            <li><a href="/plantillas" style="color: var(--color-yellow); font-weight: 700;">• Plantillas con Productos Reales ⚡</a></li>
+            <li><a href="/plantillas" style="color: var(--color-yellow); font-weight: 700;">• Perchero & Plantillas ⚡</a></li>
             <li><a href="/#servicios" style="color: #DDD;">• Asesoría de Imagen & Envíos</a></li>
             <li><a href="/#contacto" style="color: #DDD;">• Contacto</a></li>
           </ul>

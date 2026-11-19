@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PLANTILLAS CON PRODUCTOS REALES & ESTAMPA DESLIZABLE - PÁJAROS EN LA CABEZA
+   PERCHERO HORIZONTAL & ESTAMPA DESLIZABLE - PÁJAROS EN LA CABEZA
    ========================================================================== */
 
 import { getProducts, getCategories, subscribeToStore } from './data/store.js';
@@ -11,7 +11,7 @@ let currentProduct = null;
 let activeCategoryFilter = 'all';
 let searchQuery = '';
 
-// Design Overlay State (persists across product switching!)
+// Design Overlay State (persists across product changes)
 const currentDesign = {
   imageSrc: null,
   imageElement: null,
@@ -23,9 +23,7 @@ const currentDesign = {
   blendMode: 'normal'// 'normal' | 'multiply'
 };
 
-// Order Configuration State
-let selectedColor = 'Negro';
-let selectedSize = 'M';
+// Order State (NO color, NO size)
 let selectedQuantity = 1;
 let selectedPaymentFactor = 0.9; // 10% OFF Transferencia default
 
@@ -52,7 +50,7 @@ function getPlaceholderImg() {
 }
 
 /**
- * Initialize Store & URL Params
+ * Initialize Perchero Studio
  */
 function initStudio() {
   // Mobile Hamburger Menu
@@ -68,10 +66,9 @@ function initStudio() {
   subscribeToStore(({ products, categories }) => {
     allProducts = products || [];
     allCategories = categories || [];
-    updateCategorySelect();
-    renderVerticalProductsGallery();
+    renderPercheroFilterChips();
+    renderHorizontalPerchero();
 
-    // Select initial product if not set
     if (!currentProduct && allProducts.length > 0) {
       checkInitialProductSelection();
     }
@@ -80,12 +77,12 @@ function initStudio() {
   // Get current cache
   allProducts = getProducts() || [];
   allCategories = getCategories() || [];
-  updateCategorySelect();
-  renderVerticalProductsGallery();
+  renderPercheroFilterChips();
+  renderHorizontalPerchero();
   checkInitialProductSelection();
 
-  // Setup Event Listeners
-  setupGalleryFilters();
+  // Setup Event Handlers
+  setupPercheroNavigation();
   setupDraggablePointerEvents();
   setupStageControls();
   setupFileUploadHandlers();
@@ -93,7 +90,7 @@ function initStudio() {
 }
 
 /**
- * Select product by URL param or default to first
+ * Check initial product from URL param or default to first
  */
 function checkInitialProductSelection() {
   if (allProducts.length === 0) return;
@@ -106,34 +103,41 @@ function checkInitialProductSelection() {
     chosen = allProducts[0];
   }
 
-  selectProduct(chosen);
+  selectProduct(chosen, false); // Don't auto-scroll on initial page load
 }
 
 /**
- * Populate Category Dropdown
+ * Render Category Filter Chips for Perchero
  */
-function updateCategorySelect() {
-  const select = document.getElementById('gallery-cat-filter');
-  if (!select) return;
-
-  const currentVal = select.value;
-  select.innerHTML = `<option value="all">Todas las Categorías</option>` +
-    allCategories.map(cat => `
-      <option value="${cat.id}">${cat.name}</option>
-    `).join('');
-
-  if (currentVal) {
-    select.value = currentVal;
-  }
-}
-
-/**
- * Filter & Render Vertical Products Gallery
- */
-function renderVerticalProductsGallery() {
-  const container = document.getElementById('vertical-products-list');
-  const badge = document.getElementById('products-count-badge');
+function renderPercheroFilterChips() {
+  const container = document.getElementById('perchero-filter-chips');
   if (!container) return;
+
+  const allChip = `<button type="button" class="perchero-chip ${activeCategoryFilter === 'all' ? 'active' : ''}" data-cat="all">Todos los Productos</button>`;
+  const catChips = allCategories.map(cat => `
+    <button type="button" class="perchero-chip ${activeCategoryFilter === cat.id ? 'active' : ''}" data-cat="${cat.id}">
+      ${cat.name}
+    </button>
+  `).join('');
+
+  container.innerHTML = allChip + catChips;
+
+  container.querySelectorAll('.perchero-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeCategoryFilter = btn.getAttribute('data-cat');
+      renderPercheroFilterChips();
+      renderHorizontalPerchero();
+    });
+  });
+}
+
+/**
+ * Render Products in Horizontal Scroll Perchero Track
+ */
+function renderHorizontalPerchero() {
+  const track = document.getElementById('perchero-scroll-track');
+  const countBadge = document.getElementById('products-count-badge');
+  if (!track) return;
 
   let filtered = [...allProducts];
 
@@ -152,62 +156,66 @@ function renderVerticalProductsGallery() {
     );
   }
 
-  if (badge) {
-    badge.textContent = `${filtered.length} producto${filtered.length === 1 ? '' : 's'}`;
+  if (countBadge) {
+    countBadge.textContent = `${filtered.length} prenda${filtered.length === 1 ? '' : 's'} en perchero`;
   }
 
   if (filtered.length === 0) {
-    container.innerHTML = `
-      <div style="text-align: center; padding: 2.5rem 1rem; color: #777;">
-        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">🔍</span>
-        <strong style="color: var(--color-black); display: block;">Sin resultados</strong>
-        <span style="font-size: 0.8rem;">Probá buscando con otro término o categoría.</span>
+    track.innerHTML = `
+      <div style="padding: 2.5rem 1rem; text-align: center; width: 100%; color: #666;">
+        <span style="font-size: 2.2rem; display: block; margin-bottom: 0.5rem;">🔍</span>
+        <strong style="color: var(--color-black); font-size: 1.1rem; display: block;">No se encontraron prendas en el perchero</strong>
+        <span style="font-size: 0.85rem;">Probá cambiando la categoría o borrando la búsqueda.</span>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = filtered.map(prod => {
+  track.innerHTML = filtered.map(prod => {
     const isSelected = currentProduct && currentProduct.id === prod.id;
-    const prodImg = (Array.isArray(prod.images) && prod.images.length > 0) 
-      ? prod.images[0] 
+    const prodImg = (Array.isArray(prod.images) && prod.images.length > 0)
+      ? prod.images[0]
       : (prod.image || getPlaceholderImg());
     const priceFormatted = formatCurrency(prod.price);
     const categoryName = prod.categoryLabel || prod.category || 'Tienda';
 
     return `
-      <button type="button" class="gallery-product-card ${isSelected ? 'selected' : ''}" data-product-id="${prod.id}" role="option" aria-selected="${isSelected}">
-        ${isSelected ? `<span class="gallery-selected-tag">✓ Activo</span>` : ''}
-        <img class="gallery-product-thumb" src="${prodImg}" alt="${prod.name}" loading="lazy">
-        <div class="gallery-product-info">
-          <span class="gallery-product-badge">${categoryName}</span>
-          <h4 class="gallery-product-title">${prod.name}</h4>
-          <span class="gallery-product-price">${priceFormatted}</span>
+      <div class="perchero-card ${isSelected ? 'selected' : ''}" data-product-id="${prod.id}" role="option" aria-selected="${isSelected}">
+        <div class="perchero-card-img-wrap">
+          <img class="perchero-card-img" src="${prodImg}" alt="${prod.name}" loading="lazy">
         </div>
-      </button>
+        <div class="perchero-card-body">
+          <span class="perchero-card-badge">${categoryName}</span>
+          <h3 class="perchero-card-title">${prod.name}</h3>
+          <span class="perchero-card-price">${priceFormatted}</span>
+          <div class="perchero-card-btn">
+            ${isSelected ? '✓ Prenda Elegida' : 'Diseñar esta Prenda ➔'}
+          </div>
+        </div>
+      </div>
     `;
   }).join('');
 
-  // Add click listeners
-  container.querySelectorAll('.gallery-product-card').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const prodId = btn.getAttribute('data-product-id');
+  // Add click listeners to cards
+  track.querySelectorAll('.perchero-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const prodId = card.getAttribute('data-product-id');
       const prod = allProducts.find(p => p.id === prodId);
       if (prod) {
-        selectProduct(prod);
+        selectProduct(prod, true); // Auto-scroll down to Step 2
       }
     });
   });
 }
 
 /**
- * Switch Active Product
+ * Select a product from the Perchero
  */
-function selectProduct(product) {
+function selectProduct(product, autoScroll = false) {
   if (!product) return;
   currentProduct = product;
 
-  // Update URL param without full reload
+  // Update URL param
   try {
     const url = new URL(window.location);
     url.searchParams.set('product', product.id);
@@ -216,51 +224,77 @@ function selectProduct(product) {
     // ignore
   }
 
-  // Update Vertical Gallery Highlight
-  renderVerticalProductsGallery();
+  // Update Perchero Highlight
+  renderHorizontalPerchero();
 
-  // Update Stage Header & Background Image
-  const titleEl = document.getElementById('stage-product-title');
-  const priceEl = document.getElementById('stage-product-price');
-  const imgEl = document.getElementById('stage-product-img');
+  // Update Step 2 Badges & Product Displays
+  const step2Badge = document.getElementById('step2-product-badge');
+  const chosenTitle = document.getElementById('chosen-product-title');
+  const chosenPrice = document.getElementById('chosen-product-price');
+  const chosenThumb = document.getElementById('chosen-product-thumb');
+  const stageImg = document.getElementById('stage-product-img');
 
-  if (titleEl) titleEl.textContent = product.name;
-  if (priceEl) priceEl.textContent = formatCurrency(product.price);
-
-  const prodImg = (Array.isArray(product.images) && product.images.length > 0) 
-    ? product.images[0] 
+  const prodImg = (Array.isArray(product.images) && product.images.length > 0)
+    ? product.images[0]
     : (product.image || getPlaceholderImg());
 
-  if (imgEl) {
-    imgEl.style.opacity = '0.4';
-    imgEl.onload = () => { imgEl.style.opacity = '1'; };
-    imgEl.src = prodImg;
-    imgEl.alt = product.name;
+  if (step2Badge) step2Badge.textContent = product.name;
+  if (chosenTitle) chosenTitle.textContent = product.name;
+  if (chosenPrice) chosenPrice.textContent = formatCurrency(product.price);
+  if (chosenThumb) chosenThumb.src = prodImg;
+
+  if (stageImg) {
+    stageImg.style.opacity = '0.3';
+    stageImg.onload = () => { stageImg.style.opacity = '1'; };
+    stageImg.src = prodImg;
+    stageImg.alt = product.name;
   }
 
-  // Update Options & Pricing in Order Column
-  renderProductOptions();
+  // Update Price calculation
   calculateTotalPrice();
+
+  // Smooth scroll to Step 2 if requested
+  if (autoScroll) {
+    const step2El = document.getElementById('studio-step');
+    if (step2El) {
+      step2El.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 }
 
 /**
- * Setup Search & Category Filters
+ * Setup Perchero Horizontal Navigation (Arrow Buttons & Search)
  */
-function setupGalleryFilters() {
-  const searchInput = document.getElementById('gallery-search-input');
-  const catSelect = document.getElementById('gallery-cat-filter');
+function setupPercheroNavigation() {
+  const track = document.getElementById('perchero-scroll-track');
+  const btnPrev = document.getElementById('btn-perchero-prev');
+  const btnNext = document.getElementById('btn-perchero-next');
+  const searchInput = document.getElementById('perchero-search-input');
+  const btnChange = document.getElementById('btn-change-perchero');
+
+  if (track && btnPrev && btnNext) {
+    btnPrev.addEventListener('click', () => {
+      track.scrollBy({ left: -280, behavior: 'smooth' });
+    });
+    btnNext.addEventListener('click', () => {
+      track.scrollBy({ left: 280, behavior: 'smooth' });
+    });
+  }
 
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value;
-      renderVerticalProductsGallery();
+      renderHorizontalPerchero();
     });
   }
 
-  if (catSelect) {
-    catSelect.addEventListener('change', (e) => {
-      activeCategoryFilter = e.target.value;
-      renderVerticalProductsGallery();
+  // Change product button (scrolls back to perchero)
+  if (btnChange) {
+    btnChange.addEventListener('click', () => {
+      const percheroEl = document.getElementById('perchero-step');
+      if (percheroEl) {
+        percheroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     });
   }
 }
@@ -274,9 +308,7 @@ function setupDraggablePointerEvents() {
 
   if (!draggableLayer || !stageViewport) return;
 
-  // Pointer Down (Mouse click or Touch start)
   draggableLayer.addEventListener('pointerdown', (e) => {
-    // Only drag with primary pointer / left button
     if (e.button !== undefined && e.button !== 0) return;
 
     isDragging = true;
@@ -291,7 +323,6 @@ function setupDraggablePointerEvents() {
     e.preventDefault();
   });
 
-  // Pointer Move (Mouse move or Touch move)
   draggableLayer.addEventListener('pointermove', (e) => {
     if (!isDragging) return;
 
@@ -301,14 +332,13 @@ function setupDraggablePointerEvents() {
     const deltaX = e.clientX - startPointerX;
     const deltaY = e.clientY - startPointerY;
 
-    // Convert pixels to percentage of stage viewport
     const deltaPercentX = (deltaX / stageRect.width) * 100;
     const deltaPercentY = (deltaY / stageRect.height) * 100;
 
     let newX = startPosX + deltaPercentX;
     let newY = startPosY + deltaPercentY;
 
-    // Boundary constraints: Keep design accessible on stage
+    // Boundary constraints
     newX = Math.max(8, Math.min(92, newX));
     newY = Math.max(8, Math.min(92, newY));
 
@@ -318,7 +348,6 @@ function setupDraggablePointerEvents() {
     updateDraggableTransform();
   });
 
-  // Pointer Up / Cancel
   const handlePointerEnd = (e) => {
     if (!isDragging) return;
     isDragging = false;
@@ -333,31 +362,6 @@ function setupDraggablePointerEvents() {
 
   draggableLayer.addEventListener('pointerup', handlePointerEnd);
   draggableLayer.addEventListener('pointercancel', handlePointerEnd);
-
-  // Keyboard accessibility for positioning (Arrow keys)
-  draggableLayer.addEventListener('keydown', (e) => {
-    const step = e.shiftKey ? 5 : 1;
-    let handled = false;
-
-    if (e.key === 'ArrowLeft') {
-      currentDesign.posX = Math.max(8, currentDesign.posX - step);
-      handled = true;
-    } else if (e.key === 'ArrowRight') {
-      currentDesign.posX = Math.min(92, currentDesign.posX + step);
-      handled = true;
-    } else if (e.key === 'ArrowUp') {
-      currentDesign.posY = Math.max(8, currentDesign.posY - step);
-      handled = true;
-    } else if (e.key === 'ArrowDown') {
-      currentDesign.posY = Math.min(92, currentDesign.posY + step);
-      handled = true;
-    }
-
-    if (handled) {
-      e.preventDefault();
-      updateDraggableTransform();
-    }
-  });
 }
 
 /**
@@ -370,32 +374,25 @@ function updateDraggableTransform() {
 
   if (!layer || !boxFrame) return;
 
-  // Position layer with percentages
   layer.style.left = `${currentDesign.posX}%`;
   layer.style.top = `${currentDesign.posY}%`;
-
-  // Scale and rotate the inner frame
   boxFrame.style.transform = `scale(${currentDesign.scale}) rotate(${currentDesign.rotation}deg)`;
 
-  // Apply blend mode
   if (imgEl) {
     imgEl.style.mixBlendMode = currentDesign.blendMode;
   }
 }
 
 /**
- * Setup Stage Toolbar Controls (Presets, Sliders, Blend mode)
+ * Setup Stage Controls (Presets, Sliders, Blend mode)
  */
 function setupStageControls() {
-  // Preset Buttons
   const presetButtons = document.querySelectorAll('.preset-chip');
   presetButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       presetButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
-      const preset = btn.getAttribute('data-preset');
-      applyLocationPreset(preset);
+      applyLocationPreset(btn.getAttribute('data-preset'));
     });
   });
 
@@ -454,7 +451,7 @@ function setupStageControls() {
 
   if (btnRotate90 && rotateSlider) {
     btnRotate90.addEventListener('click', () => {
-      let deg = (currentDesign.rotation + 90);
+      let deg = currentDesign.rotation + 90;
       if (deg > 180) deg = deg - 360;
       rotateSlider.value = deg;
       rotateSlider.dispatchEvent(new Event('input'));
@@ -484,7 +481,7 @@ function applyLocationPreset(preset) {
       break;
 
     case 'bolsillo':
-      currentDesign.posX = 65; // Left chest as viewed on screen
+      currentDesign.posX = 65;
       currentDesign.posY = 34;
       currentDesign.scale = 0.65;
       currentDesign.rotation = 0;
@@ -538,7 +535,6 @@ function setupFileUploadHandlers() {
   const btnRemove = document.getElementById('btn-remove-design');
   const btnSample = document.getElementById('btn-load-sample');
 
-  // Trigger file input
   if (uploadZone && fileInput) {
     uploadZone.addEventListener('click', () => fileInput.click());
   }
@@ -546,7 +542,6 @@ function setupFileUploadHandlers() {
     stagePrompt.addEventListener('click', () => fileInput.click());
   }
 
-  // File Input Changed
   if (fileInput) {
     fileInput.addEventListener('change', (e) => {
       const file = e.target.files && e.target.files[0];
@@ -574,7 +569,7 @@ function setupFileUploadHandlers() {
     });
   }
 
-  // Drag and Drop directly onto the Mockup Stage!
+  // Drag and Drop directly onto the Mockup Stage
   if (stageViewport) {
     stageViewport.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -598,10 +593,10 @@ function setupFileUploadHandlers() {
     });
   }
 
-  // Load Sample Logo
+  // Sample Logo Button
   if (btnSample) {
     btnSample.addEventListener('click', () => {
-      loadSampleDesign();
+      applyDesignImage('/assets/logopajaros.jpg', 'logo_pajaros_muestra.jpg');
     });
   }
 }
@@ -617,17 +612,9 @@ function handleSelectedFile(file) {
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    const dataUrl = e.target.result;
-    applyDesignImage(dataUrl, file.name);
+    applyDesignImage(e.target.result, file.name);
   };
   reader.readAsDataURL(file);
-}
-
-/**
- * Load Sample Design
- */
-function loadSampleDesign() {
-  applyDesignImage('/assets/logopajaros.jpg', 'logo_pajaros_muestra.jpg');
 }
 
 /**
@@ -639,16 +626,14 @@ function applyDesignImage(src, filename) {
   img.onload = () => {
     currentDesign.imageSrc = src;
     currentDesign.imageElement = img;
-    currentDesign.filename = filename || 'estampa.png';
+    currentDesign.filename = filename || 'mi_estampa.png';
 
-    // Update Stage Elements
     const draggableLayer = document.getElementById('draggable-design-layer');
     const stagePrompt = document.getElementById('stage-upload-prompt');
     const renderedImg = document.getElementById('design-rendered-img');
 
     if (renderedImg) {
       renderedImg.src = src;
-      // Adjust default size according to aspect ratio
       const naturalAspect = img.naturalWidth / img.naturalHeight;
       if (naturalAspect > 1.4) {
         renderedImg.style.width = '180px';
@@ -668,7 +653,7 @@ function applyDesignImage(src, filename) {
       updateDraggableTransform();
     }
 
-    // Update Right Column Card
+    // Update Right Order Column Card
     const uploadZone = document.getElementById('upload-zone-compact');
     const uploadedCard = document.getElementById('uploaded-file-card');
     const thumbEl = document.getElementById('uploaded-file-thumb');
@@ -704,84 +689,8 @@ function removeDesign() {
 }
 
 /**
- * Render Product Options (Color and Size)
- */
-function renderProductOptions() {
-  const colorContainer = document.getElementById('color-pills-grid');
-  const colorLabel = document.getElementById('label-selected-color');
-  const sizeContainer = document.getElementById('size-pills-grid');
-  const sizeLabel = document.getElementById('label-selected-size');
-
-  if (!currentProduct) return;
-
-  // Colors
-  const availableColors = (currentProduct.colors && currentProduct.colors.length > 0)
-    ? currentProduct.colors
-    : ['Negro', 'Blanco', 'Gris Topo', 'Beige Arena'];
-
-  if (!availableColors.includes(selectedColor)) {
-    selectedColor = availableColors[0];
-  }
-  if (colorLabel) colorLabel.textContent = selectedColor;
-
-  if (colorContainer) {
-    const colorHexMap = {
-      'Negro': '#111111',
-      'Blanco': '#FFFFFF',
-      'Gris Topo': '#555555',
-      'Gris': '#888888',
-      'Beige Arena': '#E6D7BD',
-      'Beige': '#E6D7BD',
-      'Rosa': '#F5B8C8',
-      'Azul': '#1E3A8A',
-      'Verde': '#15803D'
-    };
-
-    colorContainer.innerHTML = availableColors.map(color => {
-      const hex = colorHexMap[color] || '#111111';
-      const isActive = color === selectedColor;
-      return `
-        <button type="button" class="color-pill ${isActive ? 'active' : ''}" data-color="${color}" style="background-color: ${hex};" title="${color}" aria-label="Color ${color}"></button>
-      `;
-    }).join('');
-
-    colorContainer.querySelectorAll('.color-pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        selectedColor = btn.getAttribute('data-color');
-        if (colorLabel) colorLabel.textContent = selectedColor;
-        colorContainer.querySelectorAll('.color-pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-    });
-  }
-
-  // Sizes
-  const availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-  if (sizeLabel) sizeLabel.textContent = selectedSize;
-
-  if (sizeContainer) {
-    sizeContainer.innerHTML = availableSizes.map(size => {
-      const isActive = size === selectedSize;
-      return `
-        <button type="button" class="size-pill ${isActive ? 'active' : ''}" data-size="${size}">
-          ${size}
-        </button>
-      `;
-    }).join('');
-
-    sizeContainer.querySelectorAll('.size-pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        selectedSize = btn.getAttribute('data-size');
-        if (sizeLabel) sizeLabel.textContent = selectedSize;
-        sizeContainer.querySelectorAll('.size-pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-    });
-  }
-}
-
-/**
- * Setup Order Controls (Quantity, Payment, Order & Download Buttons)
+ * Setup Order Controls (Quantity, Payment, WhatsApp, Download)
+ * NOTICE: Color and Size selection removed as requested.
  */
 function setupOrderControls() {
   const btnQtyMinus = document.getElementById('btn-qty-minus');
@@ -791,7 +700,6 @@ function setupOrderControls() {
   const btnOrder = document.getElementById('btn-order-whatsapp');
   const btnDownload = document.getElementById('btn-download-preview');
 
-  // Quantity Minus
   if (btnQtyMinus) {
     btnQtyMinus.addEventListener('click', () => {
       if (selectedQuantity > 1) {
@@ -802,7 +710,6 @@ function setupOrderControls() {
     });
   }
 
-  // Quantity Plus
   if (btnQtyPlus) {
     btnQtyPlus.addEventListener('click', () => {
       selectedQuantity++;
@@ -811,7 +718,6 @@ function setupOrderControls() {
     });
   }
 
-  // Payment Method Changed
   if (paymentSelect) {
     paymentSelect.addEventListener('change', (e) => {
       selectedPaymentFactor = parseFloat(e.target.value) || 0.9;
@@ -819,14 +725,12 @@ function setupOrderControls() {
     });
   }
 
-  // Order via WhatsApp
   if (btnOrder) {
     btnOrder.addEventListener('click', () => {
       handleWhatsAppOrder();
     });
   }
 
-  // Download Mockup Preview
   if (btnDownload) {
     btnDownload.addEventListener('click', () => {
       handleDownloadPreview();
@@ -856,7 +760,7 @@ function calculateTotalPrice() {
 function generateCompositeCanvas() {
   return new Promise((resolve, reject) => {
     if (!currentProduct) {
-      reject(new Error('No hay producto seleccionado.'));
+      reject(new Error('No hay prenda seleccionada.'));
       return;
     }
 
@@ -878,19 +782,17 @@ function generateCompositeCanvas() {
     ctx.fillStyle = '#F8F6F0';
     ctx.fillRect(0, 0, 1200, 1200);
 
-    // 2. Load and draw product background image
+    // 2. Load product background image
     const rawProdImg = (Array.isArray(currentProduct.images) && currentProduct.images.length > 0)
       ? currentProduct.images[0]
       : (currentProduct.image || getPlaceholderImg());
 
-    // Use CORS proxy if needed for remote storage
     const loadImgWithFallback = (url) => {
       return new Promise((res) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => res(img);
         img.onerror = () => {
-          // Fallback via weserv proxy for clean CORS
           if (!url.includes('images.weserv.nl') && url.startsWith('http')) {
             const proxyImg = new Image();
             proxyImg.crossOrigin = 'anonymous';
@@ -907,7 +809,6 @@ function generateCompositeCanvas() {
 
     loadImgWithFallback(rawProdImg).then((bgImg) => {
       if (bgImg) {
-        // Draw product centered fitting inside 1200x1200
         const scale = Math.min(1100 / bgImg.naturalWidth, 1100 / bgImg.naturalHeight);
         const drawW = bgImg.naturalWidth * scale;
         const drawH = bgImg.naturalHeight * scale;
@@ -916,25 +817,21 @@ function generateCompositeCanvas() {
         ctx.drawImage(bgImg, drawX, drawY, drawW, drawH);
       }
 
-      // 3. Draw User's Design if present
+      // 3. Draw User's Design
       if (currentDesign.imageSrc) {
         loadImgWithFallback(currentDesign.imageSrc).then((designImg) => {
           if (designImg) {
             ctx.save();
-
-            // Calculate pixel position on 1200x1200 canvas
             const targetX = (currentDesign.posX / 100) * 1200;
             const targetY = (currentDesign.posY / 100) * 1200;
 
             ctx.translate(targetX, targetY);
             ctx.rotate((currentDesign.rotation * Math.PI) / 180);
 
-            // Apply blend mode
             if (currentDesign.blendMode === 'multiply') {
               ctx.globalCompositeOperation = 'multiply';
             }
 
-            // Calculate size matching stage proportions (default base ~300px on 1200 canvas)
             const baseRefSize = 340 * currentDesign.scale;
             const designAspect = designImg.naturalWidth / designImg.naturalHeight;
             let dW = baseRefSize;
@@ -949,11 +846,9 @@ function generateCompositeCanvas() {
             ctx.restore();
           }
 
-          // 4. Draw Official Brand Footer Stamp
+          // 4. Official Footer Stamp
           ctx.save();
           ctx.globalCompositeOperation = 'source-over';
-          
-          // Badge background
           ctx.fillStyle = '#0D0D0D';
           ctx.beginPath();
           ctx.roundRect(40, 1110, 480, 50, 8);
@@ -971,7 +866,6 @@ function generateCompositeCanvas() {
           resolve(canvas);
         });
       } else {
-        // Without user design, just finish canvas
         resolve(canvas);
       }
     });
@@ -985,7 +879,7 @@ function handleDownloadPreview() {
   const btn = document.getElementById('btn-download-preview');
   const originalText = btn ? btn.innerHTML : '';
   if (btn) {
-    btn.innerHTML = `<span>⏳ Generando imagen en alta resolución...</span>`;
+    btn.innerHTML = `<span>⏳ Generando foto en alta resolución...</span>`;
     btn.disabled = true;
   }
 
@@ -1004,7 +898,7 @@ function handleDownloadPreview() {
         document.body.removeChild(link);
 
         if (btn) {
-          btn.innerHTML = `<span>✓ ¡Imagen Descargada! 📸</span>`;
+          btn.innerHTML = `<span>✓ ¡Foto Descargada! 📸</span>`;
           setTimeout(() => {
             btn.innerHTML = originalText;
             btn.disabled = false;
@@ -1029,7 +923,7 @@ function handleDownloadPreview() {
 }
 
 /**
- * Handle WhatsApp Order Flow
+ * Handle WhatsApp Order Flow (NO color, NO size)
  */
 function handleWhatsAppOrder() {
   if (!currentProduct) return;
@@ -1046,16 +940,14 @@ function handleWhatsAppOrder() {
   const totalFormatted = formatCurrency(total);
 
   let message = `¡Hola Pájaros en la Cabeza! 🦅\n`;
-  message += `Quisiera encargar un producto personalizado usando la tienda como plantilla:\n\n`;
-  message += `🛍️ Producto: ${currentProduct.name}\n`;
-  message += `🎨 Color: ${selectedColor}\n`;
-  message += `📏 Talle: ${selectedSize}\n`;
+  message += `Quisiera encargar una prenda personalizada elegida desde el perchero virtual:\n\n`;
+  message += `🛍️ Prenda: ${currentProduct.name}\n`;
   message += `🔢 Cantidad: ${selectedQuantity} unidad(es)\n`;
   message += `💳 Forma de Pago: ${paymentName}\n`;
   message += `💰 Total Estimado: ${totalFormatted}\n\n`;
 
   if (currentDesign.imageSrc) {
-    message += `📸 ¡Ya diseñé la vista previa y ubiqué mi estampa en la web! Te adjunto la imagen por este chat para que vean exactamente cómo lo quiero.\n\n`;
+    message += `📸 ¡Ya diseñé la vista previa y ubiqué mi estampa en la web! Te adjunto la foto por acá para que vean exactamente cómo lo quiero.\n\n`;
   } else {
     message += `💡 Quiero estampar un logo o imagen que te envío por acá.\n\n`;
   }
@@ -1065,12 +957,10 @@ function handleWhatsAppOrder() {
   const phone = '5493517620847';
   const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
-  // Automatically trigger download of preview so customer has it ready to attach on WhatsApp
   if (currentDesign.imageSrc) {
     handleDownloadPreview();
   }
 
-  // Open WhatsApp in new tab
   window.open(whatsappUrl, '_blank');
 }
 
