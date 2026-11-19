@@ -61,6 +61,68 @@ function getPlaceholderImg() {
 }
 
 /**
+ * Helper to check if a category ID, name, or product category is excluded from Plantillas
+ * Specifically excludes "Ropa Personalizada" and "Ropa Institucional"
+ */
+function isExcludedCategory(catId, catName) {
+  const norm = (str) => String(str || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  const id = norm(catId);
+  const name = norm(catName);
+
+  return (
+    id.includes('ropa-personalizada') ||
+    id.includes('ropa-institucional') ||
+    id.includes('personalizada') ||
+    id.includes('institucional') ||
+    name.includes('ropa personalizada') ||
+    name.includes('ropa institucional') ||
+    name.includes('personalizada') ||
+    name.includes('institucional')
+  );
+}
+
+/**
+ * Filter products and categories to exclude "Ropa Personalizada" and "Ropa Institucional"
+ */
+function setFilteredStoreData(rawProducts, rawCategories) {
+  const categoriesList = rawCategories || [];
+  const productsList = rawProducts || [];
+
+  // 1. Identify excluded category IDs and names
+  const excludedCatIds = new Set();
+  categoriesList.forEach(cat => {
+    if (isExcludedCategory(cat.id, cat.name)) {
+      if (cat.id) excludedCatIds.add(String(cat.id).toLowerCase());
+      if (cat.name) excludedCatIds.add(String(cat.name).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+    }
+  });
+
+  // 2. Filter categories for perchero filter chips
+  allCategories = categoriesList.filter(cat => !isExcludedCategory(cat.id, cat.name));
+
+  // If the active category filter is no longer available, reset to 'all'
+  if (activeCategoryFilter !== 'all' && !allCategories.some(c => c.id === activeCategoryFilter)) {
+    activeCategoryFilter = 'all';
+  }
+
+  // 3. Filter products for perchero track
+  allProducts = productsList.filter(prod => {
+    const prodCat = String(prod.category || '').toLowerCase();
+    const prodCatNorm = prodCat.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+    if (excludedCatIds.has(prodCat) || excludedCatIds.has(prodCatNorm)) return false;
+    if (isExcludedCategory(prod.category, prod.categoryLabel)) return false;
+
+    return true;
+  });
+
+  // If the currently selected product was in an excluded category, re-select
+  if (currentProduct && !allProducts.some(p => p.id === currentProduct.id)) {
+    currentProduct = null;
+  }
+}
+
+/**
  * Initialize Perchero Studio
  */
 function initStudio() {
@@ -75,8 +137,7 @@ function initStudio() {
 
   // Subscribe to store updates
   subscribeToStore(({ products, categories }) => {
-    allProducts = products || [];
-    allCategories = categories || [];
+    setFilteredStoreData(products, categories);
     renderPercheroFilterChips();
     renderHorizontalPerchero();
 
@@ -86,8 +147,7 @@ function initStudio() {
   });
 
   // Get current cache
-  allProducts = getProducts() || [];
-  allCategories = getCategories() || [];
+  setFilteredStoreData(getProducts(), getCategories());
   renderPercheroFilterChips();
   renderHorizontalPerchero();
   checkInitialProductSelection();
