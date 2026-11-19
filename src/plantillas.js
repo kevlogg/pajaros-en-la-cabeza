@@ -159,6 +159,7 @@ function initStudio() {
   setupStageControls();
   setupFileUploadHandlers();
   setupOrderControls();
+  setupRealisticVisualization();
 }
 
 /**
@@ -221,7 +222,7 @@ function renderHorizontalPerchero() {
   // Search filter
   if (searchQuery.trim() !== '') {
     const q = searchQuery.toLowerCase().trim();
-    filtered = filtered.filter(p => 
+    filtered = filtered.filter(p =>
       (p.name && p.name.toLowerCase().includes(q)) ||
       (p.categoryLabel && p.categoryLabel.toLowerCase().includes(q)) ||
       (p.description && p.description.toLowerCase().includes(q))
@@ -490,7 +491,7 @@ function setupCornerHandleResize() {
 
       try {
         handle.setPointerCapture(e.pointerId);
-      } catch (err) {}
+      } catch (err) { }
 
       const onPointerMove = (moveEvt) => {
         if (!isResizing) return;
@@ -521,7 +522,7 @@ function setupCornerHandleResize() {
           activeResizeHandle.classList.remove('is-active');
           try {
             activeResizeHandle.releasePointerCapture(upEvt.pointerId);
-          } catch (err) {}
+          } catch (err) { }
           activeResizeHandle = null;
         }
         window.removeEventListener('pointermove', onPointerMove);
@@ -746,7 +747,7 @@ function processWhiteBackgroundRemoval(source) {
         const factor = (240 - minC) / 25;
         data[i + 3] = Math.round(a * factor);
       }
-    } 
+    }
     // 2. Uniform light background matching sampled corners
     else if (isLightBg) {
       const dist = Math.hypot(r - avgCornerR, g - avgCornerG, b - avgCornerB);
@@ -1030,6 +1031,30 @@ function calculateTotalPrice() {
 }
 
 /**
+ * Helper to safely load image with CORS proxy fallback if needed
+ */
+function loadImgWithFallback(url) {
+  return new Promise((res) => {
+    if (!url) return res(null);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => res(img);
+    img.onerror = () => {
+      if (!url.includes('images.weserv.nl') && url.startsWith('http')) {
+        const proxyImg = new Image();
+        proxyImg.crossOrigin = 'anonymous';
+        proxyImg.onload = () => res(proxyImg);
+        proxyImg.onerror = () => res(null);
+        proxyImg.src = 'https://images.weserv.nl/?url=' + encodeURIComponent(url);
+      } else {
+        res(null);
+      }
+    };
+    img.src = url;
+  });
+}
+
+/**
  * Generate Canvas Composite Mockup
  */
 function generateCompositeCanvas() {
@@ -1061,26 +1086,6 @@ function generateCompositeCanvas() {
     const rawProdImg = (Array.isArray(currentProduct.images) && currentProduct.images.length > 0)
       ? currentProduct.images[0]
       : (currentProduct.image || getPlaceholderImg());
-
-    const loadImgWithFallback = (url) => {
-      return new Promise((res) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => res(img);
-        img.onerror = () => {
-          if (!url.includes('images.weserv.nl') && url.startsWith('http')) {
-            const proxyImg = new Image();
-            proxyImg.crossOrigin = 'anonymous';
-            proxyImg.onload = () => res(proxyImg);
-            proxyImg.onerror = () => res(null);
-            proxyImg.src = 'https://images.weserv.nl/?url=' + encodeURIComponent(url);
-          } else {
-            res(null);
-          }
-        };
-        img.src = url;
-      });
-    };
 
     loadImgWithFallback(rawProdImg).then((bgImg) => {
       if (bgImg) {
@@ -1237,6 +1242,341 @@ function handleWhatsAppOrder() {
   }
 
   window.open(whatsappUrl, '_blank');
+}
+
+let cachedRealisticDataUrl = null;
+
+/**
+ * Setup Realistic Garment Visualization Modal & Trigger Buttons
+ */
+function setupRealisticVisualization() {
+  const btnTrigger = document.getElementById('btn-trigger-visualize');
+  const btnStage = document.getElementById('btn-stage-visualize');
+  const modal = document.getElementById('visualize-modal');
+  const btnClose = document.getElementById('btn-close-visualize-modal');
+  const btnCloseFooter = document.getElementById('btn-modal-close-action');
+  const btnDownloadRealistic = document.getElementById('btn-modal-download-realistic');
+  const btnOrderWhatsApp = document.getElementById('btn-modal-order-whatsapp');
+
+  if (btnTrigger) {
+    btnTrigger.addEventListener('click', openRealisticVisualization);
+  }
+  if (btnStage) {
+    btnStage.addEventListener('click', openRealisticVisualization);
+  }
+
+  const closeModal = () => {
+    if (modal) {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+  };
+
+  if (btnClose) btnClose.addEventListener('click', closeModal);
+  if (btnCloseFooter) btnCloseFooter.addEventListener('click', closeModal);
+
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+      closeModal();
+    }
+  });
+
+  if (btnDownloadRealistic) {
+    btnDownloadRealistic.addEventListener('click', () => {
+      if (cachedRealisticDataUrl) {
+        const link = document.createElement('a');
+        const slug = (currentProduct ? currentProduct.name : 'prenda')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-');
+        link.download = `pajaros-en-la-cabeza-${slug}-realista.png`;
+        link.href = cachedRealisticDataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
+  }
+
+  if (btnOrderWhatsApp) {
+    btnOrderWhatsApp.addEventListener('click', () => {
+      closeModal();
+      handleWhatsAppOrder();
+    });
+  }
+}
+
+/**
+ * Open Realistic Preview Modal & Trigger High-End Rendering
+ */
+function openRealisticVisualization() {
+  if (!currentProduct) {
+    alert('Por favor selecciona una prenda en el perchero.');
+    return;
+  }
+
+  const modal = document.getElementById('visualize-modal');
+  const modalProdName = document.getElementById('visualize-modal-prod-name');
+  const loader = document.getElementById('visualize-loader');
+  const previewImg = document.getElementById('visualize-preview-img');
+
+  if (!modal) return;
+
+  if (modalProdName) {
+    modalProdName.textContent = `${currentProduct.name} • ${formatCurrency(currentProduct.price)}`;
+  }
+
+  if (loader) loader.style.display = 'flex';
+  if (previewImg) {
+    previewImg.style.display = 'none';
+    previewImg.src = '';
+  }
+
+  modal.classList.add('active');
+  modal.setAttribute('aria-hidden', 'false');
+
+  setTimeout(() => {
+    generateRealisticMockupCanvas()
+      .then((canvas) => {
+        const dataUrl = canvas.toDataURL('image/png');
+        cachedRealisticDataUrl = dataUrl;
+        if (previewImg) {
+          previewImg.src = dataUrl;
+          previewImg.style.display = 'block';
+        }
+        if (loader) loader.style.display = 'none';
+      })
+      .catch((err) => {
+        console.error('Error generando vista realista:', err);
+        if (loader) loader.style.display = 'none';
+        alert('Hubo un inconveniente al generar la vista realista.');
+      });
+  }, 40);
+}
+
+/**
+ * Create a procedural cotton weave texture pattern
+ */
+function createCottonWeavePattern() {
+  const pCanvas = document.createElement('canvas');
+  pCanvas.width = 6;
+  pCanvas.height = 6;
+  const pCtx = pCanvas.getContext('2d');
+  
+  pCtx.fillStyle = 'rgba(0,0,0,0.06)';
+  pCtx.fillRect(0, 0, 6, 6);
+  pCtx.fillStyle = 'rgba(255,255,255,0.08)';
+  pCtx.fillRect(0, 0, 3, 3);
+  pCtx.fillRect(3, 3, 3, 3);
+  
+  const patternCanvas = document.createElement('canvas');
+  const ctx = patternCanvas.getContext('2d');
+  return ctx.createPattern(pCanvas, 'repeat');
+}
+
+/**
+ * Generate Photorealistic Mockup Canvas using the EXACT store product and client design
+ */
+function generateRealisticMockupCanvas() {
+  return new Promise((resolve, reject) => {
+    if (!currentProduct) {
+      reject(new Error('No hay prenda seleccionada.'));
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 1200;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) {
+      reject(new Error('Contexto canvas no disponible.'));
+      return;
+    }
+
+    // 1. Studio Backdrop
+    const bgGrad = ctx.createRadialGradient(600, 560, 100, 600, 600, 850);
+    bgGrad.addColorStop(0, '#FFFFFF');
+    bgGrad.addColorStop(1, '#ECE7DC');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 1200, 1200);
+
+    // 2. Load the EXACT product image from store
+    const rawProdImg = (Array.isArray(currentProduct.images) && currentProduct.images.length > 0)
+      ? currentProduct.images[0]
+      : (currentProduct.image || getPlaceholderImg());
+
+    loadImgWithFallback(rawProdImg).then((bgImg) => {
+      if (!bgImg) {
+        reject(new Error('No se pudo cargar la prenda.'));
+        return;
+      }
+
+      const scaleBg = Math.min(1060 / bgImg.naturalWidth, 1060 / bgImg.naturalHeight);
+      const drawW = bgImg.naturalWidth * scaleBg;
+      const drawH = bgImg.naturalHeight * scaleBg;
+      const drawX = (1200 - drawW) / 2;
+      const drawY = (1200 - drawH) / 2;
+
+      // Draw subtle drop shadow for realistic volume
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.18)';
+      ctx.shadowBlur = 35;
+      ctx.shadowOffsetY = 16;
+      ctx.drawImage(bgImg, drawX, drawY, drawW, drawH);
+      ctx.restore();
+
+      // If no logo uploaded, resolve with clean product
+      if (!currentDesign.imageSrc) {
+        drawRealisticFooterStamp(ctx, currentProduct.name);
+        resolve(canvas);
+        return;
+      }
+
+      // 3. Load user's design image
+      loadImgWithFallback(currentDesign.imageSrc).then((designImg) => {
+        if (!designImg) {
+          drawRealisticFooterStamp(ctx, currentProduct.name);
+          resolve(canvas);
+          return;
+        }
+
+        const targetX = (currentDesign.posX / 100) * 1200;
+        const targetY = (currentDesign.posY / 100) * 1200;
+        const baseRefSize = 340 * currentDesign.scale;
+        const designAspect = designImg.naturalWidth / designImg.naturalHeight;
+        let dW = baseRefSize;
+        let dH = baseRefSize / designAspect;
+        if (designAspect < 1) {
+          dH = baseRefSize;
+          dW = baseRefSize * designAspect;
+        }
+        dW = Math.round(dW);
+        dH = Math.round(dH);
+
+        const rad = (currentDesign.rotation * Math.PI) / 180;
+
+        // Sample garment patch around the design area to extract fold luminance
+        const patchW = Math.round(Math.max(dW, dH) * 1.5);
+        const patchH = patchW;
+        const patchX = Math.round(targetX - patchW / 2);
+        const patchY = Math.round(targetY - patchH / 2);
+
+        const safeX = Math.max(0, Math.min(1200 - patchW, patchX));
+        const safeY = Math.max(0, Math.min(1200 - patchH, patchY));
+
+        let clothData = null;
+        try {
+          clothData = ctx.getImageData(safeX, safeY, patchW, patchH);
+        } catch (e) {
+          // ignore CORS
+        }
+
+        // Draw Base Design Ink
+        ctx.save();
+        ctx.translate(targetX, targetY);
+        ctx.rotate(rad);
+
+        // Subtle soft shadow behind the ink (gives DTF 3D depth)
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.14)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetY = 1.5;
+        ctx.drawImage(designImg, -dW / 2, -dH / 2, dW, dH);
+        ctx.shadowColor = 'transparent';
+
+        // Apply Cotton Texture Weave over the ink
+        ctx.globalCompositeOperation = 'source-atop';
+        const weave = createCottonWeavePattern();
+        if (weave) {
+          ctx.globalAlpha = 0.16;
+          ctx.fillStyle = weave;
+          ctx.fillRect(-dW / 2, -dH / 2, dW, dH);
+        }
+
+        // Apply Fabric Crease Shading from the real garment
+        if (clothData) {
+          const foldCanvas = document.createElement('canvas');
+          foldCanvas.width = patchW;
+          foldCanvas.height = patchH;
+          const foldCtx = foldCanvas.getContext('2d');
+          
+          const fImgData = foldCtx.createImageData(patchW, patchH);
+          const fData = fImgData.data;
+          const cData = clothData.data;
+          const totalPix = patchW * patchH;
+
+          let totalLum = 0;
+          for (let p = 0; p < totalPix; p++) {
+            const idx = p * 4;
+            totalLum += (cData[idx] * 0.299 + cData[idx + 1] * 0.587 + cData[idx + 2] * 0.114);
+          }
+          const avgLum = totalLum / totalPix;
+
+          for (let p = 0; p < totalPix; p++) {
+            const idx = p * 4;
+            const lum = cData[idx] * 0.299 + cData[idx + 1] * 0.587 + cData[idx + 2] * 0.114;
+            const diff = lum - avgLum;
+            
+            if (diff < 0) {
+              fData[idx] = 0;
+              fData[idx + 1] = 0;
+              fData[idx + 2] = 0;
+              fData[idx + 3] = Math.min(180, Math.round(Math.abs(diff) * 1.8));
+            } else {
+              fData[idx] = 255;
+              fData[idx + 1] = 255;
+              fData[idx + 2] = 255;
+              fData[idx + 3] = Math.min(140, Math.round(diff * 1.4));
+            }
+          }
+          foldCtx.putImageData(fImgData, 0, 0);
+
+          ctx.globalAlpha = 0.45;
+          ctx.drawImage(foldCanvas, -dW / 2, -dH / 2, dW, dH);
+        }
+
+        ctx.restore();
+
+        // 4. Official High-End Footer Stamp
+        drawRealisticFooterStamp(ctx, currentProduct.name);
+
+        resolve(canvas);
+      });
+    });
+  });
+}
+
+/**
+ * Draw Official High-End Neo-Brutalist Studio Stamp on Export / Preview
+ */
+function drawRealisticFooterStamp(ctx, productName) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1.0;
+
+  // Background Box
+  ctx.fillStyle = '#0D0D0D';
+  ctx.beginPath();
+  ctx.roundRect(40, 1105, 520, 58, 8);
+  ctx.fill();
+
+  // Yellow accent line
+  ctx.fillStyle = '#FFE600';
+  ctx.fillRect(40, 1105, 8, 58);
+
+  ctx.font = 'bold 22px "Space Grotesk", sans-serif';
+  ctx.fillText('🦅 PÁJAROS EN LA CABEZA', 64, 1141);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '600 14px "Plus Jakarta Sans", sans-serif';
+  const nameSafe = productName || 'Prenda Oficial';
+  ctx.fillText(`• ${nameSafe} • Acabado Real`, 345, 1140);
+
+  ctx.restore();
 }
 
 // Start studio on DOM ready
