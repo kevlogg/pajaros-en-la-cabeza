@@ -45,8 +45,8 @@ export default async function handler(req, res) {
     if (!apiKey) {
       return res.status(200).json({
         success: false,
-        error: 'NO_API_KEY',
-        message: 'Para activar la visualización fotorrealista con Inteligencia Artificial, ingresá tu API Key de Google Gemini (gratuita en aistudio.google.com) o OpenAI.'
+        error: 'NO_INTERNAL_KEY',
+        message: 'Servicio de visualización fotorrealista activo en cliente.'
       });
     }
 

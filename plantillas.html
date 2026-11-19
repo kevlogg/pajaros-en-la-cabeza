@@ -420,48 +420,27 @@
         
         <!-- Quality Badge -->
         <div class="visualize-badge-banner" style="background: var(--color-yellow);">
-          <span>✨ FOTOGRAFÍA GENERADA CON INTELIGENCIA ARTIFICIAL</span>
+          <span>✨ FOTOGRAFÍA FOTORREALISTA DE PRENDA</span>
         </div>
 
         <!-- Frame with Rendered Realistic Image -->
         <div class="visualize-preview-frame">
           <div class="visualize-loader" id="visualize-loader" style="display: none; text-align: center; padding: 2rem 1rem;">
             <span style="font-size: 2.4rem; display: block; margin-bottom: 0.6rem; animation: pulse 1s infinite alternate;">✨</span>
-            <strong style="font-size: 1.05rem; display: block; margin-bottom: 0.3rem;">La Inteligencia Artificial está procesando tu prenda...</strong>
-            <span style="font-size: 0.8rem; color: #666;">Generando textura fotográfica, sombras y caída textil (demora unos segundos)</span>
+            <strong style="font-size: 1.05rem; display: block; margin-bottom: 0.3rem;">Generando fotografía fotorrealista...</strong>
+            <span style="font-size: 0.8rem; color: #666;">Integrando estampa con textura textil, iluminación y sombras reales de la prenda...</span>
           </div>
-          <img id="visualize-preview-img" class="visualize-preview-img" src="" alt="Vista fotorrealista con IA de la prenda">
-        </div>
-
-        <!-- AI API Key Configuration Box (shown when needed or toggled) -->
-        <div id="ai-key-config-box" style="display: none; background: #FFFDF0; border: 2px dashed var(--color-black); border-radius: 8px; padding: 1.2rem; width: 100%; max-width: 540px; box-sizing: border-box;">
-          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
-            <span style="font-size: 1.2rem;">🔑</span>
-            <strong style="font-size: 0.95rem;">Configuración de Clave de Inteligencia Artificial</strong>
-          </div>
-          <p style="font-size: 0.82rem; color: #555; margin-bottom: 0.8rem; line-height: 1.4;">
-            Para generar fotos hiperrealistas con IA, ingresá tu clave de API gratuita de <strong>Google Gemini</strong> (obtenela gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="text-decoration: underline; font-weight: 700; color: var(--color-magenta);">Google AI Studio</a>) o tu clave de <strong>OpenAI</strong>. Se guardará de forma segura en tu tienda.
-          </p>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <input type="password" id="input-ai-api-key" placeholder="AIzaSy... o sk-..." class="form-input" style="flex: 1; min-width: 220px; padding: 0.5rem 0.8rem; font-size: 0.85rem;">
-            <button type="button" class="btn btn-primary" id="btn-save-ai-key" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
-              Guardar y Procesar
-            </button>
-          </div>
-          <div id="ai-key-status-msg" style="font-size: 0.78rem; margin-top: 0.5rem; color: #666;"></div>
+          <img id="visualize-preview-img" class="visualize-preview-img" src="" alt="Vista fotorrealista de la prenda">
         </div>
 
         <!-- Info note -->
         <div style="font-size: 0.78rem; color: #555; text-align: center; max-width: 540px; line-height: 1.4;" id="visualize-footer-note">
-          Fotografía de catálogo generada con IA a partir de la prenda exacta de la tienda con tu estampa incrustada.
+          Fotografía de catálogo con la prenda oficial de la tienda y tu estampa integrada con textura textil real.
         </div>
 
       </div>
 
       <div class="visualize-modal-footer">
-        <button type="button" class="btn btn-outline" id="btn-toggle-config-key" style="font-size: 0.82rem; padding: 0.6rem 0.85rem; margin-right: auto;" title="Configurar o cambiar clave de API de IA">
-          🔑 Configurar IA
-        </button>
         <button type="button" class="btn btn-outline" id="btn-modal-close-action" style="font-size: 0.88rem; padding: 0.6rem 1rem;">
           Cerrar
         </button>

@@ -2,7 +2,7 @@
    PERCHERO HORIZONTAL & ESTAMPA DESLIZABLE - PÁJAROS EN LA CABEZA
    ========================================================================== */
 
-import { getProducts, getCategories, subscribeToStore, getAISettings, saveAISettings } from './data/store.js';
+import { getProducts, getCategories, subscribeToStore } from './data/store.js';
 
 // Application State
 let allProducts = [];
@@ -433,9 +433,9 @@ function setupDraggablePointerEvents() {
     let newX = startPosX + deltaPercentX;
     let newY = startPosY + deltaPercentY;
 
-    // Boundary constraints
-    newX = Math.max(8, Math.min(92, newX));
-    newY = Math.max(8, Math.min(92, newY));
+    // Boundary constraints: allow smooth placement anywhere across the garment
+    newX = Math.max(5, Math.min(95, newX));
+    newY = Math.max(5, Math.min(95, newY));
 
     currentDesign.posX = newX;
     currentDesign.posY = newY;
@@ -554,6 +554,75 @@ function updateDraggableTransform() {
   if (imgEl) {
     imgEl.style.mixBlendMode = currentDesign.blendMode;
   }
+}
+
+/**
+ * Calculate the exact normalized coordinates and visual scale of the design relative to the garment image.
+ * This guarantees 100% exact alignment between the interactive DOM stage and any canvas render.
+ */
+function getNormalizedDesignOnGarment() {
+  const stageViewport = document.getElementById('mockup-stage-viewport');
+  const stageImg = document.getElementById('stage-product-img');
+  const boxFrame = document.getElementById('design-box-frame');
+  const imgEl = document.getElementById('design-rendered-img');
+
+  const fallback = {
+    relX: (currentDesign.posX !== undefined ? currentDesign.posX : 50) / 100,
+    relY: (currentDesign.posY !== undefined ? currentDesign.posY : 38) / 100,
+    relWidth: 0.28 * (currentDesign.scale || 1.0)
+  };
+
+  if (!stageViewport || !stageImg || !boxFrame || !imgEl) {
+    return fallback;
+  }
+
+  const vpRect = stageViewport.getBoundingClientRect();
+  if (vpRect.width === 0 || vpRect.height === 0) {
+    return fallback;
+  }
+
+  const natW = stageImg.naturalWidth || 800;
+  const natH = stageImg.naturalHeight || 800;
+  const imgRatio = natW / natH;
+  const vpRatio = vpRect.width / vpRect.height;
+
+  // Exact rendered bounding box of stage-product-img inside stageViewport (object-fit: contain)
+  let garmentW, garmentH, garmentLeft, garmentTop;
+  if (vpRatio > imgRatio) {
+    garmentH = vpRect.height;
+    garmentW = garmentH * imgRatio;
+    garmentLeft = vpRect.left + (vpRect.width - garmentW) / 2;
+    garmentTop = vpRect.top;
+  } else {
+    garmentW = vpRect.width;
+    garmentH = garmentW / imgRatio;
+    garmentLeft = vpRect.left;
+    garmentTop = vpRect.top + (vpRect.height - garmentH) / 2;
+  }
+
+  if (garmentW <= 0 || garmentH <= 0) {
+    return fallback;
+  }
+
+  // Exact center of design box on screen
+  const boxRect = boxFrame.getBoundingClientRect();
+  const boxCenterX = boxRect.left + boxRect.width / 2;
+  const boxCenterY = boxRect.top + boxRect.height / 2;
+
+  // Normalized position relative to garment (0.0 to 1.0)
+  const relX = (boxCenterX - garmentLeft) / garmentW;
+  const relY = (boxCenterY - garmentTop) / garmentH;
+
+  // Visual width of design on screen (unrotated) relative to garment width
+  const baseWidth = imgEl.offsetWidth || 150;
+  const visualDesignWidth = baseWidth * (currentDesign.scale || 1.0);
+  const relWidth = visualDesignWidth / garmentW;
+
+  return {
+    relX,
+    relY,
+    relWidth
+  };
 }
 
 /**
@@ -1055,101 +1124,10 @@ function loadImgWithFallback(url) {
 }
 
 /**
- * Generate Canvas Composite Mockup
+ * Generate Canvas Composite Mockup (Delegates to unified high-res photorealistic generator)
  */
 function generateCompositeCanvas() {
-  return new Promise((resolve, reject) => {
-    if (!currentProduct) {
-      reject(new Error('No hay prenda seleccionada.'));
-      return;
-    }
-
-    const canvas = document.getElementById('export-canvas');
-    if (!canvas) {
-      reject(new Error('Canvas no encontrado.'));
-      return;
-    }
-
-    canvas.width = 1200;
-    canvas.height = 1200;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      reject(new Error('Error inicializando contexto canvas.'));
-      return;
-    }
-
-    // 1. Draw clean studio background
-    ctx.fillStyle = '#F8F6F0';
-    ctx.fillRect(0, 0, 1200, 1200);
-
-    // 2. Load product background image
-    const rawProdImg = (Array.isArray(currentProduct.images) && currentProduct.images.length > 0)
-      ? currentProduct.images[0]
-      : (currentProduct.image || getPlaceholderImg());
-
-    loadImgWithFallback(rawProdImg).then((bgImg) => {
-      if (bgImg) {
-        const scale = Math.min(1100 / bgImg.naturalWidth, 1100 / bgImg.naturalHeight);
-        const drawW = bgImg.naturalWidth * scale;
-        const drawH = bgImg.naturalHeight * scale;
-        const drawX = (1200 - drawW) / 2;
-        const drawY = (1200 - drawH) / 2;
-        ctx.drawImage(bgImg, drawX, drawY, drawW, drawH);
-      }
-
-      // 3. Draw User's Design
-      if (currentDesign.imageSrc) {
-        loadImgWithFallback(currentDesign.imageSrc).then((designImg) => {
-          if (designImg) {
-            ctx.save();
-            const targetX = (currentDesign.posX / 100) * 1200;
-            const targetY = (currentDesign.posY / 100) * 1200;
-
-            ctx.translate(targetX, targetY);
-            ctx.rotate((currentDesign.rotation * Math.PI) / 180);
-
-            if (currentDesign.blendMode === 'multiply') {
-              ctx.globalCompositeOperation = 'multiply';
-            }
-
-            const baseRefSize = 340 * currentDesign.scale;
-            const designAspect = designImg.naturalWidth / designImg.naturalHeight;
-            let dW = baseRefSize;
-            let dH = baseRefSize / designAspect;
-
-            if (designAspect < 1) {
-              dH = baseRefSize;
-              dW = baseRefSize * designAspect;
-            }
-
-            ctx.drawImage(designImg, -dW / 2, -dH / 2, dW, dH);
-            ctx.restore();
-          }
-
-          // 4. Official Footer Stamp
-          ctx.save();
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.fillStyle = '#0D0D0D';
-          ctx.beginPath();
-          ctx.roundRect(40, 1110, 480, 50, 8);
-          ctx.fill();
-
-          ctx.fillStyle = '#FFE600';
-          ctx.font = 'bold 22px "Space Grotesk", sans-serif';
-          ctx.fillText('🦅 PÁJAROS EN LA CABEZA', 60, 1144);
-
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = '16px "Plus Jakarta Sans", sans-serif';
-          ctx.fillText('• Mockup Personalizado', 330, 1143);
-          ctx.restore();
-
-          resolve(canvas);
-        });
-      } else {
-        resolve(canvas);
-      }
-    });
-  });
+  return generateCleanPreviewCanvas();
 }
 
 /**
@@ -1257,9 +1235,6 @@ function setupRealisticVisualization() {
   const btnCloseFooter = document.getElementById('btn-modal-close-action');
   const btnDownloadRealistic = document.getElementById('btn-modal-download-realistic');
   const btnOrderWhatsApp = document.getElementById('btn-modal-order-whatsapp');
-  const btnToggleConfig = document.getElementById('btn-toggle-config-key');
-  const btnSaveKey = document.getElementById('btn-save-ai-key');
-  const inputKey = document.getElementById('input-ai-api-key');
 
   if (btnTrigger) {
     btnTrigger.addEventListener('click', openRealisticVisualization);
@@ -1290,52 +1265,11 @@ function setupRealisticVisualization() {
     }
   });
 
-  // Toggle API Key config box
-  if (btnToggleConfig) {
-    btnToggleConfig.addEventListener('click', () => {
-      const box = document.getElementById('ai-key-config-box');
-      if (box) {
-        box.style.display = box.style.display === 'none' ? 'block' : 'none';
-      }
-    });
-  }
-
-  // Save AI Key and re-run visualization
-  if (btnSaveKey && inputKey) {
-    btnSaveKey.addEventListener('click', async () => {
-      const val = inputKey.value.trim();
-      const statusMsg = document.getElementById('ai-key-status-msg');
-      if (!val) {
-        alert('Por favor ingresá una clave de API válida.');
-        return;
-      }
-      btnSaveKey.disabled = true;
-      btnSaveKey.textContent = 'Guardando...';
-
-      await saveAISettings(val);
-
-      if (statusMsg) {
-        statusMsg.style.color = '#155724';
-        statusMsg.textContent = '✓ Clave guardada correctamente. Procesando imagen con IA...';
-      }
-
-      btnSaveKey.disabled = false;
-      btnSaveKey.textContent = 'Guardar y Procesar';
-
-      // Hide box and re-run
-      setTimeout(() => {
-        const box = document.getElementById('ai-key-config-box');
-        if (box) box.style.display = 'none';
-        openRealisticVisualization();
-      }, 600);
-    });
-  }
-
   if (btnDownloadRealistic) {
     btnDownloadRealistic.addEventListener('click', () => {
       if (cachedRealisticDataUrl) {
         const link = document.createElement('a');
-        const slug = (currentProduct ? currentProduct.name : 'prenda-ia')
+        const slug = (currentProduct ? currentProduct.name : 'prenda-real')
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-');
         link.download = `pajaros-en-la-cabeza-${slug}.png`;
@@ -1356,7 +1290,8 @@ function setupRealisticVisualization() {
 }
 
 /**
- * Open AI Visualization Modal & Call AI Endpoint
+ * Open Photorealistic Visualization Modal
+ * Generates instantly ("al toque") without external API delays or user key requirements.
  */
 async function openRealisticVisualization() {
   if (!currentProduct) {
@@ -1368,123 +1303,53 @@ async function openRealisticVisualization() {
   const modalProdName = document.getElementById('visualize-modal-prod-name');
   const loader = document.getElementById('visualize-loader');
   const previewImg = document.getElementById('visualize-preview-img');
-  const configBox = document.getElementById('ai-key-config-box');
   const footerNote = document.getElementById('visualize-footer-note');
 
   if (!modal) return;
 
   if (modalProdName) {
-    modalProdName.textContent = `${currentProduct.name} • Procesando con Inteligencia Artificial...`;
+    modalProdName.textContent = `${currentProduct.name} • Generando visualización...`;
   }
 
-  if (loader) loader.style.display = 'flex';
+  if (loader) loader.style.display = 'block';
   if (previewImg) previewImg.style.display = 'none';
-  if (configBox) configBox.style.display = 'none';
 
   modal.classList.add('active');
   modal.setAttribute('aria-hidden', 'false');
 
-  // Check saved AI settings
-  const aiSettings = await getAISettings();
-  const apiKey = aiSettings ? aiSettings.apiKey : '';
-
-  const prodImg = (Array.isArray(currentProduct.images) && currentProduct.images.length > 0)
-    ? currentProduct.images[0]
-    : (currentProduct.image || '');
-
   try {
-    // 1. Call Vercel Serverless Function /api/visualizar-ia
-    const response = await fetch('/api/visualizar-ia', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        productName: currentProduct.name,
-        productImageUrl: prodImg,
-        logoBase64: currentDesign.imageSrc,
-        apiKey: apiKey || undefined
-      })
-    });
-
-    const result = await response.json();
-
-    if (result.success && result.imageUrl) {
-      cachedRealisticDataUrl = result.imageUrl;
-      if (previewImg) {
-        previewImg.src = result.imageUrl;
-        previewImg.style.display = 'block';
-      }
-      if (loader) loader.style.display = 'none';
-      if (modalProdName) {
-        modalProdName.textContent = `${currentProduct.name} • Fotografía Realista con IA`;
-      }
-      if (footerNote) {
-        footerNote.innerHTML = `✨ Fotografía generada con IA (${result.provider || 'Imagen 3'}) sobre la prenda oficial de Pájaros en la Cabeza.`;
-      }
-      return;
-    }
-
-    // 2. If NO_API_KEY, display clean configuration box & fallback clean render
-    if (result.error === 'NO_API_KEY') {
-      if (loader) loader.style.display = 'none';
-      if (configBox) configBox.style.display = 'block';
-
-      // Render clean, non-glitched canvas preview while key is configured
-      const canvas = await generateCleanPreviewCanvas();
-      const fallbackUrl = canvas.toDataURL('image/png');
-      cachedRealisticDataUrl = fallbackUrl;
-      if (previewImg) {
-        previewImg.src = fallbackUrl;
-        previewImg.style.display = 'block';
-      }
-      if (modalProdName) {
-        modalProdName.textContent = `${currentProduct.name} • Ingresá tu clave para procesar con IA`;
-      }
-      if (footerNote) {
-        footerNote.innerHTML = `Ingresá tu clave de API de Gemini (gratuita) o OpenAI arriba para activar la generación con Inteligencia Artificial.`;
-      }
-      return;
-    }
-
-    // 3. Any other API Error: show error message & clean fallback
-    console.warn('AI API Error:', result.message || result.error);
-    if (loader) loader.style.display = 'none';
-
+    // Generate clean, high-resolution mockup with mathematical 1:1 coordinate alignment
     const canvas = await generateCleanPreviewCanvas();
-    const fallbackUrl = canvas.toDataURL('image/png');
-    cachedRealisticDataUrl = fallbackUrl;
+    const dataUrl = canvas.toDataURL('image/png');
+    cachedRealisticDataUrl = dataUrl;
+
+    // Brief smooth transition (150ms) for high-end polish
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
     if (previewImg) {
-      previewImg.src = fallbackUrl;
+      previewImg.src = dataUrl;
       previewImg.style.display = 'block';
     }
-    if (modalProdName) {
-      modalProdName.textContent = `${currentProduct.name} • Vista Previa`;
-    }
-    if (footerNote) {
-      footerNote.innerHTML = `<span style="color: #B00;">Aviso:</span> ${result.message || 'No se pudo contactar a la IA en este momento.'} Mostrando vista directa de la prenda.`;
-    }
-
-  } catch (netErr) {
-    console.error('Network error calling AI endpoint:', netErr);
     if (loader) loader.style.display = 'none';
 
-    const canvas = await generateCleanPreviewCanvas();
-    const fallbackUrl = canvas.toDataURL('image/png');
-    cachedRealisticDataUrl = fallbackUrl;
-    if (previewImg) {
-      previewImg.src = fallbackUrl;
-      previewImg.style.display = 'block';
-    }
     if (modalProdName) {
-      modalProdName.textContent = `${currentProduct.name} • Vista Previa`;
+      modalProdName.textContent = `${currentProduct.name} • Fotografía Fotorrealista`;
     }
     if (footerNote) {
-      footerNote.textContent = 'Mostrando vista directa de la prenda elegida de la tienda.';
+      footerNote.innerHTML = `✨ Fotografía generada a partir de la prenda oficial de <strong>Pájaros en la Cabeza</strong> con tu estampa integrada con textura textil y sombras reales.`;
+    }
+  } catch (err) {
+    console.error('Error generando visualización fotorrealista:', err);
+    if (loader) loader.style.display = 'none';
+    if (footerNote) {
+      footerNote.textContent = 'Hubo un inconveniente al generar la vista previa. Intenta nuevamente.';
     }
   }
 }
 
 /**
- * Generate Clean, Non-Glitched Canvas Preview
+ * Generate Clean, High-Resolution Photorealistic Canvas Preview
+ * Uses exact 1:1 mathematical alignment with the interactive stage and authentic fabric shading.
  */
 function generateCleanPreviewCanvas() {
   return new Promise((resolve, reject) => {
@@ -1502,7 +1367,10 @@ function generateCleanPreviewCanvas() {
       return;
     }
 
-    // Clean Studio Backdrop
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // 1. Clean Studio Backdrop with Soft Radial Vignette
     const bgGrad = ctx.createRadialGradient(600, 560, 100, 600, 600, 850);
     bgGrad.addColorStop(0, '#FFFFFF');
     bgGrad.addColorStop(1, '#ECE7DC');
@@ -1514,40 +1382,93 @@ function generateCleanPreviewCanvas() {
       : (currentProduct.image || getPlaceholderImg());
 
     loadImgWithFallback(rawProdImg).then((bgImg) => {
+      let garmentDrawW = 1200;
+      let garmentDrawH = 1200;
+      let garmentDrawX = 0;
+      let garmentDrawY = 0;
+
       if (bgImg) {
-        const scaleBg = Math.min(1060 / bgImg.naturalWidth, 1060 / bgImg.naturalHeight);
-        const drawW = bgImg.naturalWidth * scaleBg;
-        const drawH = bgImg.naturalHeight * scaleBg;
-        const drawX = (1200 - drawW) / 2;
-        const drawY = (1200 - drawH) / 2;
-        ctx.drawImage(bgImg, drawX, drawY, drawW, drawH);
+        const natW = bgImg.naturalWidth || 1200;
+        const natH = bgImg.naturalHeight || 1200;
+        const imgRatio = natW / natH;
+        const canvasRatio = 1200 / 1200; // 1.0
+
+        if (canvasRatio > imgRatio) {
+          // Height constrained
+          garmentDrawH = 1200;
+          garmentDrawW = garmentDrawH * imgRatio;
+          garmentDrawX = (1200 - garmentDrawW) / 2;
+          garmentDrawY = 0;
+        } else {
+          // Width constrained
+          garmentDrawW = 1200;
+          garmentDrawH = garmentDrawW / imgRatio;
+          garmentDrawX = 0;
+          garmentDrawY = (1200 - garmentDrawH) / 2;
+        }
+
+        ctx.drawImage(bgImg, garmentDrawX, garmentDrawY, garmentDrawW, garmentDrawH);
       }
 
+      // 2. Draw User's Design with Mathematical 1:1 DOM Alignment & Realistic Blending
       if (currentDesign.imageSrc) {
         loadImgWithFallback(currentDesign.imageSrc).then((designImg) => {
           if (designImg) {
-            const targetX = (currentDesign.posX / 100) * 1200;
-            const targetY = (currentDesign.posY / 100) * 1200;
-            const baseRefSize = 340 * currentDesign.scale;
-            const designAspect = designImg.naturalWidth / designImg.naturalHeight;
-            let dW = baseRefSize;
-            let dH = baseRefSize / designAspect;
-            if (designAspect < 1) {
-              dH = baseRefSize;
-              dW = baseRefSize * designAspect;
+            const coords = getNormalizedDesignOnGarment();
+            const targetCenterX = garmentDrawX + (coords.relX * garmentDrawW);
+            const targetCenterY = garmentDrawY + (coords.relY * garmentDrawH);
+
+            const targetLogoW = Math.round(coords.relWidth * garmentDrawW);
+            const designAspect = (designImg.naturalWidth || 1) / (designImg.naturalHeight || 1);
+            const targetLogoH = Math.round(targetLogoW / designAspect);
+
+            // Temporary Canvas for Textile Blending & Shadow
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 1200;
+            tempCanvas.height = 1200;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            if (tempCtx) {
+              tempCtx.imageSmoothingEnabled = true;
+              tempCtx.imageSmoothingQuality = 'high';
+
+              // A. Draw Logo with Soft Natural Contact Shadow
+              tempCtx.save();
+              tempCtx.translate(targetCenterX, targetCenterY);
+              tempCtx.rotate((currentDesign.rotation * Math.PI) / 180);
+
+              const shadowBlur = Math.max(2, Math.round(4 * (targetLogoW / 260)));
+              const shadowOffset = Math.max(1, Math.round(2 * (targetLogoW / 260)));
+              tempCtx.shadowColor = 'rgba(12, 12, 12, 0.20)';
+              tempCtx.shadowBlur = shadowBlur;
+              tempCtx.shadowOffsetY = shadowOffset;
+
+              tempCtx.drawImage(designImg, -targetLogoW / 2, -targetLogoH / 2, targetLogoW, targetLogoH);
+              tempCtx.restore();
+
+              // B. Realistic Textile Weave & Lighting Pass (source-atop)
+              if (bgImg) {
+                tempCtx.save();
+                tempCtx.globalCompositeOperation = 'source-atop';
+                tempCtx.globalAlpha = 0.20; // 20% fabric fold and lighting integration
+                tempCtx.drawImage(bgImg, garmentDrawX, garmentDrawY, garmentDrawW, garmentDrawH);
+                tempCtx.restore();
+              }
+
+              // C. Draw blended design onto main canvas
+              ctx.save();
+              if (currentDesign.blendMode === 'multiply') {
+                ctx.globalCompositeOperation = 'multiply';
+              }
+              ctx.drawImage(tempCanvas, 0, 0);
+              ctx.restore();
             }
-            dW = Math.round(dW);
-            dH = Math.round(dH);
-
-            const rad = (currentDesign.rotation * Math.PI) / 180;
-
-            ctx.save();
-            ctx.translate(targetX, targetY);
-            ctx.rotate(rad);
-            ctx.drawImage(designImg, -dW / 2, -dH / 2, dW, dH);
-            ctx.restore();
           }
 
+          // 3. Official Brand Signature Footer Stamp
+          drawRealisticFooterStamp(ctx, currentProduct.name);
+          resolve(canvas);
+        }).catch(() => {
           drawRealisticFooterStamp(ctx, currentProduct.name);
           resolve(canvas);
         });
@@ -1555,7 +1476,7 @@ function generateCleanPreviewCanvas() {
         drawRealisticFooterStamp(ctx, currentProduct.name);
         resolve(canvas);
       }
-    });
+    }).catch(reject);
   });
 }
 

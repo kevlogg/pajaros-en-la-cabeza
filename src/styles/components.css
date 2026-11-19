@@ -3262,6 +3262,7 @@
   justify-content: center;
   user-select: none;
   will-change: transform, top, left;
+  transform: translate(-50%, -50%);
 }
 
 .draggable-design-layer.is-dragging {
