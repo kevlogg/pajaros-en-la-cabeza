@@ -16,7 +16,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { productName, productImageUrl, logoBase64, userPrompt, apiKey: reqApiKey, provider: reqProvider } = req.body || {};
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        body = {};
+      }
+    } else if (!body && typeof req[Symbol.asyncIterator] === 'function') {
+      try {
+        const chunks = [];
+        for await (const chunk of req) {
+          chunks.push(chunk);
+        }
+        body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      } catch (e) {
+        body = {};
+      }
+    }
+    body = body || {};
+
+    const { productName, productImageUrl, logoBase64, userPrompt, apiKey: reqApiKey, provider: reqProvider } = body;
 
     // 1. Resolve API Key & Provider
     let apiKey = reqApiKey || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
